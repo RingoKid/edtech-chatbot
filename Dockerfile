@@ -16,7 +16,7 @@ RUN npm run build
 
 # --- Stage 2: Final Production Image ---
 # Use a slim, secure, and stable Python base image.
-FROM python:3.12-slim
+FROM python:3.12-slim AS final
 
 # Set recommended environment variables for running Python in a container.
 ENV PYTHONUNBUFFERED=1 \
