@@ -1,0 +1,15 @@
+# Git files
+.git
+.gitignore
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Python cache
+backend/__pycache__/
+*.pyc
+
+# Frontend dependencies and build artifacts
+frontend/node_modules/
+frontend/build/
