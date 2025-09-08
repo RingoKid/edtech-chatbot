@@ -15,6 +15,26 @@
                     "${workspaceFolder}/docker-compose.override.yml"
                 ]
             },
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "label": "Start Debug Containers (Shell)",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": [
+                "-f", "docker-compose.yml",
+                "-f", "docker-compose.override.yml",
+                "up", "--build", "-d"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true
+            },
             "problemMatcher": []
         }
     ]

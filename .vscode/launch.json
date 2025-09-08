@@ -12,10 +12,31 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/backend/app",
-                    "remoteRoot": "/app/app"
+                    "localRoot": "${workspaceFolder}/backend",
+                    "remoteRoot": "/app"
                 }
-            ]
+            ],
+            "justMyCode": false,
+            "redirectOutput": true,
+            "showReturnValue": true
+        },
+        {
+            "name": "Backend: Attach Manual (No PreLaunch)",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/backend",
+                    "remoteRoot": "/app"
+                }
+            ],
+            "justMyCode": false,
+            "redirectOutput": true,
+            "showReturnValue": true
         },
         {
             "name": "Frontend: Launch Chrome against localhost",

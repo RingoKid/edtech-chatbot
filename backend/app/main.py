@@ -18,6 +18,22 @@ def read_health():
     return {"status": "ok"}
 
 
+@app.get("/api/v1/debug-test")
+def debug_test():
+    """
+    Test endpoint for debugging - set a breakpoint here!
+    """
+    message = "This is a debug test endpoint"
+    data = {
+        "message": message,
+        "timestamp": "2025-09-08",
+        "debug": True
+    }
+    # Set a breakpoint on the next line to test debugging
+    result = {"status": "debug-success", "data": data}
+    return result
+
+
 # --- Static File Serving ---
 # This section serves the compiled React frontend.
 
