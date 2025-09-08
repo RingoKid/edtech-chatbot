@@ -1,0 +1,21 @@
+// .vscode/tasks.json
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "docker-compose-up (debug)",
+            "type": "docker-compose",
+            "dockerCompose": {
+                "up": {
+                    "build": true,
+                    "detached": true
+                },
+                "files": [
+                    "${workspaceFolder}/docker-compose.yml",
+                    "${workspaceFolder}/docker-compose.override.yml"
+                ]
+            },
+            "problemMatcher": []
+        }
+    ]
+}

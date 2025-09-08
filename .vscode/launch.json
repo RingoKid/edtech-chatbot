@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Backend: Attach to Docker",
+            "type": "debugpy",
+            "request": "attach",
+            "preLaunchTask": "docker-compose-up (debug)",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/backend/app",
+                    "remoteRoot": "/app/app"
+                }
+            ]
+        },
+        {
+            "name": "Frontend: Launch Chrome against localhost",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/frontend/src",
+            "sourceMaps": true
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Full-Stack Debug (Docker)",
+            "configurations": [
+                "Backend: Attach to Docker",
+                "Frontend: Launch Chrome against localhost"
+            ]
+        }
+    ]
+}

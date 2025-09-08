@@ -1,0 +1,10 @@
+# docker-compose.override.yml
+services:
+  backend:
+    ports:
+      # Expose the debugger port 5678 to your local machine
+      - "5678:5678"
+
+    # Override the start command to launch via the debugger
+    command: >
+      sh -c "python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"

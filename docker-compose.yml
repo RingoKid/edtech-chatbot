@@ -11,7 +11,7 @@ services:
     volumes:
       # Mount your local backend source code into the container.
       # Changes on your host will be reflected immediately inside the container.
-      - ./backend/app:/app/app
+      - ./backend:/app
     # Override the production CMD to run Uvicorn with --reload for hot-reloading.
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     environment:
