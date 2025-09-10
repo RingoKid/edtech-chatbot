@@ -1,3 +1,10 @@
 fastapi
 uvicorn[standard]
 debugpy
+pytest
+httpx
+langsmith
+langchain
+langchain-openai
+langgraph
+boto3

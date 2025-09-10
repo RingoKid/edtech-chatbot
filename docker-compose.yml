@@ -33,6 +33,12 @@ services:
     # Command to install dependencies (if not already present) and start the dev server.
     command: sh -c "npm install && npm start"
 
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    ports:
+      - "8001:8000"
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-optimizeDbBeforeStartup", "-dbPath", "./data"]
+
 volumes:
   # Define the named volume used by the frontend service.
   node_modules:
