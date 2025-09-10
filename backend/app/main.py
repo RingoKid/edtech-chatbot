@@ -3,35 +3,21 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
+# Import routers
+from app.routers import health, chat, auth, users
+
+# Configuration
+API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
+
 # Initialize the FastAPI application
 app = FastAPI()
 
-# --- API Endpoints ---
-# This is where your business logic and API routes will go.
-# We'll start with a simple health check.
-
-@app.get("/api/v1/health")
-def read_health():
-    """
-    Health check endpoint to confirm the API is running.
-    """
-    return {"status": "ok"}
-
-
-@app.get("/api/v1/debug-test")
-def debug_test():
-    """
-    Test endpoint for debugging - set a breakpoint here!
-    """
-    message = "This is a debug test endpoint"
-    data = {
-        "message": message,
-        "timestamp": "2025-09-08",
-        "debug": True
-    }
-    # Set a breakpoint on the next line to test debugging
-    result = {"status": "debug-success", "data": data}
-    return result
+# --- API Routers ---
+# Include all routers with the global prefix
+app.include_router(health.router, prefix=API_PREFIX, tags=["Health"])
+app.include_router(chat.router, prefix=API_PREFIX, tags=["Chat"])
+app.include_router(auth.router, prefix=API_PREFIX, tags=["Authentication"])
+app.include_router(users.router, prefix=API_PREFIX, tags=["Users"])
 
 
 # --- Static File Serving ---
