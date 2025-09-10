@@ -37,8 +37,14 @@ services:
     image: amazon/dynamodb-local:latest
     ports:
       - "8001:8000"
+    volumes:
+      # Mount a volume for DynamoDB data persistence
+      - dynamodb_data:/home/dynamodblocal/data
+    working_dir: /home/dynamodblocal
     command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-optimizeDbBeforeStartup", "-dbPath", "./data"]
 
 volumes:
   # Define the named volume used by the frontend service.
   node_modules:
+  # Define the named volume for DynamoDB data persistence
+  dynamodb_data:
