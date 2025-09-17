@@ -16,6 +16,7 @@ services:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     environment:
       # Define development-specific environment variables here.
+      - APP_ENV=LOCAL
       - ENV=development
 
   frontend:
@@ -38,10 +39,10 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      # Mount a volume for DynamoDB data persistence
-      - dynamodb_data:/home/dynamodblocal/data
+      # Change this from a named volume to a bind mount
+      - ./data/dynamodb:/home/dynamodblocal/data
     working_dir: /home/dynamodblocal
-    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-optimizeDbBeforeStartup", "-dbPath", "./data"]
+    command: [ "-jar", "DynamoDBLocal.jar", "-sharedDb", "-optimizeDbBeforeStartup", "-dbPath", "./data" ]
 
 volumes:
   # Define the named volume used by the frontend service.

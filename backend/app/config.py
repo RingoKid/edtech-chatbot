@@ -26,8 +26,26 @@ class Settings(BaseSettings):
     aws_region: str = "dummy"
     
     # DynamoDB configuration
-    dynamodb_table_name: str = "EdTechChatbotTable"
+    dynamodb_table_name: Optional[str] = None
     # Use local DynamoDB endpoint for development, None for production AWS
     dynamodb_endpoint_url: Optional[str] = None
+    
+    @property
+    def table_name(self) -> str:
+        """
+        Generate table name based on environment.
+        Returns environment-specific table names:
+        - LOCAL: EdTechChatbotTable-local
+        - SANDBOX: EdTechChatbotTable-sandbox  
+        - PRODUCTION: EdTechChatbotTable-prod
+        """
+        base_name = self.dynamodb_table_name or "EdTechChatbotTable"
+        
+        if self.app_env == AppEnv.LOCAL:
+            return f"{base_name}-local"
+        elif self.app_env == AppEnv.SANDBOX:
+            return f"{base_name}-sandbox"
+        else:  # PRODUCTION
+            return f"{base_name}-prod"
 
 settings = Settings()

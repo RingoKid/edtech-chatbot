@@ -30,7 +30,7 @@ def get_dynamodb_resource():
 dynamodb = get_dynamodb_resource()
 
 # Global table reference
-table = dynamodb.Table(settings.dynamodb_table_name)
+table = dynamodb.Table(settings.table_name)
 
 
 def get_db():
