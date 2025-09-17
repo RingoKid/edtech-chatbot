@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 debugpy
 pytest
+pytest-asyncio
 httpx
 langsmith
 langchain

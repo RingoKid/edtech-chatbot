@@ -16,8 +16,9 @@ services:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     environment:
       # Define development-specific environment variables here.
-      - APP_ENV=LOCAL
+      - APP_ENV=local
       - ENV=development
+      - PYTHONPATH=/app
 
   frontend:
     # Use the base node image directly for the React development server.
