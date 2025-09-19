@@ -1,0 +1,144 @@
+.page {
+  min-height: 100vh;
+  padding: 4rem 2rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  color: rgba(255,255,255,0.92);
+}
+
+.header {
+  width: 100%;
+  max-width: 1100px;
+  text-align: center;
+}
+
+.header h1 {
+  margin: 0 0 6px 0;
+  font-size: 1.8rem;
+  color: rgba(255,255,255,0.98);
+}
+
+.lead {
+  margin: 0;
+  color: rgba(255,255,255,0.72);
+}
+
+.main {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto; /* keep main centered within page */
+  display: flex;
+  gap: 24px;
+}
+
+.left {
+  flex: 1 1 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.right {
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card, .panel {
+  /* visual surface is provided by AppBubble */
+  background: transparent;
+  border-radius: 12px;
+  padding: 18px;
+  color: rgba(255,255,255,0.92);
+  box-shadow: none;
+}
+
+.card h2, .panel h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.05rem;
+  color: rgba(255,255,255,0.96);
+}
+
+.cardLead {
+  margin: 0 0 12px 0;
+  color: rgba(255,255,255,0.72);
+}
+
+.primary {
+  background: linear-gradient(90deg, #2563eb, #06b6d4);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(37,99,235,0.12);
+  font-family: 'Poppins', sans-serif;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.secondary {
+  background: transparent;
+  color: rgba(37,99,235,1);
+  border: 1px solid rgba(37,99,235,0.12);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.placeholder {
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  color: rgba(255,255,255,0.72);
+}
+
+.preview {
+  min-height: 140px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+}
+
+.controlsRow { display:flex; gap:12px; align-items:center; }
+
+.modeRow { display:flex; gap:12px; }
+.modeBtn {
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,0.02);
+  text-align: left;
+}
+.modeActive {
+  background: linear-gradient(90deg,#2563eb,#06b6d4);
+  color: white;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.modeNote { font-size: 0.8rem; color: rgba(255,255,255,0.6);} 
+
+/* Responsive layout: stack panels on narrower viewports */
+@media (max-width: 900px) {
+  .main {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .right {
+    width: 100%;
+  }
+  .left {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 2rem 1rem; }
+  .header h1 { font-size: 1.3rem; }
+  .main { gap: 10px; }
+}

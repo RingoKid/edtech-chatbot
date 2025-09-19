@@ -1,0 +1,11 @@
+.app {
+  font-family: 'Poppins', 'Inter', Arial, sans-serif;
+  color: var(--app-text, #fff);
+  min-height: 100vh;
+  background: #07070a;
+  --color-primary: #ffffff;
+  --color-secondary: #d1d1d6;
+  --app-bg: #07070a;
+  --app-text: #ffffff;
+  padding-top: 80px; /* space for fixed AppBar */
+}

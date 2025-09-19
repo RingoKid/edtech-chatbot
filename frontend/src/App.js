@@ -1,137 +1,69 @@
-import { useState, useEffect } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Header from './components/Header';
+import Hero from './components/Hero';
+import HomeSections from './components/HomeSections';
+import AiTool from './pages/AiTool';
+import BestPractices from './pages/BestPractices';
+import Videos from './pages/Videos';
+import VideoDetail from './pages/VideoDetail';
+import styles from './App.module.css';
+
+// MUI
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { useState, useMemo, useEffect } from 'react';
+import CssBaseline from '@mui/material/CssBaseline';
+
+function makeTheme(mode) {
+  return createTheme({
+    palette: {
+      mode,
+      primary: { main: mode === 'dark' ? '#ffffff' : '#000000' },
+      secondary: { main: '#d1d1d6' },
+      background: { default: mode === 'dark' ? '#07070a' : '#ffffff', paper: mode === 'dark' ? '#0b0b0d' : '#f7f7f8' },
+      text: { primary: mode === 'dark' ? '#ffffff' : '#0b0b0d', secondary: '#6b6b6f' }
+    },
+    typography: {
+      fontFamily: ['Poppins', 'Inter', 'Open Sans', 'Arial'].join(','),
+      button: {
+        textTransform: 'none',
+        fontWeight: 700
+      }
+    },
+    shape: { borderRadius: 12 }
+  });
+}
 
 function App() {
-  // State variables - great places to set breakpoints!
-  const [message, setMessage] = useState('Loading...');
-  const [debugData, setDebugData] = useState(null);
-  const [counter, setCounter] = useState(0);
-  const [apiStatus, setApiStatus] = useState('unknown');
+  const [mode, setMode] = useState(() => localStorage.getItem('siteMode') || 'dark');
 
-  // useEffect hook - excellent debugging spot for component lifecycle
   useEffect(() => {
-    console.log('Component mounted - set breakpoint here!');
-    checkApiHealth();
-  }, []);
+    localStorage.setItem('siteMode', mode);
+  }, [mode]);
 
-  // API call function - perfect for debugging HTTP requests
-  const checkApiHealth = async () => {
-    try {
-      console.log('Checking API health...');
-      const response = await fetch('http://localhost:8000/api/v1/health');
-      const data = await response.json();
-      
-      // Set breakpoint here to inspect API response
-      setApiStatus(data.status);
-      setMessage('Backend API is connected!');
-    } catch (error) {
-      // Set breakpoint here to debug API errors
-      console.error('API Error:', error);
-      setApiStatus('error');
-      setMessage('Backend API not available');
-    }
-  };
+  const theme = useMemo(() => makeTheme(mode), [mode]);
 
-  // Event handler - great for debugging user interactions
-  const handleCounterClick = () => {
-    // Set breakpoint here to debug button clicks
-    console.log('Button clicked! Current counter:', counter);
-    setCounter(prevCounter => {
-      const newCounter = prevCounter + 1;
-      console.log('Counter updated to:', newCounter);
-      return newCounter;
-    });
-  };
-
-  // Debug API test function
-  const testDebugEndpoint = async () => {
-    try {
-      console.log('Testing debug endpoint...');
-      // Set breakpoint here to debug the debug endpoint call
-      const response = await fetch('http://localhost:8000/api/v1/debug-test');
-      const data = await response.json();
-      
-      // Set breakpoint here to inspect debug data
-      console.log('Debug endpoint response:', data);
-      setDebugData(data);
-    } catch (error) {
-      console.error('Debug endpoint error:', error);
-      setDebugData({ error: 'Failed to call debug endpoint' });
-    }
-  };
+  const toggleMode = () => setMode((m) => (m === 'dark' ? 'light' : 'dark'));
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        
-        {/* Status indicators - set breakpoints in render logic */}
-        <div style={{ marginBottom: '20px' }}>
-          <p>API Status: <span style={{ color: apiStatus === 'ok' ? 'green' : 'red' }}>
-            {apiStatus}
-          </span></p>
-          <p>{message}</p>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BrowserRouter>
+        <div className={styles.app}>
+          <Header mode={mode} onToggleTheme={toggleMode} />
+          <Routes>
+            <Route path="/" element={<div className={styles.page + ' backgroundImagePage'}>
+              <Hero />
+              <HomeSections />
+            </div>} />
+            <Route path="/ai-tool" element={<AiTool />} />
+            <Route path="/best-practices" element={<BestPractices />} />
+            <Route path="/videos/:topic" element={<Videos />} />
+            <Route path="/watch/:topic/:index" element={<VideoDetail />} />
+          </Routes>
         </div>
-
-        {/* Interactive counter - great for debugging state changes */}
-        <div style={{ marginBottom: '20px' }}>
-          <h3>Counter: {counter}</h3>
-          <button 
-            onClick={handleCounterClick}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#61dafb',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Click me! (Set breakpoint in handler)
-          </button>
-        </div>
-
-        {/* Debug API test button */}
-        <div style={{ marginBottom: '20px' }}>
-          <button 
-            onClick={testDebugEndpoint}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#ff6b6b',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Test Backend Debug Endpoint
-          </button>
-        </div>
-
-        {/* Debug data display */}
-        {debugData && (
-          <div style={{ 
-            backgroundColor: 'rgba(255,255,255,0.1)', 
-            padding: '15px', 
-            borderRadius: '5px',
-            maxWidth: '600px',
-            textAlign: 'left'
-          }}>
-            <h4>Debug Response:</h4>
-            <pre style={{ fontSize: '12px', overflow: 'auto' }}>
-              {JSON.stringify(debugData, null, 2)}
-            </pre>
-          </div>
-        )}
-
-        <p style={{ marginTop: '20px', fontSize: '14px' }}>
-          🎯 <strong>Frontend Debug Tips:</strong><br/>
-          Set breakpoints in React DevTools or VS Code on the lines marked with console.log!
-        </p>
-      </header>
-    </div>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
