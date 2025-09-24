@@ -17,6 +17,7 @@ services:
     environment:
       # Define development-specific environment variables here.
       - ENV=development
+      - PYTHONPATH=/app
 
   frontend:
     # Use the base node image directly for the React development server.
@@ -38,10 +39,10 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      # Mount a volume for DynamoDB data persistence
-      - dynamodb_data:/home/dynamodblocal/data
+      # Change this from a named volume to a bind mount
+      - ./data/dynamodb:/home/dynamodblocal/data
     working_dir: /home/dynamodblocal
-    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-optimizeDbBeforeStartup", "-dbPath", "./data"]
+    command: [ "-jar", "DynamoDBLocal.jar", "-sharedDb", "-optimizeDbBeforeStartup", "-dbPath", "./data" ]
 
 volumes:
   # Define the named volume used by the frontend service.

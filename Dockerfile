@@ -25,6 +25,21 @@ ENV PYTHONUNBUFFERED=1 \
 # Set the working directory for the final application.
 WORKDIR /app
 
+# Install system dependencies including wget and unzip for AWS CLI
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install AWS CLI
+RUN wget "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws
+
+RUN ln -sf /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws
+
 # Install Python dependencies efficiently.
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
