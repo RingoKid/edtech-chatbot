@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
 from app.routers import health, chat, auth, users
@@ -11,6 +12,18 @@ API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
 
 # Initialize the FastAPI application
 app = FastAPI()
+
+# Define allowed origins for CORS
+allowed_origins = ['*']
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- API Routers ---
 # Include all routers with the global prefix

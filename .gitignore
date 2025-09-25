@@ -208,3 +208,7 @@ __marimo__/
 
 # Environment files
 .env.*
+
+
+# Local database files
+*.db
