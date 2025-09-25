@@ -1,18 +1,25 @@
 version: 0.2
 
 phases:
+  install:
+    # Install Python dependencies in the CodeBuild environment to run tests
+    commands:
+      - echo "Installing backend dependencies for testing..."
+      - pip install -r backend/requirements.txt
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region [us-east-1] | docker login --username AWS --password-stdin [522534289122].dkr.ecr.[us-east-1].amazonaws.com
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 522534289122.dkr.ecr.us-east-1.amazonaws.com
   build:
     commands:
-      - echo Build started on `date`
-      - echo Building the Docker image...
-      - docker build -t [522534289122].dkr.ecr.[us-east-1].amazonaws.com/edtech-chatbot:latest .
+      # --- Test Execution ---
+      - echo "Running backend unit tests..."
+      - pytest backend/
+
+      # --- Docker Build (only runs if tests pass) ---
+      - echo "Building the final Docker image..."
+      - docker build -t 522534289122.dkr.ecr.us-east-1.amazonaws.com/edtech-chatbot:latest .
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing the Docker image...
-      - docker push [522534289122].dkr.ecr.[us-east-1].amazonaws.com/edtech-chatbot:latest
-      - echo Pushed the Docker image successfully
+      - echo "Pushing the Docker image to ECR..."
+      - docker push 522534289122.dkr.ecr.us-east-1.amazonaws.com/edtech-chatbot:latest
