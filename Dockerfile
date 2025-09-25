@@ -1,6 +1,6 @@
 # --- Stage 1: Build React Frontend (Builder Stage) ---
 # Use the official Node.js 22 LTS (Long-Term Support) image.
-FROM node:22-alpine AS builder
+FROM public.ecr.aws/docker/library/node:22-alpine AS builder
 
 # Set the working directory within the builder stage.
 WORKDIR /app/frontend
@@ -16,7 +16,7 @@ RUN npm run build
 
 # --- Stage 2: Final Production Image ---
 # Use a slim, secure, and stable Python base image.
-FROM python:3.12-slim AS final
+FROM public.ecr.aws/docker/library/python:3.12-slim AS final
 
 # Set recommended environment variables for running Python in a container.
 ENV PYTHONUNBUFFERED=1 \
