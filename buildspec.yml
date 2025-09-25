@@ -5,7 +5,7 @@ phases:
     # Install Python dependencies in the CodeBuild environment to run tests
     commands:
       - echo "Installing backend dependencies for testing..."
-      - pip install -r backend/requirements.txt
+      - pip install -r backend/requirements-dev.txt
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
