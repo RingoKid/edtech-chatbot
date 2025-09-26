@@ -13,7 +13,7 @@ function App() {
     setHealthStatus(null);
 
     try {
-      const response = await fetch('https://6z3gpgnt7a.us-east-1.awsapprunner.com/api/v1/health');
+      const response = await fetch('https://mkbifgscip.us-east-1.awsapprunner.com//api/v1/health');
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
