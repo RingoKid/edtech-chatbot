@@ -48,7 +48,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ./backend/app ./app
 
 # Copy the compiled static frontend assets from the 'builder' stage.
-COPY --from=builder /app/frontend/build ./static
+COPY --from=builder /app/frontend/dist ./static
 
 # Expose the port the application will listen on.
 EXPOSE 8000
