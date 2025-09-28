@@ -4,10 +4,9 @@ Contains endpoints for chat functionality and conversation management.
 """
 from fastapi import APIRouter
 
-router = APIRouter()
+router = APIRouter(prefix="/chat", tags=["Chat"])
 
-
-@router.get("/chat", tags=["Chat"])
+@router.get("/status")
 def get_chat_status():
     """
     Placeholder endpoint for chat functionality.
