@@ -2,10 +2,7 @@
 services:
   backend:
     build:
-      context: .
-      # Target the final stage, but we will override the CMD and mount source code.
-      # This ensures dev dependencies are aligned if you add a dev stage later.
-      target: final 
+      context: ./backend
     ports:
       - "8000:8000"
     volumes:
@@ -20,19 +17,10 @@ services:
       - PYTHONPATH=/app
 
   frontend:
-    # Use the base node image directly for the React development server.
-    image: node:22-alpine
-    working_dir: /app/frontend
+    build:
+      context: ./frontend
     ports:
-      - "3000:5173" # Vite dev server runs on 5173 by default
-    volumes:
-      # Mount the frontend source code.
-      - ./frontend:/app/frontend
-      # Use a named volume for node_modules to prevent host OS from overwriting it.
-      # This isolates dependencies inside the container for performance and consistency.
-      - node_modules:/app/frontend/node_modules
-    # Command to install dependencies (if not already present) and start the dev server.
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+      - "3000:80" # Map host port 3000 to container port 80 (nginx)
 
   dynamodb-local:
     image: amazon/dynamodb-local:latest
@@ -45,7 +33,5 @@ services:
     command: [ "-jar", "DynamoDBLocal.jar", "-sharedDb", "-optimizeDbBeforeStartup", "-dbPath", "./data" ]
 
 volumes:
-  # Define the named volume used by the frontend service.
-  node_modules:
   # Define the named volume for DynamoDB data persistence
   dynamodb_data:
