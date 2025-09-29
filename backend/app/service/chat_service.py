@@ -1,25 +1,41 @@
 """
 Chat service module containing the core chatbot logic.
-This service encapsulates LangGraph integration and message handling.
+This service encapsulates LangChain LCEL chain integration and message handling.
 """
 
 from typing import Dict, Any
 import asyncio
 import uuid
 
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
+from app.config import settings
+
 
 class ChatService:
     """
-    Service class that encapsulates the core chatbot logic using LangGraph.
+    Service class that encapsulates the core chatbot logic using LangChain LCEL.
     This service will be dependency-injected into the API router.
     """
     
     def __init__(self):
         """
-        Initialize the ChatService with a placeholder for LangGraph graph.
+        Initialize the ChatService with LangChain LCEL chain.
         """
-        # Placeholder for LangGraph graph - will be initialized later
-        self.graph = None
+        # Initialize ChatOpenAI model with API key from settings
+        model = ChatOpenAI(
+            api_key=settings.openai_api_key.get_secret_value() if settings.openai_api_key else None
+        )
+        
+        # Create a simple ChatPromptTemplate
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are a helpful assistant."),
+            ("user", "{input}")
+        ])
+        
+        # Define the LCEL chain
+        self.chain = prompt | model | StrOutputParser()
     
     def create_new_thread(self, user_id: str) -> str:
         """
@@ -51,13 +67,11 @@ class ChatService:
         if thread_id is None:
             thread_id = self.create_new_thread(user_id)
         
-        # Simulate some async processing time
-        await asyncio.sleep(0.1)
+        # Invoke the LCEL chain with the user message
+        reply = await self.chain.ainvoke({"input": user_message})
         
-        # For now, simulate invoking the graph and getting a response
-        # This will be replaced with actual LangGraph integration later
         response = {
-            "reply": f"Graph received: {user_message}",
+            "reply": reply,
             "thread_id": thread_id
         }
         
