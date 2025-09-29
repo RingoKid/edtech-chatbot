@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, SecretStr
 from typing import Optional, Any
 from enum import Enum
 import os
@@ -51,6 +51,14 @@ class Settings(BaseSettings):
     dynamodb_table_name: Optional[str] = Field(default=None, alias="DYNAMODB_TABLE_NAME")
     # Use local DynamoDB endpoint for development, None for production AWS
     dynamodb_endpoint_url: Optional[str] = Field(default=None, alias="DYNAMODB_ENDPOINT_URL")
+    
+    # LangSmith configuration for tracing and monitoring
+    langsmith_tracing: Optional[str] = Field(default=None, alias="LANGSMITH_TRACING")
+    langsmith_api_key: Optional[str] = Field(default=None, alias="LANGSMITH_API_KEY")
+    langsmith_workspace_id: Optional[str] = Field(default=None, alias="LANGSMITH_WORKSPACE_ID")
+    
+    # OpenAI API configuration
+    openai_api_key: Optional[SecretStr] = Field(default=None, alias="OPENAI_API_KEY")
     
     @property
     def table_name(self) -> str:
