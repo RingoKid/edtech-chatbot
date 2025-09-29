@@ -1,5 +1,5 @@
 # Use a slim, secure, and stable Python base image.
-FROM public.ecr.aws/docker/library/python:3.12-slim
+FROM public.ecr.aws/docker/library/python:3.12-slim AS final
 
 # Set recommended environment variables for running Python in a container.
 ENV PYTHONUNBUFFERED=1 \
