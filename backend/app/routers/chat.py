@@ -1,48 +1,67 @@
 """
 Chat router for the FastAPI application.
-Contains endpoints for chat functionality and conversation management.
+Contains HTTP endpoints for testing lesson planner graph functionality.
 """
-from fastapi import APIRouter, Depends
-from app.service import ChatService
-from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
-
-
-def get_chat_service() -> ChatService:
-    """
-    Dependency factory for ChatService injection.
-    """
-    return ChatService()
+import uuid
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
-@router.post("/", response_model=ChatMessageResponse)
-async def chat(
-    chat_message: ChatMessageRequest,
-    chat_service: ChatService = Depends(get_chat_service)
-) -> ChatMessageResponse:
+class LessonPlanResponse(BaseModel):
+    """Response model for lesson plan generation."""
+    thread_id: str
+    topic: str
+    lesson_plan: str
+    status: str
+
+
+@router.get("/test-lesson-planner")
+async def test_lesson_planner():
     """
-    Main chat endpoint that processes user messages and returns AI responses.
+    HTTP endpoint to test the lesson planner graph with a hardcoded handwriting topic.
     
-    Args:
-        chat_message (ChatMessageRequest): The chat message containing thread_id and message
-        chat_service (ChatService): Injected ChatService instance
-        
     Returns:
-        ChatMessageResponse: Response from the chat service with thread_id and reply
+        LessonPlanResponse: The generated lesson plan for handwriting
     """
-    # Use placeholder user_id for now - this could be extracted from authentication later
-    user_id = "user_placeholder"
+    # Generate a unique thread_id for LangSmith tracing
+    thread_id = str(uuid.uuid4())
+    config = {"configurable": {"thread_id": thread_id}}
     
-    response_dict = await chat_service.handle_message(
-        user_message=chat_message.message,
-        user_id=user_id,
-        thread_id=chat_message.thread_id
-    )
+    # Hardcoded topic for testing
+    hardcoded_topic = "handwriting"
     
-    # Construct and return ChatMessageResponse object
-    return ChatMessageResponse(
-        thread_id=response_dict["thread_id"],
-        reply=response_dict["reply"]
-    )
+    try:
+        # Import the lesson planner app here to catch import errors
+        from app.graph.lesson_planner import lesson_planner_app
+        
+        # Test the graph with the handcoded topic
+        topic_input = {"topic": hardcoded_topic}
+        
+        # Invoke the graph (not streaming for HTTP response)
+        result = lesson_planner_app.invoke(topic_input, config=config)
+        
+        # Extract the lesson plan from the result
+        lesson_plan_content = result.get("lesson_plan", "No lesson plan generated")
+        
+        return LessonPlanResponse(
+            thread_id=thread_id,
+            topic=hardcoded_topic,
+            lesson_plan=lesson_plan_content,
+            status="success"
+        )
+        
+    except ImportError as import_error:
+        print(f"Import error for thread {thread_id}: {str(import_error)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to import lesson planner: {str(import_error)}"
+        )
+    except Exception as e:
+        print(f"Error generating lesson plan for thread {thread_id}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate lesson plan: {str(e)}"
+        )

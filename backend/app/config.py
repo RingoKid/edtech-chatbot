@@ -55,7 +55,8 @@ class Settings(BaseSettings):
     # LangSmith configuration for tracing and monitoring
     langsmith_tracing: Optional[str] = Field(default=None, alias="LANGSMITH_TRACING")
     langsmith_api_key: Optional[str] = Field(default=None, alias="LANGSMITH_API_KEY")
-    langsmith_workspace_id: Optional[str] = Field(default=None, alias="LANGSMITH_WORKSPACE_ID")
+    langsmith_endpoint: Optional[str] = Field(default=None, alias="LANGSMITH_ENDPOINT")
+    langsmith_project: Optional[str] = Field(default=None, alias="LANGSMITH_PROJECT")
     
     # OpenAI API configuration
     openai_api_key: Optional[SecretStr] = Field(default=None, alias="OPENAI_API_KEY")
