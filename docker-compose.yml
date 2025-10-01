@@ -8,6 +8,7 @@ services:
       target: final 
     ports:
       - "8000:8000"
+      - "2024:2024"  # Add LangGraph Studio port
     volumes:
       # Mount your local backend source code into the container.
       # Changes on your host will be reflected immediately inside the container.

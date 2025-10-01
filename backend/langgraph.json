@@ -1,0 +1,8 @@
+{
+  "$schema": "https://langgra.ph/schema.json",
+  "dependencies": ["."],
+  "graphs": {
+    "lesson_planner": "./app/graph/graph.py:graph"
+  }
+}
+
