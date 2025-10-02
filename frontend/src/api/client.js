@@ -21,6 +21,7 @@ async function request(path, options = {}) {
   }
 
   if (!res.ok) {
+    // Normalize various FastAPI error shapes into a readable message
     let errorMsg;
     if (data?.detail) {
       if (typeof data.detail === 'string') {
