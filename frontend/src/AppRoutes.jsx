@@ -8,11 +8,16 @@ import VocabularySyntax from './pages/VocabularySyntax'
 import IdeaGeneration from './pages/IdeaGeneration'
 import AITeachingAssistant from './pages/AITeachingAssistant'
 import VideoPlayer from './pages/VideoPlayer'
+import TeachProperWayToHold from './pages/handwriting-spelling/TeachProperWayToHoldPencil.jsx'
+import SequenceofStroles from './pages/handwriting-spelling/SequenceofStroles.jsx'
+import RetrieveandConnectPatterns from './pages/handwriting-spelling/RetrieveandConnectPatterns.jsx'
+import PronounceIdentifyIsolatePhoneme from './pages/handwriting-spelling/PronounceIdentifyIsolatePhoneme.jsx'
+import PhonemeGraphemePatterns from './pages/handwriting-spelling/PhonemeGraphemePatterns.jsx'
+import InventedSpelling from './pages/handwriting-spelling/InventedSpelling.jsx'
+import Directionality from './pages/handwriting-spelling/Directionality.jsx'
+import CorrectiveFeedback from './pages/handwriting-spelling/CorrectiveFeedback.jsx'
+import CompareContrastLetterForms from './pages/handwriting-spelling/CompareContrastLetterForms.jsx'
 
-// Handwriting & Spelling Pages
-import MakingLetterFormationAutomatic from './pages/handwriting-spelling/MakingLetterFormationAutomatic'
-import PhonologicalAwarenessActivities from './pages/handwriting-spelling/PhonologicalAwarenessActivities'
-import MultiSensoryWritingApproaches from './pages/handwriting-spelling/MultiSensoryWritingApproaches'
 
 const AppRoutes = () => {
   return (
@@ -27,9 +32,16 @@ const AppRoutes = () => {
         <Route path="ai-teaching-assistant" element={<AITeachingAssistant />} />
         
         {/* Handwriting & Spelling Individual Pages */}
-        <Route path="handwriting-spelling/making-letter-formation-automatic" element={<MakingLetterFormationAutomatic />} />
-        <Route path="handwriting-spelling/phonological-awareness-activities" element={<PhonologicalAwarenessActivities />} />
-        <Route path="handwriting-spelling/multi-sensory-writing-approaches" element={<MultiSensoryWritingApproaches />} />
+        <Route path="handwriting-spelling/proper-way-to-hold" element={<TeachProperWayToHold/>} />
+        <Route path="handwriting-spelling/sequence-strokes" element={<SequenceofStroles/>} />
+        <Route path="handwriting-spelling/pronounce-identify" element={<PronounceIdentifyIsolatePhoneme/>} />
+        <Route path="handwriting-spelling/retrieve-connect" element={<RetrieveandConnectPatterns/>} />
+        <Route path="handwriting-spelling/phoneme-graphene" element={<PhonemeGraphemePatterns/>} />
+        <Route path="handwriting-spelling/compare-contrast" element={<CompareContrastLetterForms/>} />
+        <Route path="handwriting-spelling/invented-spelling" element={<InventedSpelling/>} />
+        <Route path="handwriting-spelling/directionality" element={<Directionality/>} />
+        <Route path="handwriting-spelling/corrective-feedback" element={<CorrectiveFeedback/>} />
+
       </Route>
     </Routes>
   )

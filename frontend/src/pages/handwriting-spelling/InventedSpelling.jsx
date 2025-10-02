@@ -3,32 +3,33 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Play } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-const PhonologicalAwarenessActivities = () => {
+const InventedSpelling = () => {
   const videoData = {
-    title: "Phonological Awareness Activities",
-    description: "Building sound-letter connections through interactive games and systematic phonics instruction to help children develop essential reading and spelling skills.",
-    videoUrl: "https://www.youtube-nocookie.com/embed/sample-video-id?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
-    content: "Phonological awareness is the ability to hear, identify, and manipulate the individual sounds in spoken words. This foundational skill is crucial for reading and spelling development.\n\nKey activities include:\n• Sound identification games\n• Rhyming exercises\n• Syllable clapping\n• Beginning sound matching\n• Sound blending and segmentation"
+    title: "Encourage Invented Spelling",
+    description: "Using the correct pencil grip helps children develop fine motor skills and hand control, making writing more comfortable, legible, and efficient",
+    videoUrl: "https://www.youtube-nocookie.com/embed/YRTKFejSEH0?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+    content: "How to hold a pencil?\n" +
+        "Use the tripod grip- Hold the pencil gently between the thumb and index finger, with the pencil resting on the middle finger."
   }
 
   const exploreMoreVideos = [
     {
       id: 1,
-      title: "Making Letter Formation Automatic",
-      thumbnail: "/src/assets/images/letter-formation-thumbnail.png",
-      videoUrl: "/handwriting-spelling/making-letter-formation-automatic"
+      title: "Phoneme-Grapheme Patterns",
+      thumbnail: "/src/assets/images/phoneme-grapheme.jpg",
+      videoUrl: "/handwriting-spelling/phoneme-grapheme-patterns"
+    },
+    {
+      id: 2,
+      title: "Phonological Awareness Activities",
+      thumbnail: "/src/assets/images/phonological-awareness.jpg",
+      videoUrl: "/handwriting-spelling/phonological-awareness-activities"
     },
     {
       id: 3,
-      title: "Multi-Sensory Writing Approaches",
-      thumbnail: "/src/assets/images/multisensory-writing.jpg",
-      videoUrl: "/handwriting-spelling/multi-sensory-writing-approaches"
-    },
-    {
-      id: 4,
-      title: "Letter-Sound Correspondence Practice",
-      thumbnail: "/src/assets/images/letter-sound.jpg",
-      videoUrl: "/handwriting-spelling/letter-sound-correspondence-practice"
+      title: "Corrective Feedback",
+      thumbnail: "/src/assets/images/corrective-feedback.jpg",
+      videoUrl: "/handwriting-spelling/corrective-feedback"
     }
   ]
 
@@ -170,4 +171,4 @@ const PhonologicalAwarenessActivities = () => {
   )
 }
 
-export default PhonologicalAwarenessActivities
+export default InventedSpelling
