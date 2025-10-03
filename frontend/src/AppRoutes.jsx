@@ -25,6 +25,11 @@ import VocabularySentenceStructures from './pages/vocabulary/VocabularySentenceS
 import VocabularySupport from './pages/vocabulary/VocabularySupport.jsx'
 import SentenceBuilding from './pages/vocabulary/SentenceBuilding.jsx'
 import CompositionCues from "./pages/vocabulary/CompositionCues.jsx";
+import TopicandPurposeExplanation from './pages/idea-generation/TopicandPurposeExplanation.jsx'
+import TopicRecall from './pages/idea-generation/TopicRecall.jsx'
+import ConnectorWords from './pages/idea-generation/ConnectorWords.jsx'
+import ContentIntegration from "./pages/idea-generation/ContentIntegration.jsx";
+import CueQuestion from './pages/idea-generation/CueQuestion.jsx'
 
 
 const AppRoutes = () => {
@@ -59,6 +64,15 @@ const AppRoutes = () => {
         <Route path="vocabulary/vocabulary-support" element={<VocabularySupport/>} />
         <Route path="vocabulary/sentence-building" element={<SentenceBuilding/>} />
         <Route path="vocabulary/composition-cues" element={<CompositionCues/>} />
+
+        {/* Idea Organisation and Generation Individual Pages */}
+        <Route path="idea-generation/topic-purpose" element={<TopicandPurposeExplanation/>} />
+        <Route path="idea-generation/topic-recall" element={<TopicRecall/>} />
+        <Route path="idea-generation/connector-words" element={<ConnectorWords/>} />
+        <Route path="idea-generation/content-integration" element={<ContentIntegration/>} />
+        <Route path="idea-generation/cue-question" element={<CueQuestion/>} />
+
+
 
 
       </Route>
