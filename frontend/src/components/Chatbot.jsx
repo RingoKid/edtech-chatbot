@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Bot, User, Loader, RotateCcw, ChevronDown } from 'lucide-react'
 import { cn } from '../utils/cn'
+import { chat } from '../api'
 
 const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   const [messages, setMessages] = useState([
@@ -112,17 +113,30 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
       onNewMessage()
     }
 
-    await simulateTyping()
-
-    const response = generateResponse(inputValue)
-    const botResponse = {
-      id: Date.now() + 1,
-      type: 'bot',
-      content: response,
-      timestamp: new Date()
+    // First try backend chat endpoint; if it fails fall back to local generator
+    setIsTyping(true)
+    try {
+      const res = await chat.send(inputValue)
+      const botResponse = {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: res?.reply ?? generateResponse(inputValue),
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, botResponse])
+    } catch (err) {
+      // fallback to local response
+      const response = generateResponse(inputValue)
+      const botResponse = {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: response,
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, botResponse])
+    } finally {
+      setIsTyping(false)
     }
-
-    setMessages(prev => [...prev, botResponse])
   }
 
   const handleKeyPress = (e) => {
