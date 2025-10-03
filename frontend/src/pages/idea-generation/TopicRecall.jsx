@@ -43,11 +43,11 @@ const TopicRecall = () => {
                         transition={{ duration: 0.6 }}
                     >
                         <Link
-                            to="/videos/vocabulary"
+                            to="/videos/idea-generation"
                             className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium mb-8 transition-colors"
                         >
                             <ArrowLeft className="w-5 h-5 mr-2" />
-                            Back to Vocabulary
+                            Back to Idea Generation
                         </Link>
                     </motion.div>
                 </div>
