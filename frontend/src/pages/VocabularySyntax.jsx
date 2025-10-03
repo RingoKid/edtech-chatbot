@@ -7,45 +7,52 @@ const VocabularySyntax = () => {
   const videoItems = [
     {
       id: 1,
-      title: "Multiple Vocabulary Opportunities",
-      description: "Provide multiple opportunities for children to use vocabulary words from their unit or theme during sentence generation tasks",
+      title: "Provide multiple opportunities for children to use vocabulary words from their unit or theme during sentence generation tasks",
+      description: "Supports retrieval of vocabulary words in different contexts, strengthening word depth",
       thumbnail: "/src/assets/images/vocab1.png",
-      videoUrl: "https://example.com/vocab-video1"
+      videoUrl: "/vocabulary/sentence-building"
     },
     {
       id: 2,
-      title: "Systematic Language Structure Focus",
-      description: "Explicitly and systematically focus on one language structure at a time–like subject-verb clauses or prepositional phrases–to build sentence awareness",
-      thumbnail: "/src/assets/images/sstructure.png",
-      videoUrl: "https://example.com/vocab-video2"
+      title: "Encourage children to play with words by making connections, grouping them into categories, and exploring how they relate to the writing topic or unit theme",
+      description: "Supports retrieval of vocabulary across contexts, enhancing depth of word knowledge.",
+      thumbnail: "/src/assets/images/structure.png",
+      videoUrl: "/vocabulary/vocabulary-support"
     },
     {
       id: 3,
-      title: "Guided Vocabulary Prompting",
-      description: "Prompt children to use specific vocabulary and sentence structures while they compose.",
+      title: "Teach children connecting words like \"because\" for cause and effect and \"also\" to add ideas, helping their thoughts clearly in writing",
+      description: "Promotes cognitive organization by teaching relative and additive connectives to clarify and expand ideas in oral and written language.",
       thumbnail: "/src/assets/images/cuevocab.png",
-      videoUrl: "https://example.com/vocab-video3"
+      videoUrl: "/vocabulary/connecting-words"
     },
     {
       id: 4,
-      title: "Word Play and Connections",
-      description: "Encourage children to play with words by making connections, grouping them into categories, and exploring how they relate to the writing topic or unit theme",
+      title: "Explicitly and systematically focus on one language structure at a time–like subject-verb clauses or prepositional phrases–to build sentence awareness",
+      description: "Explicitly and systematically focus on one language structure at a time–like subject-verb clauses or prepositional phrases–to build sentence awareness",
       thumbnail: "/src/assets/images/vocab2.png",
-      videoUrl: "https://example.com/vocab-video4"
+      videoUrl: "/vocabulary/sentence-awareness"
     },
     {
       id: 5,
-      title: "Sentence Development Support",
-      description: "Support children's sentence development by having them build, rearrange, combine, and expand sentences related to the writing topic or unit theme.",
+      title: "Support children’s sentence development by having them build, rearrange, combine, and expand sentences related to the writing topic or unit theme.",
+      description: "Promotes retrieval and application of syntactic structures, enhancing syntactic fluency.",
       thumbnail: "/src/assets/images/sentencecompletion.png",
-      videoUrl: "https://example.com/vocab-video5"
+      videoUrl: "/vocabulary/sentence-manipulation"
     },
     {
       id: 6,
-      title: "Phonological Knowledge Application",
-      description: "Encourage children to use what they've learned about sounds, spelling patterns, and word parts to try spelling new words. Promotes application of phonological knowledge through invented spelling, strengthening",
+      title: "Connect vocabulary to sentence writing by having children use new words from a unit theme in sentences related to the writing topic.",
+      description: "Builds word depth by expanding contextual usage, strengthening topic-related vocabulary and conceptual mappings.",
       thumbnail: "/src/assets/images/vocab1.png",
-      videoUrl: "https://example.com/vocab-video6"
+      videoUrl: "/vocabulary/sentence-generation"
+    },
+    {
+      id: 7,
+      title: "Prompt children to use specific vocabulary and sentence structures while they compose.",
+      description: "Promotes application of syntactic structures and vocabulary to facilitate transfer of skills to communicative contexts",
+      thumbnail: "/src/assets/images/vocab1.png",
+      videoUrl: "/vocabulary/composition-cues"
     }
   ]
 

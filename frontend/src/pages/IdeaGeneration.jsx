@@ -7,57 +7,57 @@ const IdeaGeneration = () => {
   const videoItems = [
     {
       id: 1,
-      title: "Topic and Purpose Explanation",
-      description: "Clearly explain the writing topic and its purpose, and identify key features of the genre that support that purpose.",
+      title: "Clearly explain the writing topic and its purpose, and identify key features of the genre that support that purpose.",
+      description: "Facilitates construction of a mental blueprint for organizing and retrieving relevant ideas related to topic and genre purpose.",
       thumbnail: "/src/assets/images/topicandpurpose.png",
-      videoUrl: "https://example.com/idea-video1"
+      videoUrl: "/idea-generation/topic-purpose",
     },
     {
       id: 2,
-      title: "Personal Experience Sharing",
-      description: "Invite children to share their own experiences related to the topic—things they've seen, done, or talked about at school, home, or in their community.",
+      title: "Use visuals, read-alouds, and multimedia to help children learn about the topic. These tools support understanding by connecting new information to what children already know, making it easier ",
+      description: "Supports creative thinking by prompting comparisons, analogies, and synthesis",
       thumbnail: "/src/assets/images/topicandpurpose.png",
       videoUrl: "https://example.com/idea-video2"
     },
     {
       id: 3,
-      title: "Guided Questions and Prompts",
-      description: "Use questions and prompts to help children expand their ideas, clarify their thinking, and revise their language before and during writing.",
+      title: "Help children connect the writing topic to what they’ve read, learned in the unit, or experienced in real life.",
+      description: "Supports ability to distinguish relevant from irrelevant details and identify those that develop a central topic",
       thumbnail: "/src/assets/images/usingq.png",
-      videoUrl: "https://example.com/idea-video3"
+      videoUrl: "/idea-generation/connector-words",
     },
     {
       id: 4,
-      title: "Visual and Multimedia Support",
-      description: "Use visuals, read-alouds, and multimedia to help children learn about the topic. These tools support understanding by connecting new information to what children already know, making it easier",
+      title: "Invite children to share their own experiences related to the topic—things they’ve seen, done, or talked about at school, home, or in their community. ",
+      description: "Activates emotional and experiential memory, enhancing idea generation and content richness",
       thumbnail: "/src/assets/images/idea2.png",
       videoUrl: "https://example.com/idea-video4"
     },
     {
       id: 5,
-      title: "Modeling Brainstorming Process",
-      description: "Model the brainstorming process by thinking out loud. Show children how to come up with ideas by saying your thoughts as you connect the writing topic to personal experiences",
+      title: "Model the brainstorming process by thinking out loud. Show children how to come up with ideas by saying your thoughts as you connect the writing topic to personal experiences",
+      description: "Strengths fluency through retrieval and consolidation of phoneme-grapheme patterns",
       thumbnail: "/src/assets/images/topicandpurpose.png",
       videoUrl: "https://example.com/idea-video5"
     },
     {
       id: 6,
-      title: "Oral Rehearsal Practice",
-      description: "Encourage children to orally rehearse their ideas by saying their complete \"crafted\" sentence aloud before writing.",
+      title: "Have young children draw their ideas before writing. This helps them clarify what they want to say and supports their memory when turning ideas into written words",
+      description: "Supports childrens ability to hold ideas in working memory to clarify and refine ideas in relation to topic",
       thumbnail: "/src/assets/images/topicandpurpose.png",
-      videoUrl: "https://example.com/idea-video6"
+      videoUrl: "/idea-generation/content-integration"
     },
     {
       id: 7,
-      title: "Content Connection Building",
-      description: "Help children connect the writing topic to what they've read, learned in the unit, or experienced in real life.",
+      title: "Use questions and prompts to help children expand their ideas, clarify their thinking, and revise their language before and during writing.",
+      description: "Sustains attention to topic and relevant details while supporting progression from contextualized to decontextualized oral language",
       thumbnail: "/src/assets/images/contentnew.png",
-      videoUrl: "https://example.com/idea-video7"
+      videoUrl: "/idea-generation/cue-question"
     },
     {
       id: 8,
-      title: "Drawing Before Writing",
-      description: "Have young children draw their ideas before writing. This helps them clarify what they want to say and supports their memory when turning ideas into written words",
+      title: "Encourage children to orally rehearse their ideas by saying their complete “crafted” sentence aloud before writing.",
+      description: "Cements the idea in working memory, supporting transition from oral language to transcription of language in writing",
       thumbnail: "/src/assets/images/drawcontent.png",
       videoUrl: "https://example.com/idea-video8"
     }

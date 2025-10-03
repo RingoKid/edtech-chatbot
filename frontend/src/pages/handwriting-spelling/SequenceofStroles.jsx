@@ -3,32 +3,33 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Play } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-const PhonologicalAwarenessActivities = () => {
+const SequenceofStrokes = () => {
   const videoData = {
-    title: "Phonological Awareness Activities",
-    description: "Building sound-letter connections through interactive games and systematic phonics instruction to help children develop essential reading and spelling skills.",
-    videoUrl: "https://www.youtube-nocookie.com/embed/sample-video-id?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
-    content: "Phonological awareness is the ability to hear, identify, and manipulate the individual sounds in spoken words. This foundational skill is crucial for reading and spelling development.\n\nKey activities include:\n• Sound identification games\n• Rhyming exercises\n• Syllable clapping\n• Beginning sound matching\n• Sound blending and segmentation"
+    title: "Sequence of Strokes",
+    description: "Learning the proper order of strokes when forming letters supports neat handwriting, consistency, and speed.",
+    videoUrl: "https://www.youtube-nocookie.com/embed/YRTKFejSEH0?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+    content: "How to practice correct strokes?\n" +
+        "Guide children to start each letter at the correct point, moving in the right direction, and finishing with a smooth flow. Use lined paper or tracing sheets to help them follow the sequence and build muscle memory for clear, legible writing.",
   }
 
   const exploreMoreVideos = [
     {
       id: 1,
-      title: "Making Letter Formation Automatic",
-      thumbnail: "/src/assets/images/letter-formation-thumbnail.png",
-      videoUrl: "/handwriting-spelling/making-letter-formation-automatic"
+      title: "Directionality",
+      thumbnail: "/src/assets/images/directionality.jpg",
+      videoUrl: "/handwriting-spelling/directionality"
+    },
+    {
+      id: 2,
+      title: "Teaching Proper Pencil Grip",
+      thumbnail: "/src/assets/images/pencil-grip.jpg",
+      videoUrl: "/handwriting-spelling/teach-proper-way-to-hold-pencil"
     },
     {
       id: 3,
-      title: "Multi-Sensory Writing Approaches",
-      thumbnail: "/src/assets/images/multisensory-writing.jpg",
-      videoUrl: "/handwriting-spelling/multi-sensory-writing-approaches"
-    },
-    {
-      id: 4,
-      title: "Letter-Sound Correspondence Practice",
-      thumbnail: "/src/assets/images/letter-sound.jpg",
-      videoUrl: "/handwriting-spelling/letter-sound-correspondence-practice"
+      title: "Making Letter Formation Automatic",
+      thumbnail: "/src/assets/images/letter-formation.jpg",
+      videoUrl: "/handwriting-spelling/retrieve-and-connect-patterns"
     }
   ]
 
@@ -170,4 +171,4 @@ const PhonologicalAwarenessActivities = () => {
   )
 }
 
-export default PhonologicalAwarenessActivities
+export default SequenceofStrokes
