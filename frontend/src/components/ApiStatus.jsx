@@ -8,14 +8,24 @@ export default function ApiStatus() {
     let mounted = true;
 
     async function fetchAll() {
-      try {
-        const [h, d, c] = await Promise.all([health.get(), health.debug(), chat.status()]);
-        if (!mounted) return;
-        setStatus({ health: h, debug: d, chat: c, error: null });
-      } catch (err) {
-        if (!mounted) return;
-        setStatus(s => ({ ...s, error: err.message || 'Network error' }));
+      const results = await Promise.allSettled([health.get(), health.debug(), chat.status()]);
+      if (!mounted) return;
+      const [h, d, c] = results;
+      let error = null;
+      if (h.status === 'rejected' || d.status === 'rejected' || c.status === 'rejected') {
+        const errors = [h, d, c].map((r, i) =>
+          r.status === 'rejected'
+            ? ['Health', 'Debug', 'Chat'][i] + ': ' + (r.reason?.message || r.reason || 'Network error')
+            : null
+        ).filter(Boolean);
+        error = errors.join('; ');
       }
+      setStatus({
+        health: h.status === 'fulfilled' ? h.value : null,
+        debug: d.status === 'fulfilled' ? d.value : null,
+        chat: c.status === 'fulfilled' ? c.value : null,
+        error,
+      });
     }
 
     fetchAll();
