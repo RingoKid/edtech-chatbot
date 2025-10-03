@@ -1,42 +1,27 @@
 """
 Chat service module containing the core chatbot logic.
-This service encapsulates LangChain LCEL chain integration and message handling.
+This service encapsulates LangGraph integration and message handling.
 """
 
 from typing import Dict, Any
-import asyncio
 import uuid
 
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
-from langchain_core.output_parsers import StrOutputParser
-from app.config import settings
+from app.graph.graph import graph
+from langchain_core.messages import HumanMessage
 
 
 class ChatService:
     """
-    Service class that encapsulates the core chatbot logic using LangChain LCEL.
+    Service class that encapsulates the core chatbot logic using LangGraph.
     This service will be dependency-injected into the API router.
     """
     
     def __init__(self):
         """
-        Initialize the ChatService with LangChain LCEL chain.
+        Initialize the ChatService with LangGraph.
         """
-        # Initialize ChatOpenAI model with API key from settings
-        model = ChatOpenAI(
-            api_key=settings.openai_api_key.get_secret_value() if settings.openai_api_key else None
-        )
-        
-        # Create a simple ChatPromptTemplate
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are a helpful assistant."),
-            ("user", "{input}")
-        ])
-        
-        # Define the LCEL chain
-        self.chain = prompt | model | StrOutputParser()
-    
+        self.graph = graph
+
     def create_new_thread(self, user_id: str) -> str:
         """
         Create a new thread ID for a user conversation.
@@ -53,8 +38,8 @@ class ChatService:
         
     async def handle_message(self, user_message: str, user_id: str, thread_id: str | None = None) -> Dict[str, Any]:
         """
-        Main async method to handle incoming messages and generate responses.
-        
+        Main async method to handle incoming messages and generate responses using the graph.
+
         Args:
             user_message (str): The message received from the user
             user_id (str): The user identifier
@@ -67,9 +52,26 @@ class ChatService:
         if thread_id is None:
             thread_id = self.create_new_thread(user_id)
         
-        # Invoke the LCEL chain with the user message
-        reply = await self.chain.ainvoke({"input": user_message})
-        
+        # Create config with thread_id for graph execution
+        config = {"configurable": {"thread_id": thread_id}}
+
+        # Create the input state with the user's message
+        input_state = {
+            "messages": [HumanMessage(content=user_message)]
+        }
+
+        # Invoke the graph with the user message
+        result = await self.graph.ainvoke(input_state, config=config)
+
+        # Extract the AI response from the result
+        messages = result.get("messages", [])
+        if messages:
+            # Get the last message which should be the AI's response
+            last_message = messages[-1]
+            reply = last_message.content
+        else:
+            reply = "I'm sorry, I couldn't generate a response."
+
         response = {
             "reply": reply,
             "thread_id": thread_id
