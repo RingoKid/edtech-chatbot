@@ -304,3 +304,7 @@ public
 # Vite
 dist-ssr
 *.tsbuildinfo
+
+# Analysis and documentation files
+*.md
+!README.md
