@@ -5,12 +5,12 @@ FROM public.ecr.aws/docker/library/python:3.12-slim AS final
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Set the working directory for the final application.
-WORKDIR /app
+# Install Git and other essential tools for dev container
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies efficiently.
-COPY backend/requirements.txt .
-RUN pip install -r requirements.txt
 
 # Copy the backend Python application code to the correct location.
 COPY ./backend/app ./app
