@@ -2,10 +2,11 @@ from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, END, START
 from langchain_core.runnables import RunnableConfig
 from typing import Dict, Any
+from langchain_openai import ChatOpenAI
 
 from app.graph.state import GraphState
-from app.graph.prompts import TOPIC_SELECTION_PROMPT
-from app.graph.context import Context
+from app.graph.prompts import TOPIC_SELECTION_PROMPT, SYSTEM_PROMPT
+from app.config import settings
 
 
 async def ask_for_topic_node(state: GraphState, *, config: RunnableConfig) -> Dict[str, Any]:
@@ -20,9 +21,6 @@ async def ask_for_topic_node(state: GraphState, *, config: RunnableConfig) -> Di
     Returns:
         Dictionary with updated messages field and control flags
     """
-    # Access the context from config
-    context: Context = config.get("configurable", {}).get("context")
-
     messages = state.get("messages", [])
 
     # If no messages, ask the topic selection question and signal for interrupt
@@ -46,14 +44,34 @@ async def ask_for_topic_node(state: GraphState, *, config: RunnableConfig) -> Di
     if isinstance(last_message, HumanMessage):
         user_input = last_message.content
 
+        # Initialize the model (handle both with and without API key)
+        try:
+            if settings.openai_api_key:
+                model = ChatOpenAI(
+                    model="gpt-4o",
+                    api_key=settings.openai_api_key.get_secret_value()
+                )
+            else:
+                # Fallback for when API key is not available
+                model = ChatOpenAI(model="gpt-4o")
+        except Exception as e:
+            # If model initialization fails, return error message
+            error_message = AIMessage(
+                content=f"Error initializing AI model: {str(e)}. Please ensure OPENAI_API_KEY is set."
+            )
+            return {
+                "messages": messages + [error_message],
+                "needs_user_input": False
+            }
+
         # Create messages for LLM call
         model_messages = [
-            SystemMessage(content=context.system_prompt),
+            SystemMessage(content=SYSTEM_PROMPT),
             HumanMessage(content=f"The user selected: {user_input}. Please acknowledge their selection and provide a lesson plan.")
         ]
 
         # Make the LLM call
-        model_response = await context.model.ainvoke(model_messages)
+        model_response = await model.ainvoke(model_messages)
 
         return {
             "messages": messages + [model_response],

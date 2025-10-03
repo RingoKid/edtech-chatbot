@@ -61,6 +61,16 @@ class Settings(BaseSettings):
     # OpenAI API configuration
     openai_api_key: Optional[SecretStr] = Field(default=None, alias="OPENAI_API_KEY")
     
+    def initialize_langsmith(self) -> None:
+        """Initialize LangSmith tracing if configured."""
+        if self.langsmith_tracing and self.langsmith_api_key:
+            os.environ["LANGCHAIN_TRACING_V2"] = self.langsmith_tracing
+            os.environ["LANGCHAIN_API_KEY"] = self.langsmith_api_key
+            if self.langsmith_endpoint:
+                os.environ["LANGCHAIN_ENDPOINT"] = self.langsmith_endpoint
+            if self.langsmith_project:
+                os.environ["LANGCHAIN_PROJECT"] = self.langsmith_project
+
     @property
     def table_name(self) -> str:
         """
