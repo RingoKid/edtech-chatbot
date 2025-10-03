@@ -3,32 +3,33 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Play } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-const MultiSensoryWritingApproaches = () => {
+const CorrectiveFeedback = () => {
   const videoData = {
-    title: "Multi-Sensory Writing Approaches",
-    description: "Engaging visual, auditory, and kinesthetic learning styles in handwriting instruction to help children learn through multiple pathways and strengthen memory retention.",
-    videoUrl: "https://www.youtube-nocookie.com/embed/sample-video-id?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
-    content: "Multi-sensory approaches engage multiple senses simultaneously to reinforce learning and improve retention.\n\nKey techniques include:\n• Visual: Using colors, shapes, and visual cues\n• Auditory: Letter sounds, rhymes, and verbal instructions\n• Kinesthetic: Hand movements, tracing, and tactile materials\n• Combined approaches for maximum effectiveness\n\nThese methods help children with different learning styles and strengthen neural pathways for better handwriting skills."
+    title: "Corrective Feedback",
+    description: "Providing gentle and timely guidance helps children recognize mistakes, adjust their approach, and build confidence in their learning.",
+    videoUrl: "https://www.youtube-nocookie.com/embed/YRTKFejSEH0?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+    content: "How to give effective feedback?\n" +
+        "Acknowledge the effort first, then point out the specific error and model the correct way. Encourage the child to try again, reinforcing success with positive words. For example, if a child writes a letter backwards, show the right direction and have them trace it correctly."
   }
 
   const exploreMoreVideos = [
     {
       id: 1,
-      title: "Making Letter Formation Automatic",
-      thumbnail: "/src/assets/images/letter-formation-thumbnail.png",
-      videoUrl: "/handwriting-spelling/making-letter-formation-automatic"
+      title: "Teaching Proper Pencil Grip",
+      thumbnail: "/src/assets/images/pencil-grip.jpg",
+      videoUrl: "/handwriting-spelling/teach-proper-way-to-hold-pencil"
     },
     {
       id: 2,
-      title: "Phonological Awareness Activities",
-      thumbnail: "/src/assets/images/phonological-awareness.jpg",
-      videoUrl: "/handwriting-spelling/phonological-awareness-activities"
+      title: "Making Letter Formation Automatic",
+      thumbnail: "/src/assets/images/letter-formation.jpg",
+      videoUrl: "/handwriting-spelling/retrieve-and-connect-patterns"
     },
     {
-      id: 4,
-      title: "Letter-Sound Correspondence Practice",
-      thumbnail: "/src/assets/images/letter-sound.jpg",
-      videoUrl: "/handwriting-spelling/letter-sound-correspondence-practice"
+      id: 3,
+      title: "Multi-Sensory Writing Approaches",
+      thumbnail: "/src/assets/images/multisensory-writing.jpg",
+      videoUrl: "/handwriting-spelling/multi-sensory-writing-approaches"
     }
   ]
 
@@ -170,4 +171,4 @@ const MultiSensoryWritingApproaches = () => {
   )
 }
 
-export default MultiSensoryWritingApproaches
+export default CorrectiveFeedback

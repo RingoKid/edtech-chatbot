@@ -7,59 +7,66 @@ const HandwritingSpelling = () => {
   const videoItems = [
     {
       id: 1,
-      title: "Making Letter Formation Automatic",
-      description: "Helping children develop fluent letter writing through repetitive practice and muscle memory development.",
-      thumbnail: "/src/assets/images/letter-formation-thumbnail.png",
-      videoUrl: "/handwriting-spelling/making-letter-formation-automatic"
+      title: "Teaching Proper Pencil Grip",
+      description: "Learn effective techniques for teaching children the correct way to hold a pencil for comfortable, legible writing.",
+      thumbnail: "/src/assets/images/pencil-grip.jpg",
+      videoUrl: "/handwriting-spelling/proper-way-to-hold",
     },
     {
       id: 2,
-      title: "Phonological Awareness Activities",
-      description: "Building sound-letter connections through interactive games and systematic phonics instruction.",
-      thumbnail: "/src/assets/images/phonological-awareness.jpg",
-      videoUrl: "/handwriting-spelling/phonological-awareness-activities"
+      title: "Help children pronounce, identify, and isolate phonemes correctly",
+      description: "Enhances phoneme isolation and focuses attention for accurate sound-symbol mapping and memory encoding",
+      thumbnail: "/src/assets/images/pronounce-identify.jpg",
+      videoUrl: "/handwriting-spelling/pronounce-identify",
     },
     {
       id: 3,
-      title: "Multi-Sensory Writing Approaches",
-      description: "Engaging visual, auditory, and kinesthetic learning styles in handwriting instruction.",
-      thumbnail: "/src/assets/images/multisensory-writing.jpg",
-      videoUrl: "/handwriting-spelling/multi-sensory-writing-approaches"
+      title: "Teach how to form each letter step by step, showing the exact order and direction of strokes",
+      description: "Supports coordination of timed movement with correct stroke order",
+      thumbnail: "/src/assets/images/letter-formation.jpg",
+      videoUrl: "/handwriting-spelling/sequence-strokes"
     },
     {
       id: 4,
-      title: "Letter-Sound Correspondence Practice",
-      description: "Systematic practice connecting letters with their corresponding sounds and phonemes.",
-      thumbnail: "/src/assets/images/letter-sound.jpg",
-      videoUrl: "https://example.com/video4"
+      title: "Have children retrieve prior phoneme-grapheme knowledge and connect to new phoneme-grapheme patterns",
+      description: "Activates prior phoneme-graphene knowledge to support orthographic mapping",
+      thumbnail: "/src/assets/images/phonemic-awareness.jpg",
+      videoUrl: "/handwriting-spelling/retrieve-connect"
     },
     {
       id: 5,
-      title: "Writing Posture and Grip Development",
-      description: "Teaching proper pencil grip and body positioning for comfortable, effective writing.",
-      thumbnail: "/src/assets/images/writing-posture.jpg",
-      videoUrl: "https://example.com/video5"
+      title: "Cue children to apply phoneme-grapheme patterns during activities",
+      description: "Strengths Fluency through retrieval and consolidation of phoneme-graphene patterns",
+      thumbnail: "/src/assets/images/phoneme-grapheme.jpg",
+      videoUrl: "/handwriting-spelling/phoneme-graphene"
     },
     {
       id: 6,
-      title: "High-Frequency Word Recognition",
-      description: "Building automatic recognition and spelling of common sight words and vocabulary.",
-      thumbnail: "/src/assets/images/sight-words.jpg",
-      videoUrl: "https://example.com/video6"
+      title: "Talk with children about how letters look—compare their shapes and the strokes used to write them.",
+      description: "Promotes deep encoding of letter forms for memory retention",
+      thumbnail: "/src/assets/images/invented-spelling.jpg",
+      videoUrl: "/handwriting-spelling/compare-contrast"
     },
     {
       id: 7,
-      title: "Progressive Writing Exercises",
-      description: "Structured activities that gradually increase writing complexity and independence.",
-      thumbnail: "/src/assets/images/progressive-writing.jpg",
-      videoUrl: "https://example.com/video7"
+      title: "Provide corrective and confirmatory feedback explaining what part is incorrect and showing them how to fix it.",
+      description: "Supports deeper processing of spelling patterns to enhance retrieval and automaticity",
+      thumbnail: "/src/assets/images/directionality.jpg",
+      videoUrl: "/handwriting-spelling/corrective-feedback"
     },
     {
       id: 8,
-      title: "Assessment and Tracking Progress",
-      description: "Methods for monitoring handwriting development and spelling accuracy improvements.",
-      thumbnail: "/src/assets/images/assessment.jpg",
-      videoUrl: "https://example.com/video8"
+      title: "Encourage children to use what they’ve learned about sounds, spelling patterns, and word parts to try spelling new words",
+      description: "Promotes application of phonological and knowledge through invented spelling, strengthening",
+      thumbnail: "/src/assets/images/corrective-feedback.jpg",
+      videoUrl: "/handwriting-spelling/invented-spelling"
+    },
+    {
+      id: 9,
+      title: "Support writing within lines left to right (directionality)",
+      description: "Helps children learn to keep letter on the line and moves smoothly from left to right.",
+      thumbnail: "/src/assets/images/phonological-awareness.jpg",
+      videoUrl: "/handwriting-spelling/directionality"
     }
   ]
 

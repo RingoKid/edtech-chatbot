@@ -3,38 +3,38 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Play } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-const MakingLetterFormationAutomatic = () => {
+const SentenceManipulation = () => {
   const videoData = {
-    title: "Making Letter Formation Automatic",
-    description: "Using the correct pencil grip helps children develop fine motor skills and hand control, making writing more comfortable, legible, and efficient",
-    videoUrl: "https://www.youtube-nocookie.com/embed/YRTKFejSEH0?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
-    content: "How to hold a pencil?\nUse the tripod grip- Hold the pencil gently between the thumb and index finger, with the pencil resting on the middle finger."
+    title: "Build Sentence Manipulation",
+    description: "Learning the proper order of strokes when forming letters supports neat handwriting, consistency, and speed",
+    videoUrl: "https://www.youtube-nocookie.com/embed/sample-sentence-manipulation?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+    content: "How to practice correct strokes?\n" +
+        "Guide children to start each letter at the correct point, moving in the right direction, and finishing with a smooth flow. Use lined paper or tracing sheets to help them follow the sequence and build muscle memory for clear, legible writing."
   }
 
   const exploreMoreVideos = [
     {
+      id: 1,
+      title: "Vocabulary Sentence Structures",
+      thumbnail: "/src/assets/images/sentence-structures.jpg",
+      videoUrl: "/vocabulary/vocabulary-sentence-structures"
+    },
+    {
       id: 2,
-      title: "Phonological Awareness Activities",
-      thumbnail: "/src/assets/images/phonological-awareness.jpg",
-      videoUrl: "/handwriting-spelling/phonological-awareness-activities"
+      title: "Sentence Awareness",
+      thumbnail: "/src/assets/images/sentence-awareness.jpg",
+      videoUrl: "/vocabulary/sentence-awareness"
     },
     {
       id: 3,
-      title: "Multi-Sensory Writing Approaches",
-      thumbnail: "/src/assets/images/multisensory-writing.jpg",
-      videoUrl: "/handwriting-spelling/multi-sensory-writing-approaches"
-    },
-    {
-      id: 4,
-      title: "Letter-Sound Correspondence Practice",
-      thumbnail: "/src/assets/images/letter-sound.jpg",
-      videoUrl: "/handwriting-spelling/letter-sound-correspondence-practice"
+      title: "Vocabulary Support",
+      thumbnail: "/src/assets/images/vocabulary-support.jpg",
+      videoUrl: "/vocabulary/vocabulary-support"
     }
   ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
-      {/* Navigation */}
       <div className="section-padding pt-32">
         <div className="container">
           <motion.div
@@ -43,17 +43,16 @@ const MakingLetterFormationAutomatic = () => {
             transition={{ duration: 0.6 }}
           >
             <Link 
-              to="/handwriting-spelling"
+              to="/vocabulary"
               className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium mb-8 transition-colors"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Handwriting & Spelling
+              Back to Vocabulary
             </Link>
           </motion.div>
         </div>
       </div>
 
-      {/* Video Section */}
       <section className="section-padding pt-0">
         <div className="container">
           <motion.div
@@ -62,17 +61,14 @@ const MakingLetterFormationAutomatic = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            {/* Video Title */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-display mb-6 text-gray-900 text-center">
               {videoData.title}
             </h1>
             
-            {/* Video Description */}
             <p className="text-lg text-gray-700 leading-relaxed mb-12 text-center max-w-4xl mx-auto">
               {videoData.description}
             </p>
 
-            {/* Video Player */}
             <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200 mb-12">
               <div className="aspect-video rounded-xl overflow-hidden">
                 <iframe
@@ -86,7 +82,6 @@ const MakingLetterFormationAutomatic = () => {
               </div>
             </div>
 
-            {/* Video Content */}
             {videoData.content && (
               <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 mb-16">
                 <div className="max-w-2xl mx-auto">
@@ -100,7 +95,6 @@ const MakingLetterFormationAutomatic = () => {
         </div>
       </section>
 
-      {/* Explore More Section */}
       <section className="section-padding pt-0 pb-20">
         <div className="container">
           <motion.div
@@ -122,7 +116,6 @@ const MakingLetterFormationAutomatic = () => {
                   transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
                   whileHover={{ y: -5 }}
                 >
-                  {/* Video Thumbnail */}
                   <div className="relative aspect-video bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden">
                     <img 
                       src={video.thumbnail}
@@ -133,12 +126,10 @@ const MakingLetterFormationAutomatic = () => {
                         e.target.nextSibling.style.display = 'flex'
                       }}
                     />
-                    {/* Fallback placeholder */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-primary-600 font-medium text-sm hidden">
                       Video Thumbnail
                     </div>
                     
-                    {/* Play Button Overlay */}
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
                         <Play className="w-6 h-6 text-primary-600 ml-1" />
@@ -146,13 +137,11 @@ const MakingLetterFormationAutomatic = () => {
                     </div>
                   </div>
 
-                  {/* Content */}
                   <div className="p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 group-hover:text-primary-600 transition-colors leading-tight">
                       {video.title}
                     </h3>
                     
-                    {/* View Button */}
                     <Link
                       to={video.videoUrl}
                       className="inline-flex items-center justify-center w-full px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors duration-200"
@@ -170,4 +159,4 @@ const MakingLetterFormationAutomatic = () => {
   )
 }
 
-export default MakingLetterFormationAutomatic
+export default SentenceManipulation
