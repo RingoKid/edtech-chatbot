@@ -17,6 +17,14 @@ import InventedSpelling from './pages/handwriting-spelling/InventedSpelling.jsx'
 import Directionality from './pages/handwriting-spelling/Directionality.jsx'
 import CorrectiveFeedback from './pages/handwriting-spelling/CorrectiveFeedback.jsx'
 import CompareContrastLetterForms from './pages/handwriting-spelling/CompareContrastLetterForms.jsx'
+import ConnectingWords from './pages/vocabulary/ConnectingWords.jsx'
+import SentenceAwareness from './pages/vocabulary/SentenceAwareness.jsx'
+import SentenceManipulation from './pages/vocabulary/SentenceManipulation.jsx'
+import VocabularySentenceGeneration from './pages/vocabulary/VocabularySentenceGeneration.jsx'
+import VocabularySentenceStructures from './pages/vocabulary/VocabularySentenceStructures.jsx'
+import VocabularySupport from './pages/vocabulary/VocabularySupport.jsx'
+import SentenceBuilding from './pages/vocabulary/SentenceBuilding.jsx'
+import CompositionCues from "./pages/vocabulary/CompositionCues.jsx";
 
 
 const AppRoutes = () => {
@@ -41,6 +49,17 @@ const AppRoutes = () => {
         <Route path="handwriting-spelling/invented-spelling" element={<InventedSpelling/>} />
         <Route path="handwriting-spelling/directionality" element={<Directionality/>} />
         <Route path="handwriting-spelling/corrective-feedback" element={<CorrectiveFeedback/>} />
+
+        {/* Vocabulary Individual Pages */}
+        <Route path="vocabulary/connecting-words" element={<ConnectingWords/>} />
+        <Route path="vocabulary/sentence-awareness" element={<SentenceAwareness/>} />
+        <Route path="vocabulary/sentence-manipulation" element={<SentenceManipulation/>} />
+        <Route path="vocabulary/sentence-generation" element={<VocabularySentenceGeneration/>} />
+        <Route path="vocabulary/vocabulary-sentence-structures" element={<VocabularySentenceStructures/>} />
+        <Route path="vocabulary/vocabulary-support" element={<VocabularySupport/>} />
+        <Route path="vocabulary/sentence-building" element={<SentenceBuilding/>} />
+        <Route path="vocabulary/composition-cues" element={<CompositionCues/>} />
+
 
       </Route>
     </Routes>
