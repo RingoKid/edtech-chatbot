@@ -21,7 +21,23 @@ async function request(path, options = {}) {
   }
 
   if (!res.ok) {
-    const error = new Error(data?.message || res.statusText || 'API Error');
+    let errorMsg;
+    if (data?.detail) {
+      if (typeof data.detail === 'string') {
+        errorMsg = data.detail;
+      } else if (Array.isArray(data.detail)) {
+        errorMsg = data.detail.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join('; ');
+      } else if (typeof data.detail === 'object') {
+        errorMsg = JSON.stringify(data.detail);
+      } else {
+        errorMsg = String(data.detail);
+      }
+    } else if (data?.message) {
+      errorMsg = data.message;
+    } else {
+      errorMsg = res.statusText || 'API Error';
+    }
+    const error = new Error(errorMsg);
     error.status = res.status;
     error.body = data;
     throw error;
