@@ -6,9 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
 from app.routers import health, chat, auth, users
+from app.config import settings
 
 # Configuration
 API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
+
+# Initialize LangSmith tracing
+settings.initialize_langsmith()
 
 # Initialize the FastAPI application
 app = FastAPI()

@@ -70,6 +70,9 @@ class Settings(BaseSettings):
                 os.environ["LANGCHAIN_ENDPOINT"] = self.langsmith_endpoint
             if self.langsmith_project:
                 os.environ["LANGCHAIN_PROJECT"] = self.langsmith_project
+            print(f"✅ LangSmith tracing initialized for project: {self.langsmith_project or 'default'}")
+        else:
+            print("⚠️  LangSmith tracing not initialized - missing LANGSMITH_TRACING or LANGSMITH_API_KEY")
 
     @property
     def table_name(self) -> str:
