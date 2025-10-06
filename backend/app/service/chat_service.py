@@ -6,7 +6,7 @@ This service encapsulates LangGraph integration and message handling.
 from typing import Dict, Any
 import uuid
 
-from app.graph.graph import graph
+from app.graph.graph import create_graph
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 
@@ -21,7 +21,7 @@ class ChatService:
         """
         Initialize the ChatService with LangGraph.
         """
-        self.graph = graph
+        self.graph = create_graph()
 
     def create_new_thread(self, user_id: str) -> str:
         """
