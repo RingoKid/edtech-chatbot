@@ -19,7 +19,6 @@ cloudpickle==3.1.1
 cryptography==44.0.3
 debugpy==1.8.16
 distro==1.9.0
-edtech-chatbot-backend==0.1.0
 fastapi==0.116.2
 forbiddenfruit==0.1.4
 frozenlist==1.8.0
@@ -46,6 +45,7 @@ langgraph==1.0.0a3
 langgraph-api==0.4.32
 langgraph-checkpoint==2.1.1
 langgraph-checkpoint-amazon-dynamodb==0.1.2
+langgraph-dynamodb-checkpoint
 langgraph-cli==0.4.2
 langgraph-prebuilt==0.7.0a2
 langgraph-runtime-inmem==0.14.1
