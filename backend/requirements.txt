@@ -44,7 +44,6 @@ langchain-text-splitters==0.3.11
 langgraph==1.0.0a3
 langgraph-api==0.4.32
 langgraph-checkpoint==2.1.1
-langgraph-checkpoint-amazon-dynamodb==0.1.2
 langgraph-dynamodb-checkpoint
 langgraph-cli==0.4.2
 langgraph-prebuilt==0.7.0a2
