@@ -3,6 +3,7 @@ import boto3
 from langgraph.prebuilt import create_react_agent
 from langgraph_dynamodb_checkpoint import DynamoDBSaver
 from app.graph.context import Context
+from app.config import settings
 
 
 def create_graph():
@@ -23,13 +24,14 @@ def create_graph():
     # The DynamoDBSaver creates its own boto3 resource internally,
     # so we need to configure the default boto3 session before instantiation
     boto3.setup_default_session(
-        region_name="us-east-1",
-        aws_access_key_id="dummy",
-        aws_secret_access_key="dummy"
+        region_name=settings.aws_region,
+        aws_access_key_id=settings.aws_access_key_id,
+        aws_secret_access_key=settings.aws_secret_access_key
     )
 
     # Set the endpoint URL via environment variable (boto3 will pick this up)
-    os.environ['AWS_ENDPOINT_URL_DYNAMODB'] = "http://dynamodb-local:8000"
+    if settings.dynamodb_endpoint_url:
+        os.environ['AWS_ENDPOINT_URL_DYNAMODB'] = settings.dynamodb_endpoint_url
 
     # Initialize the DynamoDB checkpointer
     # The saver will automatically create the table if it does not exist
