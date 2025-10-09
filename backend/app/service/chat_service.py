@@ -113,9 +113,9 @@ class ChatService:
 
     async def handle_websocket_connection(self, websocket: WebSocket):
         """
-        Handle WebSocket connection for real-time chat.
+        Handle WebSocket connection for real-time chat with streaming.
         Continuously receives JSON messages from the client, validates them,
-        processes them using the existing handle_message logic, and sends responses back.
+        and streams token chunks from the language model directly over the WebSocket.
 
         Args:
             websocket (WebSocket): The WebSocket connection instance from FastAPI
@@ -131,11 +131,39 @@ class ChatService:
                 message_data = json.loads(data)
                 request = ChatMessageRequest(**message_data)
 
-                # Process the message using existing logic
-                response = await self.process_chat_request(request)
+                # Use a default user_id for now (can be replaced with auth later)
+                user_id = "default_user"
 
-                # Send the complete JSON response back to the client
-                await websocket.send_text(response.model_dump_json())
+                # Handle thread_id logic
+                thread_id = request.thread_id
+                if thread_id is None:
+                    thread_id = self.create_new_thread(user_id)
+
+                # Create config with thread_id for graph execution
+                config = {"configurable": {"thread_id": thread_id}}
+
+                # Create the input state with the user's message
+                input_state = {
+                    "messages": [HumanMessage(content=request.message)]
+                }
+
+                # Stream events from the graph
+                async for event in self.graph.astream_events(input_state, config=config, version="v1"):
+                    # Filter for chat model stream events
+                    if event["event"] == "on_chat_model_stream":
+                        ## Extract the content chunk from the event
+                        chunk_content = event["data"]["chunk"].content
+
+                        # Only send non-empty chunks
+                        if chunk_content:
+                            # Construct a ChatMessageResponse with the chunk
+                            response = ChatMessageResponse(
+                                thread_id=thread_id,
+                                reply=chunk_content
+                            )
+
+                            # Send the chunk as JSON over the WebSocket
+                            await websocket.send_text(response.model_dump_json())
 
         except WebSocketDisconnect:
             print("WebSocket client disconnected")
