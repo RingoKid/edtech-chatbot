@@ -20,4 +20,5 @@ COPY ./backend/langgraph.json ./langgraph.json
 EXPOSE 8000 2024
 
 # The command to start the Uvicorn ASGI server for FastAPI.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+#CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "test_config.py"]
