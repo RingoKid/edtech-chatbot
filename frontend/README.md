@@ -10,3 +10,46 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Backend API integration
+
+This frontend uses a small fetch-based API client at `src/api` and expects a backend API base URL in the environment variable `VITE_API_BASE_URL`.
+
+- Default (if not set): `http://localhost:8000/api/v1`
+- Set `VITE_API_BASE_URL` to point to your backend when running locally or in CI.
+
+Health & debug endpoints
+
+The backend exposes simple health endpoints used by the development UI:
+
+- GET `${VITE_API_BASE_URL}/health` — returns `{status: "ok"}` when healthy.
+- GET `${VITE_API_BASE_URL}/debug-test` — returns a debug payload (useful for development).
+- GET `${VITE_API_BASE_URL}/chat` — placeholder chat status endpoint (returns router status).
+
+The app shows a small `ApiStatus` panel in development mode (bottom-right) that polls these endpoints every 10s. To test manually from PowerShell:
+
+```powershell
+# From repository root, start the backend (example using uvicorn if FastAPI is the backend):
+# uvicorn backend.app.main:app --reload --port 8000
+
+cd frontend
+npm install
+npm run dev
+
+# Quick curl-like tests (PowerShell):
+(Invoke-WebRequest -UseBasicParsing "http://localhost:8000/api/v1/health").Content | ConvertFrom-Json
+(Invoke-WebRequest -UseBasicParsing "http://localhost:8000/api/v1/debug-test").Content | ConvertFrom-Json
+(Invoke-WebRequest -UseBasicParsing "http://localhost:8000/api/v1/chat").Content | ConvertFrom-Json
+```
+
+If your backend runs on a different origin, set the Vite env var before starting the dev server (PowerShell):
+
+```powershell
+$env:VITE_API_BASE_URL = 'http://127.0.0.1:8000/api/v1'; npm run dev
+```
+
+Notes
+
+- The `ApiStatus` component is only rendered in development (`import.meta.env.DEV`) to avoid exposing debug UI in production.
+- Authentication endpoints are not implemented in the backend yet; the frontend has a placeholder `auth.status()` helper that calls `/auth`.
+
