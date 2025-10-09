@@ -5,7 +5,9 @@ This service encapsulates LangGraph integration and message handling.
 
 from typing import Dict, Any
 import uuid
+import json
 
+from fastapi import WebSocket, WebSocketDisconnect
 from app.graph.graph import create_graph
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
@@ -108,3 +110,35 @@ class ChatService:
         }
         
         return response
+
+    async def handle_websocket_connection(self, websocket: WebSocket):
+        """
+        Handle WebSocket connection for real-time chat.
+        Continuously receives JSON messages from the client, validates them,
+        processes them using the existing handle_message logic, and sends responses back.
+
+        Args:
+            websocket (WebSocket): The WebSocket connection instance from FastAPI
+        """
+        await websocket.accept()
+
+        try:
+            while True:
+                # Receive JSON message from the client
+                data = await websocket.receive_text()
+
+                # Parse and validate the message with ChatMessageRequest
+                message_data = json.loads(data)
+                request = ChatMessageRequest(**message_data)
+
+                # Process the message using existing logic
+                response = await self.process_chat_request(request)
+
+                # Send the complete JSON response back to the client
+                await websocket.send_text(response.model_dump_json())
+
+        except WebSocketDisconnect:
+            print("WebSocket client disconnected")
+        except Exception as e:
+            print(f"Error in WebSocket connection: {str(e)}")
+            await websocket.close()

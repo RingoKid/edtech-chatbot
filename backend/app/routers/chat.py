@@ -2,7 +2,7 @@
 Chat router for the FastAPI application.
 Contains HTTP endpoints for chat functionality using LangGraph.
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, WebSocket
 
 from app.service.chat_service import ChatService
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
@@ -43,3 +43,19 @@ async def send_message(
             status_code=500,
             detail=f"Failed to process message: {str(e)}"
         )
+
+
+@router.websocket("/ws/message")
+async def websocket_message(
+    websocket: WebSocket,
+    chat_service: ChatService = Depends(get_chat_service)
+):
+    """
+    WebSocket endpoint for real-time chat communication.
+    Accepts WebSocket connections and handles bidirectional chat messages.
+
+    Args:
+        websocket: The WebSocket connection instance
+        chat_service: Injected ChatService instance
+    """
+    await chat_service.handle_websocket_connection(websocket)
