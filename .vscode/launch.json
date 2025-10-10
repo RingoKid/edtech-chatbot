@@ -39,6 +39,39 @@
             "showReturnValue": true
         },
         {
+            "name": "Dev Container: Python Debug Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "/workspace/backend",
+            "env": {
+                "PYTHONPATH": "/workspace/backend"
+            },
+            "justMyCode": false,
+            "args": []
+        },
+        {
+            "name": "Dev Container: FastAPI Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "app.main:app",
+                "--host",
+                "0.0.0.0", 
+                "--port",
+                "8000",
+                "--reload"
+            ],
+            "cwd": "/workspace/backend",
+            "env": {
+                "PYTHONPATH": "/workspace/backend"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
             "name": "Frontend: Launch Chrome against localhost",
             "type": "chrome",
             "request": "launch",

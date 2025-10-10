@@ -1,46 +1,141 @@
 """
 Chat router for the FastAPI application.
-Contains endpoints for chat functionality and conversation management.
+Contains HTTP endpoints for chat functionality using LangGraph.
 """
-from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import Optional
+from fastapi import APIRouter, HTTPException, Depends, WebSocket
+from fastapi.responses import JSONResponse
 
-router = APIRouter()
-
-
-class MessageIn(BaseModel):
-    message: str
-    conversation_id: Optional[str] = None
+from app.service.chat_service import ChatService
+from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 
 
-class MessageOut(BaseModel):
-    reply: str
-    conversation_id: Optional[str] = None
+router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
-@router.get("/chat", tags=["Chat"])
-def get_chat_status():
+def get_chat_service() -> ChatService:
     """
-    Placeholder endpoint for chat functionality.
+    Dependency function to get ChatService instance.
+    This creates a new instance for each request.
     """
-    return {"router": "chat", "status": "active", "message": "Chat router is working"}
+    return ChatService()
 
 
-
-@router.post("/message", response_model=MessageOut, tags=["Chat"])
-def post_message(payload: MessageIn):
+@router.post("/message", response_model=ChatMessageResponse)
+async def send_message(
+    request: ChatMessageRequest,
+    chat_service: ChatService = Depends(get_chat_service)
+):
     """
-    Simple demo endpoint that returns a canned reply to the provided message.
-    This is a placeholder for the real chat/message handling logic.
-    """
-    user_text = payload.message or ""
-    # Very simple canned reply logic for demo
-    if 'phonics' in user_text.lower():
-        reply = "(Demo) Try multi-sensory phonics activities — sand writing, letter tiles, and songs."
-    elif 'behavior' in user_text.lower():
-        reply = "(Demo) Consider clear expectations, routines, and positive reinforcement."
-    else:
-        reply = "(Demo) Thanks for your question. This is a demo reply from the chat endpoint."
+    Send a message to the chatbot and receive a response from the LangGraph.
 
-    return {"reply": reply, "conversation_id": payload.conversation_id}
+    Args:
+        request: ChatMessageRequest containing the message and optional thread_id
+        chat_service: Injected ChatService instance
+
+    Returns:
+        ChatMessageResponse: The AI's response and thread_id
+    """
+    try:
+        return await chat_service.process_chat_request(request)
+
+    except Exception as e:
+        print(f"Error handling chat message: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process message: {str(e)}"
+        )
+
+
+@router.get("/ws/info", summary="WebSocket Connection Information")
+async def websocket_info():
+    """
+    Get information about the WebSocket endpoint for real-time chat.
+
+    **WebSocket Endpoint:** `/api/v1/chat/ws/message`
+
+    **Protocol:** WebSocket (ws:// or wss://)
+
+    **Connection Example (JavaScript):**
+    ```javascript
+    const ws = new WebSocket('ws://localhost:8000/api/v1/chat/ws/message');
+
+    ws.onopen = () => {
+        ws.send(JSON.stringify({
+            message: "Hello!",
+            thread_id: "optional-thread-id"
+        }));
+    };
+
+    ws.onmessage = (event) => {
+        const response = JSON.parse(event.data);
+        console.log(response);
+    };
+    ```
+
+    **Message Format (Client → Server):**
+    ```json
+    {
+        "message": "Your message here",
+        "thread_id": "optional-thread-id-for-conversation-continuity"
+    }
+    ```
+
+    **Response Format (Server → Client):**
+    ```json
+    {
+        "response": "AI assistant response",
+        "thread_id": "conversation-thread-id"
+    }
+    ```
+
+    **Error Response:**
+    ```json
+    {
+        "error": "Error message description"
+    }
+    ```
+
+    Returns:
+        JSON object with WebSocket endpoint details and usage examples
+    """
+    return JSONResponse(content={
+        "endpoint": "/api/v1/chat/ws/message",
+        "protocol": "WebSocket",
+        "message_format": {
+            "request": {
+                "message": "string (required)",
+                "thread_id": "string (optional)"
+            },
+            "response": {
+                "response": "string",
+                "thread_id": "string"
+            },
+            "error": {
+                "error": "string"
+            }
+        },
+        "example_urls": {
+            "local": "ws://localhost:8000/api/v1/chat/ws/message",
+            "production": "wss://your-domain.com/api/v1/chat/ws/message"
+        },
+        "usage": "Connect using WebSocket client and send/receive JSON messages"
+    })
+
+
+@router.websocket("/ws/message")
+async def websocket_message(
+    websocket: WebSocket,
+    chat_service: ChatService = Depends(get_chat_service)
+):
+    """
+    WebSocket endpoint for real-time chat communication.
+    Accepts WebSocket connections and handles bidirectional chat messages.
+
+    **Note:** This endpoint uses WebSocket protocol and won't appear in Swagger UI.
+    Use the GET /ws/info endpoint above for connection details and examples.
+
+    Args:
+        websocket: The WebSocket connection instance
+        chat_service: Injected ChatService instance
+    """
+    await chat_service.handle_websocket_connection(websocket)
