@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Bot, User, Loader, RotateCcw, ChevronDown } from 'lucide-react'
 import { cn } from '../utils/cn'
-import { chat } from '../api'
+import { chat, createChatWsClient } from '../api'
 
 const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   const [messages, setMessages] = useState([
@@ -15,9 +15,14 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   ])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [wsConnected, setWsConnected] = useState(false)
+  const [threadId, setThreadId] = useState(() => {
+    try { return localStorage.getItem('chat_thread_id') || null } catch (e) { return null }
+  })
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
+  const wsRef = useRef(null)
 
   // Check if user is at the bottom of the chat
   const isAtBottom = () => {
@@ -55,6 +60,42 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   useEffect(() => {
     scrollToBottom()
   }, [messages, isTyping])
+
+  // Setup WebSocket on mount
+  useEffect(() => {
+    let unsub = null
+    const client = createChatWsClient()
+    wsRef.current = client
+    // store the unsubscribe function so we can remove listener on cleanup
+    unsub = client.subscribe((evt) => {
+      if (evt.type === 'open') setWsConnected(true)
+      if (evt.type === 'close') setWsConnected(false)
+      if (evt.type === 'error') setWsConnected(false)
+      if (evt.type === 'message') {
+        const data = evt.data || {}
+        // Expect data to be { response, thread_id } per API
+        if (data.response) {
+          const botMessage = {
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            type: 'bot',
+            content: data.response,
+            timestamp: new Date()
+          }
+          setMessages(prev => [...prev, botMessage])
+        }
+        if (data.thread_id) {
+          setThreadId(data.thread_id)
+          try { localStorage.setItem('chat_thread_id', data.thread_id) } catch (e) {}
+        }
+      }
+    })
+    client.connect().catch(err => console.warn('WS connect failed', err))
+
+    return () => {
+      try { client.close() } catch (e) {}
+      if (typeof unsub === 'function') unsub()
+    }
+  }, [])
 
   const simulateTyping = async () => {
     setIsTyping(true)
@@ -113,29 +154,52 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
       onNewMessage()
     }
 
-    // First try backend chat endpoint; if it fails fall back to local generator
+    // Use WebSocket if connected; otherwise fallback to HTTP POST or local generator
     setIsTyping(true)
-    try {
-      const res = await chat.send(inputValue)
-      const botResponse = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: res?.reply ?? generateResponse(inputValue),
-        timestamp: new Date()
+    const client = wsRef.current
+    if (client && client.isConnected && client.isConnected()) {
+      try {
+        const payload = { message: inputValue }
+        if (threadId) payload.thread_id = threadId
+        client.send(payload)
+        // Server will send back messages which we append via subscription
+      } catch (err) {
+        console.warn('WS send failed, falling back to HTTP', err)
+        try {
+          const res = await chat.send(inputValue)
+          const botResponse = {
+            id: Date.now() + 1,
+            type: 'bot',
+            content: res?.reply ?? generateResponse(inputValue),
+            timestamp: new Date()
+          }
+          setMessages(prev => [...prev, botResponse])
+        } catch (err2) {
+          const response = generateResponse(inputValue)
+          const botResponse = { id: Date.now() + 1, type: 'bot', content: response, timestamp: new Date() }
+          setMessages(prev => [...prev, botResponse])
+        }
+      } finally {
+        setIsTyping(false)
       }
-      setMessages(prev => [...prev, botResponse])
-    } catch (err) {
-      // fallback to local response
-      const response = generateResponse(inputValue)
-      const botResponse = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: response,
-        timestamp: new Date()
+    } else {
+      // No WS connection — fallback to HTTP
+      try {
+        const res = await chat.send(inputValue)
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: res?.reply ?? generateResponse(inputValue),
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botResponse])
+      } catch (err) {
+        const response = generateResponse(inputValue)
+        const botResponse = { id: Date.now() + 1, type: 'bot', content: response, timestamp: new Date() }
+        setMessages(prev => [...prev, botResponse])
+      } finally {
+        setIsTyping(false)
       }
-      setMessages(prev => [...prev, botResponse])
-    } finally {
-      setIsTyping(false)
     }
   }
 
