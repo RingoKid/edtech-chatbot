@@ -1,0 +1,142 @@
+{
+  "form_m": {
+    "title": "Elements of Genre",
+    "informational_explanatory_text": {
+      "description": "Children write to share real information about a topic they know or are learning about. This type of writing helps them explain facts, ideas, or how something works.",
+      "examples": ["Writing about animals that live in the ocean", "how pumpkins grow", "the life cycle of a butterfly"],
+      "elements_to_teach": {
+        "topic_sentence": {
+          "description": "Writing a topic sentence (Main Idea) = Topic + What is the main thing you want to explain about the topic",
+          "example": "The bodies of polar bears help them live in the Arctic"
+        },
+        "relevant_irrelevant_details": {
+          "description": "details that explain and elaborate the topic",
+          "relevant_example": "Polar bears have thick fur to keep them warm",
+          "irrelevant_example": "Penguins are good swimmers"
+        },
+        "fact_vs_fantasy": {
+          "description": "facts that are real and observable not make believe",
+          "fact_example": "Polar bears have thick fur to keep them warm",
+          "fantasy_example": "Polar bears go to school and play with their friends at recess"
+        },
+        "structure": "Main Idea + supporting details + Conclusion"
+      }
+    },
+    "reading_response_summary": {
+      "description": "Children respond to a book they read or heard by telling what it was about. This may include retelling key events.",
+      "example": "After reading The Very Hungry Caterpillar, they write or draw to show what happened first, next, and last.",
+      "elements_to_teach": {
+        "characters_setting": "identifying who the characters are and where are they",
+        "textual_evidence": "getting kids to understand that they are summarizing what the text says not what they make up on their own",
+        "sequence_of_events": "identifying chronological order, what happened 1st, 2nd, and 3rd, etc.",
+        "problem_resolution": "what was the main problem/conflict of the story and how did the problem get solved",
+        "structure": "Beginning, Middle, and End = identify main details of a story in order"
+      }
+    },
+    "compare_and_contrast": {
+      "description": "Children look at two things and describe how they are the same and how they are different. This builds thinking and language skills.",
+      "example": "Writing about how mammals and fish are alike and different, or comparing two characters from a story.",
+      "elements_to_teach": {
+        "main_idea_topic_sentence": {
+          "description": "Topic + What is the main thing you want to explain about the topic",
+          "example": "Polar bears and Black bears are different types of bears"
+        },
+        "relevant_irrelevant_details": {
+          "description": "details that explain and elaborate the topic",
+          "relevant_example": "Polar bears have thick fur to keep them warm",
+          "irrelevant_example": "Penguins are good swimmers"
+        },
+        "same_vs_different_details": "Same supporting details vs. Different supporting details",
+        "fact_vs_fantasy": {
+          "description": "facts that are real and observable not make believe",
+          "fact_example": "Polar bears have thick fur to keep them warm",
+          "fantasy_example": "Polar bears go to school and play with their friends at recess"
+        },
+        "structure": "Topic Sentence (Main idea), supporting details about similarities and differences, conclusion"
+      }
+    },
+    "opinion_argumentative_writing": {
+      "personal_opinion": {
+        "description": "Children share what they like or think and give a reason why. This type of writing encourages them to express preferences or beliefs.",
+        "example": "Recess is my favorite part of school because I can play with my friends. Friends make the day fun.",
+        "elements_to_teach": {
+          "topic_sentence_thesis": {
+            "description": "Topic + What is the main thing you believe or think about that topic",
+            "example": "Polar bears are amazing animals."
+          },
+          "opinion_vs_fact": {
+            "description": "understanding the difference between a statement that expresses an opinion or belief or conclusion about a topic and a statement that explains a fact",
+            "opinion_example": "My favorite mammal is the manatee",
+            "fact_example": "Manatees float to the surface of the water in order to breathe."
+          },
+          "relevant_irrelevant_details": {
+            "description": "details that explain and elaborate the topic",
+            "relevant_example": "Polar bears have thick fur to keep them warm",
+            "irrelevant_example": "Penguins are good swimmers"
+          },
+          "structure": "Thesis Statement/Opinion Statement + supporting details (Why?) + Conclusion (the importance of the why to the writer)"
+        }
+      },
+      "problem_solution": {
+        "description": "This is an early version of problem-solution writing. Children describe a problem and imagine a helpful solution. Exploring a problem helps them think through events and how one thing leads to another.",
+        "example": "Littering can cause animals to get hurt. When people throw trash on the ground, animals might think it's food or get stuck in it. That can make them sick or hurt. We should throw out our trash.",
+        "elements_to_teach": {
+          "problem_statement_thesis": {
+            "description": "Topic + What is the main thing you believe or think about that topic",
+            "example": "Ice melting in the arctic can cause polar bears to go extinct"
+          },
+          "opinion_vs_fact": "understanding the difference between a statement that expresses an opinion or belief or conclusion about a topic and a statement that explains a fact",
+          "relevant_irrelevant_details": {
+            "description": "details that explain and elaborate the topic",
+            "relevant_example": "Polar bears have thick fur to keep them warm",
+            "irrelevant_example": "Penguins are good swimmers"
+          },
+          "structure": "Statement of Problem + Effect of Problem (how does the problem lead to something not good) + Conclusion: Solution to the Problem"
+        }
+      }
+    },
+    "reading_response_inferring": {
+      "description": "Children think beyond what the text says to explain why something happened or what a character might be thinking or feeling. They use clues from the story to support their ideas.",
+      "example": "I think the boy was sad because he lost his toy. In the text it says, he put his head down, and he's not smiling. No one likes to lose a toy.",
+      "elements_to_teach": {
+        "thesis_statement": {
+          "description": "Topic (answer to the question, e.g., Why is the boy sad = The boy is sad because ..) + What is the main thing you want to explain about the topic",
+          "example": "because he lost his toy"
+        },
+        "cause_effect_opinion": "Why –what would be the effects of a textual event / what are the causes of a textual event",
+        "relevant_irrelevant_details": {
+          "description": "details that explain and elaborate the topic",
+          "relevant_example": "Polar bears have thick fur to keep them warm",
+          "irrelevant_example": "Penguins are good swimmers"
+        },
+        "textual_evidence": "What the text directly says",
+        "inference": "what is the meaning of the text, considering what the text says AND what we know about life in general",
+        "structure": "Answer the Question in a complete statement, textual evidence, Conclusion (connect to what we know in general)"
+      }
+    },
+    "narrative": {
+      "personal_narrative": {
+        "description": "Children write or tell a true story about something that happened to them. It often includes where they were, what they did, and how they felt. This helps build a sense of time, sequence, and self-expression.",
+        "example": "I went to the park. I saw a big dog. I felt scared, but it was nice. I didn't need to be scared",
+        "elements_to_teach": {
+          "exposition": "Introduce Character Setting and Problem",
+          "cause_and_effect": "Rising Action (e.g., how does the main character (the writer) react to the problem?)",
+          "sequence_of_events": "identifying chronological order, what happened 1st, 2nd, and 3rd, etc.",
+          "conclusion": "What did the writer come to understand"
+        }
+      },
+      "story_writing": {
+        "description": "Children make up a story with characters and events. These stories can be realistic or imaginary. Story writing helps develop creativity, language, and understanding of story structure.",
+        "example": "Once there was a dragon who loved cupcakes. One day, he ran out, so he flew to the bakery!",
+        "elements_to_teach": {
+          "exposition": "Introduce Character Setting and Problem",
+          "cause_and_effect": "Rising Action (e.g., how does the main character react to the problem?)",
+          "sequence_of_events": "identifying chronological order, what happened 1st, 2nd, and 3rd, etc.",
+          "dialogue": "what characters would say to move the plot forward",
+          "conclusion": "How does the problem get resolved",
+          "descriptive_writing": "Sensory details to create tone for readers to feel a mood"
+        }
+      }
+    }
+  }
+}

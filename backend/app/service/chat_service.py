@@ -3,7 +3,7 @@ Chat service module containing the core chatbot logic.
 This service encapsulates LangChain LCEL chain integration and message handling.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import asyncio
 import uuid
 
@@ -51,14 +51,14 @@ class ChatService:
         thread_id = f"{user_id}_{uuid.uuid4().hex[:8]}"
         return thread_id
         
-    async def handle_message(self, user_message: str, user_id: str, thread_id: str | None = None) -> Dict[str, Any]:
+    async def handle_message(self, user_message: str, user_id: str, thread_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Main async method to handle incoming messages and generate responses.
         
         Args:
             user_message (str): The message received from the user
             user_id (str): The user identifier
-            thread_id (str | None): Optional unique identifier for the conversation thread
+            thread_id (Optional[str]): Optional unique identifier for the conversation thread
             
         Returns:
             Dict[str, Any]: Dictionary containing the chatbot's response and thread_id

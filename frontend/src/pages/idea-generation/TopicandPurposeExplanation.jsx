@@ -7,7 +7,7 @@ const TopicandPurposeExplanation = () => {
     const videoData = {
         title: "Define Topic & Purpose",
         description: "Learning the proper order of strokes when forming letters supports neat handwriting, consistency, and speed.",
-        videoUrl: "https://www.youtube-nocookie.com/embed/sample-connecting-words?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+        videoUrl: "https://www.youtube.com/embed/QUXCkF2ZGRs\n",
         content: "How to practice correct strokes?\n" +
             "Guide children to start each letter at the correct point, moving in the right direction, and finishing with a smooth flow. Use lined paper or tracing sheets to help them follow the sequence and build muscle memory for clear, legible writing."
     }

@@ -7,7 +7,7 @@ const CorrectiveFeedback = () => {
   const videoData = {
     title: "Corrective Feedback",
     description: "Providing gentle and timely guidance helps children recognize mistakes, adjust their approach, and build confidence in their learning.",
-    videoUrl: "https://www.youtube-nocookie.com/embed/YRTKFejSEH0?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+    videoUrl: "https://youtube.com/embed/BfaaY27TuxM",
     content: "How to give effective feedback?\n" +
         "Acknowledge the effort first, then point out the specific error and model the correct way. Encourage the child to try again, reinforcing success with positive words. For example, if a child writes a letter backwards, show the right direction and have them trace it correctly."
   }

@@ -1,0 +1,60 @@
+{
+  "form_n": {
+    "title": "Idea Generation & Organization Lesson Framework",
+    "major_sections": [
+      "Standards",
+      "Objectives",
+      "Materials",
+      "Detailed Scripted Idea Generation & Organization Lesson"
+    ],
+    "lesson_subsections": {
+      "review_connect": {
+        "purpose": "Quickly review the type of text genre and content or unit topics children are learning and connect to the writing topic and purpose",
+        "order": 1
+      },
+      "model_explain_engage": {
+        "purpose": "For the teacher to explicitly define the writing concept or skill and provide examples and non-examples so children clearly understand. Next, the skill or concept is directly modeled, step-by step so children can begin to apply the skill or concept during a writing task",
+        "order": 2
+      },
+      "guided_practice": {
+        "purpose": "For children to begin to apply the writing skill or concept during a task that is broken down into component steps so that children can practice step by step and have teacher feedback for improvement",
+        "order": 3
+      },
+      "application": {
+        "purpose": "To allow children practice in applying writing skills and concepts without the step by step guidance to check child facility with the writing process or task. The teacher can assess the degree to which the child has mastered the skill to further adapt instruction to child needs",
+        "order": 4
+      },
+      "wrap_up": {
+        "purpose": "To remind children about the target writing skill or concept, how it's different or similar from previously learned writing skills or genre components, and why they are important to the type of genre you are writing in class",
+        "order": 5
+      }
+    },
+    "lesson_components": {
+      "explanation": {
+        "description": "Explanation of the part of the scripted lesson",
+        "format": "Set apart in brackets [ ]"
+      },
+      "teacher_script": {
+        "description": "Detailed example of what the teacher actually says. This should be detailed to allow teachers to rehearse the lesson",
+        "format": "Set apart with #"
+      },
+      "child_response": {
+        "description": "Expected child response within the script",
+        "format": "Set off in parentheses ( )"
+      },
+      "teacher_does": {
+        "description": "What the teacher is doing within the script",
+        "format": "Set off in curly brackets { }"
+      },
+      "adaptation": {
+        "description": "AI prompts teacher request for activity examples, modifications according to child ability level",
+        "format": "Set apart with *",
+        "prompt": "Let me know if you would like more examples to use in an activity or whether you would like me to increase or decrease the level of difficulty of an activity. Please specify whether the activity is in the Review & Connect, Model Explain Engage, Guided Practice, or Application part of the lesson"
+      },
+      "modification": {
+        "description": "AI provides an organized list of activity examples and/or a modified teacher script in response to teacher request for more examples or modification of the activity",
+        "format": "Set apart with *"
+      }
+    }
+  }
+}

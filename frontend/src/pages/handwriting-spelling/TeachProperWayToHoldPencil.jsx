@@ -7,7 +7,7 @@ const TeachProperWayToHoldPencil = () => {
   const videoData = {
     title: "Hold Proper Pencil Grip",
     description: "Using the correct pencil grip helps children develop fine motor skills and hand control, making writing more comfortable, legible, and efficient",
-    videoUrl: "https://www.youtube-nocookie.com/embed/YRTKFejSEH0?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+    videoUrl: "https://youtube.com/embed/U_GkAYvrrFM",
     content: "How to hold a pencil?\nUse the tripod grip- Hold the pencil gently between the thumb and index finger, with the pencil resting on the middle finger."
   }
 

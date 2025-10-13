@@ -1,0 +1,161 @@
+{
+  "handwriting_spelling_forms": {
+    "form_b_example": {
+      "lesson_title": "Letter Z Handwriting and Spelling Lesson",
+      "target_sound": "/z/",
+      "target_letter": "z (uppercase Z, lowercase z)",
+      "major_sections": {
+        "standards": "Example: CCSS.ELA-LITERACY.L.K.1.A - Print many upper- and lowercase letters",
+        "objectives": "Students will correctly form uppercase Z and lowercase z using proper stroke sequence and connect the /z/ sound to the letter z",
+        "materials": "Sound cards, zebra cards, handwriting lines, pencils, Sound-Letter Hunt worksheet",
+        "scripted_lesson": {
+          "review_connect": {
+            "explanation": "[The purpose of this part of the lesson is to start with a quick review of previously learned sounds. Do not use sounds that have not been directly taught. Do not use words that have sounds that have not been directly taught.]",
+            "teacher_script": "#Teacher Script:\n\"Let's review our sounds. We are doing our Sound Sparks game +Level: Middle. Look up here. When I point to a sound. You will all say that sound when I say go, and when you see my hand close to a fist.\"\n\"Ready. My Turn. {Teacher points to /m/.}\nGet Ready. Go.\" (children chorally respond /m/). {Teacher continues this process, reviewing previous sounds. Should be around 2-3 minutes.}",
+            "adaptation": "*Adaptation1: Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
+          },
+          "model_explain_engage": {
+            "explanation": "[The purpose of this part of the lesson is to connect a sound or sound patterns that you focused on during your reading block to writing its corresponding grapheme patterns. First, make sure children clearly can distinguish the targeted sound; then, hook that sound to the letter patterns through modeling and explaining the sequence of strokes for letters and correct order of letters.]",
+            "teacher_script": "#Teacher Script:\nWe've been working on the /z/ sound.\nMy turn. Listen to my sound /z/.\nPut your hand on your vocal box–now say the sound /z/.\nDid you feel your vocal box? (Children should respond yes)\nThat means you are using your voice, so we use our voice to make the /z/ sound.",
+            "gesture": "+Gesture: Move hand in a zigzag motion through the air while making the /z/ sound",
+            "sequence_verbal_cues": "##Sequence Verbal Cues for letter z: Little line across. Slant down the stairs. Little line across.",
+            "adaptation": "*Adaptation2: Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
+          },
+          "guided_practice": {
+            "explanation": "[The purpose is to give children practice writing the letter while supporting proper pencil grip and correct sequence of stroke formation using handwriting lines.]",
+            "teacher_script": "#Teacher Script:\nLet's practice how to write uppercase letter z first. We are not using our pencils yet. Let's do our Magic Finger Write +Level= Low. Place your finger at the top of the line. Let me see {teacher checks students finger placement}",
+            "adaptation": "*Adaptation3: Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
+          },
+          "application": {
+            "explanation": "[The purpose of this part of the lesson is to facilitate children's spelling of the letter or letter patterns when they hear the sound(s). This supports children's early coordination of matching sound to letter(s) for the purpose of spelling words.]",
+            "teacher_script": "#Teacher Script:\nBoys and girls, I am going back to the /z/ Sound Hunt game, but now it's the Sound-Letter Hunt game +Level:Middle. I am going to say a word. You are listening to the beginning sound of that word.",
+            "adaptation": "*Adaptation4: Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
+          },
+          "wrap_up": {
+            "explanation": "[The purpose of this part of the lesson is to remind students what they were focused on and provide praise for their accomplishments]",
+            "teacher_script": "#Teacher Script:\nAlright, boys and girls I am so proud of you. What sound have we been working on? {Teacher holds up zebra sound card] (Children respond /z/).\nPerfect! And which of these letters say /z/ {Teacher provides children with a choice} (Children can touch the correct letter)\nShow me how to write it (children air write with sequence verbal cues–e.g., little line across, slant down the stairs, little line across)\nWonderful! Kiss your brains."
+          }
+        }
+      }
+    },
+    "form_f_example": {
+      "title": "Sequence Verbal Cues for Letter Formation",
+      "letter_z": {
+        "uppercase": "Little line across. Slant down the stairs. Little line across.",
+        "lowercase": "Little line across. Slant down the stairs. Little line across.",
+        "stroke_count": 3,
+        "starting_position": {
+          "uppercase": "top line",
+          "lowercase": "middle dotted line"
+        }
+      },
+      "letter_a": {
+        "uppercase": "Slant down. Slant down. Little line across.",
+        "lowercase": "Around and up. Straight line down.",
+        "stroke_count": {
+          "uppercase": 3,
+          "lowercase": 2
+        }
+      },
+      "letter_m": {
+        "uppercase": "Straight line down. Straight line down. Slant down. Slant down.",
+        "lowercase": "Straight line down. Over the hill. Over the hill.",
+        "stroke_count": {
+          "uppercase": 4,
+          "lowercase": 3
+        }
+      }
+    },
+    "form_g_example": {
+      "title": "Gestures for Phoneme Sounds",
+      "z_sound": {
+        "phoneme": "/z/",
+        "gesture": "Move hand in a zigzag motion through the air while making the /z/ sound",
+        "description": "Buzzing bee gesture"
+      },
+      "m_sound": {
+        "phoneme": "/m/",
+        "gesture": "Rub stomach in circular motion while saying /m/",
+        "description": "Yummy gesture"
+      },
+      "s_sound": {
+        "phoneme": "/s/",
+        "gesture": "Move finger in snake-like motion while hissing /s/",
+        "description": "Snake gesture"
+      }
+    },
+    "form_h_example": {
+      "title": "Adaptations and Modifications by Ability Level",
+      "activity_modifications": {
+        "sound_sparks_game": {
+          "low": "Teacher points to sounds one at a time, gives extra wait time, provides individual support",
+          "middle": "Standard group response, moderate pace",
+          "high": "Faster pace, multiple sounds in sequence, student leaders"
+        },
+        "magic_finger_write": {
+          "low": "Teacher guides child's finger, slower pace, repeat multiple times",
+          "middle": "Independent finger tracing with verbal cues",
+          "high": "Air writing without visual support, eyes closed challenge"
+        },
+        "trace_and_say": {
+          "low": "Hand-over-hand support, larger dotted lines, fewer repetitions",
+          "middle": "Standard dotted line practice with monitoring",
+          "high": "Smaller lines, independent practice, peer teaching"
+        }
+      },
+      "additional_activities": {
+        "low_level": [
+          "Sensory letter formation in sand or rice",
+          "Large motor movements for letter shapes",
+          "Picture cards with target sound"
+        ],
+        "middle_level": [
+          "Interactive whiteboard letter tracing",
+          "Sound sorting activities",
+          "Partner practice games"
+        ],
+        "high_level": [
+          "Word building with target letter",
+          "Letter formation races",
+          "Teaching younger students"
+        ]
+      }
+    },
+    "lesson_templates": {
+      "consonant_lesson": {
+        "target_sounds": ["/b/", "/d/", "/f/", "/g/", "/h/", "/j/", "/k/", "/l/", "/m/", "/n/", "/p/", "/r/", "/s/", "/t/", "/v/", "/w/", "/x/", "/y/", "/z/"],
+        "required_components": [
+          "Gesture for target phoneme",
+          "Sequence verbal cues for letter formation",
+          "Sound discrimination activity", 
+          "Letter formation practice",
+          "Sound-to-letter application"
+        ]
+      },
+      "vowel_lesson": {
+        "target_sounds": ["/a/", "/e/", "/i/", "/o/", "/u/"],
+        "required_components": [
+          "Mouth position instruction",
+          "Gesture for target phoneme",
+          "Sequence verbal cues for letter formation",
+          "Sound discrimination activity",
+          "Letter formation practice"
+        ]
+      }
+    },
+    "assessment_rubric": {
+      "letter_formation": {
+        "4_mastery": "Forms letter correctly with proper stroke sequence independently",
+        "3_proficient": "Forms letter correctly with minimal prompting",
+        "2_developing": "Forms letter with some errors, needs guidance",
+        "1_beginning": "Requires hand-over-hand support"
+      },
+      "sound_recognition": {
+        "4_mastery": "Identifies target sound in all positions independently",
+        "3_proficient": "Identifies target sound with minimal prompting",
+        "2_developing": "Identifies target sound with support",
+        "1_beginning": "Requires direct instruction for sound identification"
+      }
+    }
+  }
+}

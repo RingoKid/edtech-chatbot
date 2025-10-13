@@ -1,0 +1,132 @@
+{
+  "form_o": {
+    "title": "Idea Generation & Organization Structured Lesson Plan Template",
+    "structure_overview": "This is FORM O",
+    "dynamic_sections": {
+      "standards": "refer to Form X, Form Y, and IXL.pdf",
+      "objectives": "chatbot has to derive based on lesson content",
+      "materials": "chatbot has to derive based on activities and lesson requirements"
+    },
+    "lesson_structure": {
+      "review_connect": {
+        "explanation": "The purpose of this part of the lesson is to quickly review the type of text genre and content /unit topics children are learning and connect to the writing topic and purpose",
+        "teacher_script": [
+          "[TEACHER NOTE: Ask teacher: 'What unit topic have you been studying?' and 'What texts have students been reading about this topic?']",
+          "Remember boys and girls we have been learning all about [UNIT_TOPIC].",
+          "What's a [KEY_CONCEPT] everyone? {Teacher points to picture cue of [KEY_CONCEPT]}",
+          "(Children respond, '[CONCEPT_DEFINITION].')",
+          "And [KEY_CONCEPT] gives [SUBJECT] what, everyone? {Teacher points to visual cues for [SUPPORTING_ELEMENTS]}.",
+          "(Children respond, '[SUPPORTING_ELEMENTS],' as teacher points to the cue).",
+          "Right, and we know that information because we've been reading some texts that give us information about [UNIT_TOPIC].",
+          "[Student name], what [SPECIFIC_FOCUS] are we learning about now? (Child responds, '[SPECIFIC_TOPIC]').",
+          "[Student name], [FOLLOW_UP_QUESTION]? (Child response: [EXPECTED_RESPONSE]).",
+          "Right, and we know that [ADDITIONAL_CONTEXT].",
+          "[Student name], how does that affect [CONNECTION_QUESTION]? (Child response: [STUDENT_INSIGHT]).",
+          "Exactly, remember our book? {Teacher references the text children have been reading}.",
+          "What [MAIN_SUBJECT] did we just get done reading about, everyone? (Response: [MAIN_SUBJECT_ANSWER]).",
+          "And we found out some cool information about the [MAIN_SUBJECT]. So today we want to share information about [MAIN_SUBJECT] and [WRITING_FOCUS]. We are writing [GENRE_TYPE]. So our topic is [MAIN_SUBJECT] and we want to focus on telling our readers all about [SPECIFIC_WRITING_PURPOSE]. [GUIDING_QUESTION]?"
+        ],
+        "example_output": "Review unit topic and key concepts using visual cues. Connect to texts students have read. Establish writing purpose and guiding question for informational text.",
+        "reference": "Form E for evidence-based idea generation practices"
+      },
+      "model_explain_engage": {
+        "explanation": "The purpose of this part of the lesson is for the teacher to explicitly define the writing concept or skill and provide examples and non-examples so children clearly understand. Next, the skill or concept is directly modeled, step-by step so children can begin to apply the skill or concept during a writing task",
+        "teacher_script": [
+          "The first thing we need to do is brainstorm. We need to remember the information we learned about [BRAINSTORM_FOCUS].",
+          "Here is our book. {Teacher displays book on overhead}.",
+          "We are going to do [TARGET_ACTIVITY] +Level = Middle about the information we learned that tells [ACTIVITY_PURPOSE].",
+          "{Teacher turns to page one.}",
+          "I am thinking about what I remember from this picture. I see [VISUAL_OBSERVATION]. That reminds me that we did read that [TEXT_CONNECTION].",
+          "Can anyone remember [RECALL_QUESTION]? [PROMPT_START] . . (Children respond: [STUDENT_RESPONSE]).",
+          "[CONCEPT_REINFORCEMENT].",
+          "So on my [TOOL_NAME], I am going to write [NOTE_CONTENT] in the first column under words. Remember notes are just words and phrases that help us remember the idea. So, I am going to write what I can. Then we'll draw next, but let's write we can first.",
+          "I know [PHONICS_EXAMPLE_1], begins with [LETTER_1], [SOUND_1]. And I know [WORD_2], [PHONICS_EXAMPLE_2] begins with [LETTER_2]. I also hear [SOUND_PATTERN], I hear [SOUND_DESCRIPTION], so I will write that. But now I want to sketch the picture. We are going to do that in this second column next to the words. It says picture at the top. And it doesn't have to be perfect, just a quick sketch. I am going to draw [DRAWING_DESCRIPTION]. [CONCEPT_CONNECTION].",
+          "This note helps me to remember what, [Student name]?",
+          "(Child response: [STUDENT_UNDERSTANDING]).",
+          "Exactly, so in my last column that says [COLUMN_HEADER], you see it says [FILL_IN_PROMPT]. We are going to fill in '[ANSWER]' as best we can by listening to the sounds we hear.",
+          "[Additional teaching and connections to deepen understanding]",
+          "Remember that is what we are trying to explain to our audience: [GUIDING_QUESTION]?"
+        ],
+        "example_output": "Model note-taking strategy using text and visuals. Demonstrate three-column approach: words, pictures, and how it helps. Use phonics skills for invented spelling. Connect to writing purpose.",
+        "reference": "Form E for evidence-based idea generation and transcription practices"
+      },
+      "guided_practice": {
+        "explanation": "The purpose of this part of the lesson is for children to begin to apply the writing skill or concept during a task that is broken down into component steps so that children can practice step by step and have teacher feedback for improvement",
+        "teacher_script": [
+          "Alright, now you are going to try to take a note on your [TOOL_NAME]. So the first thing you are going to do is look at the next picture. Everyone is going to think about what note they take. You are not saying it yet, you are thinking of that note in your head. When I say go, you are going to turn to your partner and share. Blue partner goes first, then green.",
+          "Get Ready, go ahead and think in your head. {Teacher waits a minute}.",
+          "Alright, turn to your partner. Blue Go. (Blue partner shares).",
+          "Stop. (Children turn back to the teacher).",
+          "Green Go. (Green partner shares).",
+          "Now that you shared, think of the final note you want to write about [NOTE_FOCUS].",
+          "{Teacher waits 20 seconds}.",
+          "[Student name], what is your note? (Child response: [STUDENT_NOTE_1])",
+          "[STUDENT_NOTE_1] (teacher writes down)",
+          "[Student name], what was your note? (Child response: [STUDENT_NOTE_2])",
+          "[Student name]? ([STUDENT_NOTE_3])",
+          "Great, all of these notes can help us remember. [EXPLANATION_OF_CONCEPT]. So you can write [NOTE_OPTIONS].",
+          "Everyone, take a minute and write what you can hear. (Children use invented spelling). {Teacher waits a minute or two and circulates to monitor progress}.",
+          "Great, our next step is to draw a picture. How do you think we could draw [DRAWING_CONCEPT]? {Teacher takes a few suggestions and demonstrates how to possibly draw the child suggestions.}",
+          "Okay, now you are going to draw your own, go ahead. {Teacher waits about a minute and circulates to monitor progress}.",
+          "The last thing we want to think about is [FINAL_QUESTION]?",
+          "Before you answer. Let me reread this sentence from the text. Listen.",
+          "[TEXT_QUOTE].",
+          "So what does it do? What verb did the text use, everyone? (Child response: [TEXT_VERB]).",
+          "Great so in the last column, it says [COLUMN_PROMPT], what? (Child response: [STUDENT_ANSWER]). {Teacher writes [STUDENT_ANSWER] in column three in the [TOOL_NAME]}."
+        ],
+        "example_output": "Partner sharing and individual note-taking practice. Step-by-step guidance: think, write words, draw picture, explain how it helps. Teacher monitoring and feedback.",
+        "reference": "Form E for evidence-based transcription and idea development practices"
+      },
+      "application": {
+        "explanation": "The purpose of this part of the lesson is to allow children practice in applying writing skills and concepts without the step by step guidance to check child facility with the writing process or task. The teacher can assess the degree to which the child has mastered the skill to further adapt instruction to child needs",
+        "teacher_script": [
+          "Now you are going to do the next note by yourself. You are filling in the [ROW_NUMBER] row, and you are looking at page [PAGE_NUMBER] of your book. Everyone put a star next to the [ROW_NUMBER] row {Teacher demonstrates on the overhead–circulates to check students}.",
+          "Now open to page [PAGE_NUMBER]; I am coming around to check. Show me. {Teacher circulates to check}.",
+          "Remember our steps:",
+          "Think of the note.",
+          "Write a word or two as best you can.",
+          "Sketch the note",
+          "Fill in the blank about [FINAL_STEP_PURPOSE]. Remember you listen to sounds and write the word as best you can.",
+          "Okay. Go. {Teacher circulates as children write a note to monitor progress}.",
+          "Now you can share your note with your partner. Tell your partner the words you wrote, show your picture and tell how the note shows [SHARING_PURPOSE]. Green partner goes first this time.",
+          "Get ready. Go. {Teacher waits for a minute}.",
+          "Now Blue partner, go ahead and share your note. {Teacher waits for a minute}.",
+          "Who wants to share their note with the class? {Teacher allows a few children to share their notes, monitoring children's progress}."
+        ],
+        "example_output": "Independent note-taking practice using the same three-step process. Partner sharing to reinforce learning. Whole class sharing for assessment and celebration.",
+        "reference": "Form E for evidence-based independent practice in idea generation"
+      },
+      "wrap_up": {
+        "explanation": "The purpose of this part of the lesson is to remind children about the target writing skill or concept, how it's different or similar from previously learned writing skills or genre components, and why they are important to the type of genre you are writing in class",
+        "teacher_script": [
+          "Everyone, we are working on writing [GENRE_TYPE], we want to [GENRE_PURPOSE]. The information we want to tell our audience is about [TOPIC_FOCUS] and [SPECIFIC_INFORMATION_GOAL]. So today we took notes that can help us write. Tomorrow we will talk more about how we can organize those notes in a way that makes sense to our readers.",
+          "*Let me know if you would like more examples to use in an activity or whether you would like me to increase or decrease the level of difficulty of an activity. Please specify whether the activity is in the Review & Connect, Model Explain Engage, Guided Practice, or Application part of the lesson."
+        ],
+        "example_output": "Reinforce purpose of note-taking for informational writing. Connect to next lesson on organization. Remind students of genre goals and audience.",
+        "reference": "Form E for evidence-based writing practices"
+      }
+    },
+    "references": {
+      "form_e": "for evidence-based practices in idea generation, vocabulary, and transcription",
+      "form_x": "for standards (to be specified)",
+      "form_y": "for standards (to be specified)",
+      "ixl_pdf": "for standards reference"
+    },
+    "placeholder_variables": {
+      "UNIT_TOPIC": "Current unit of study topic (teacher input)",
+      "KEY_CONCEPT": "Main concept from unit (e.g., habitat)",
+      "CONCEPT_DEFINITION": "Student definition of key concept",
+      "MAIN_SUBJECT": "Primary subject being studied (e.g., penguins)",
+      "GENRE_TYPE": "Type of writing (e.g., informational text)",
+      "WRITING_FOCUS": "Specific writing purpose or question",
+      "TARGET_ACTIVITY": "Main activity name (e.g., Note-Taking of Relevant Textual Details)",
+      "TOOL_NAME": "Name of graphic organizer or worksheet",
+      "GUIDING_QUESTION": "Central question driving the writing",
+      "TEXT_CONNECTION": "Information from text being referenced",
+      "BRAINSTORM_FOCUS": "Specific aspect being brainstormed",
+      "VISUAL_OBSERVATION": "What teacher sees in text illustration",
+      "NOTE_CONTENT": "Content of the note being taken",
+      "DRAWING_CONCEPT": "Concept being illustrated in drawing"
+    }
+  }
+}

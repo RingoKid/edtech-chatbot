@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 const PhonemeGraphemePatterns = () => {
   const videoData = {
     title: "Apply Phoneme Grapheme Patterns",
-    description: "​Using knowledge of sound-letter patterns allows children to read new words, spell correctly, and expand their vocabulary.",
+    description: "Using knowledge of sound-letter patterns allows children to read new words, spell correctly, and expand their vocabulary.",
     videoUrl: "https://www.youtube-nocookie.com/embed/YRTKFejSEH0?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
     content: "How to apply phoneme-grapheme knowledge?\n" +
         "Encourage children to blend sounds together to read words, or segment words into sounds to spell them. For example, with the word ship, they connect the sounds /sh/ /i/ /p/ to the letters “sh,” “i,” and “p.” Practice with word families and patterns (like -at, -ing, -ight) to reinforce learning."

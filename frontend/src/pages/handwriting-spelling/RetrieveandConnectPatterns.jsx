@@ -7,7 +7,7 @@ const RetrieveandConnectPatterns = () => {
   const videoData = {
     title: "Retrieve and Connect Phoneme-Grapheme Patterns",
     description: "Linking spoken sounds (phonemes) with their written symbols (graphemes) helps children strengthen reading and spelling skills.",
-    videoUrl: "https://www.youtube-nocookie.com/embed/YRTKFejSEH0?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+    videoUrl: "https://youtube.com/embed/a6-IX-DltGA",
     content: "How to practice phoneme-grapheme connections?\n" +
         "Say a sound aloud and have the child point to or write the matching letter. Practice with simple words by stretching out the sounds (like /d/ /o/ /g/) and connecting each sound to its letter. Repeated practice builds confidence in decoding and encoding words."
   }

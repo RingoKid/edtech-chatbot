@@ -7,7 +7,7 @@ const CompareContrastLetterForms = () => {
   const videoData = {
     title: "Compare and Contrast Letter Forms",
     description: "Recognizing similarities and differences between letters helps children avoid confusion and develop accurate reading and writing skills",
-    videoUrl: "https://www.youtube-nocookie.com/embed/sample-video-id?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+    videoUrl: "https://youtube.com/embed/Xs_upcUTjjc",
     content: "How to practice letter comparison?\n" +
         "Show pairs of letters that often look alike, such as b and d or p and q. Point out their shapes, starting points, and directions. Use tracing, matching, or sorting activities so children can clearly see what makes each letter unique."
   }

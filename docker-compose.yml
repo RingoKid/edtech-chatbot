@@ -3,17 +3,25 @@ services:
   backend:
     build:
       context: .
-      target: final 
+      target: final
     ports:
       - "8000:8000"
       - "2024:2024"  # LangGraph Studio port
     volumes:
       - ./backend:/app
-    # Start both FastAPI and LangGraph Studio
-    command: sh -c "langgraph dev --host 0.0.0.0 --port 2024 & uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+      - ./data:/app/data  # Mount data directory for forms
+    command: ["bash", "-c", "chmod +x ./startup.sh && ./startup.sh"]
     environment:
       - ENV=development
       - PYTHONPATH=/app
+      - APP_ENV=local
+      - DYNAMODB_ENDPOINT_URL=http://dynamodb-local:8000
+      - DYNAMODB_TABLE_NAME=EdTechChatbotTable
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      - dynamodb-local
 
   frontend:
     image: node:22-alpine

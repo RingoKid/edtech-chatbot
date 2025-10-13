@@ -135,12 +135,23 @@ edtech-chatbot/
 ├── backend/                    # FastAPI backend
 │   ├── app/
 │   │   ├── __init__.py
-│   │   └── main.py            # FastAPI application entry point
+│   │   ├── main.py            # FastAPI application entry point
+│   │   ├── models.py          # SQLAlchemy & Pydantic data models
+│   │   ├── config.py          # Configuration management
+│   │   ├── database.py        # PostgreSQL connection
+│   │   ├── routers/           # API route handlers
+│   │   ├── service/           # Business logic services
+│   │   └── schemas/           # Request/response schemas
+│   ├── migrations/            # Database migration scripts
+│   ├── startup.sh             # Automated startup script
+│   ├── load_forms.py          # Educational forms data loader
 │   └── requirements.txt       # Python dependencies
 ├── frontend/                  # React frontend
 │   ├── public/               # Static assets
 │   ├── src/                  # React source code
 │   └── package.json          # Node.js dependencies
+├── data/
+│   └── Forms_Json/           # Educational form content (JSON)
 ├── .vscode/                  # VS Code configuration
 │   ├── launch.json           # Debug configurations
 │   └── tasks.json            # Build tasks

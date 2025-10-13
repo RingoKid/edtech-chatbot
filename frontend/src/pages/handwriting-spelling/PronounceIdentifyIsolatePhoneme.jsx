@@ -7,7 +7,7 @@ const PronounceIdentifyIsolatePhoneme = () => {
   const videoData = {
     title: "Pronounce, Identify & Isolate Phonemes",
     description: "Recognizing and working with phonemes—the smallest units of sound—helps children build strong foundations for reading, spelling, and clear communication.",
-    videoUrl: "https://www.youtube-nocookie.com/embed/YRTKFejSEH0?modestbranding=1&rel=0&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&loop=0&color=white&theme=light&origin=localhost",
+    videoUrl: "https://youtube.com/emvbed/a6-IX-DltGA",
     content: "How to practice phoneme awareness?\n Start with simple words. Say a word slowly, break it into individual sounds (like /c/ /a/ /t/), and have the child repeat them. Encourage them to listen carefully, identify the beginning, middle, and ending sounds, and then blend them back to form the word."
   }
 

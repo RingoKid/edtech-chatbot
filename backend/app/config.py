@@ -61,6 +61,27 @@ class Settings(BaseSettings):
     # OpenAI API configuration
     openai_api_key: Optional[SecretStr] = Field(default=None, alias="OPENAI_API_KEY")
     
+    # PostgreSQL Database configuration
+    database_url: Optional[str] = Field(default=None, alias="DATABASE_URL")
+    db_host: str = Field(default="localhost", alias="DB_HOST")
+    db_port: int = Field(default=5432, alias="DB_PORT")
+    db_name: str = Field(default="edtech_db", alias="DB_NAME")
+    db_user: str = Field(default="edtech_user", alias="DB_USER")
+    db_password: str = Field(default="edtech_password", alias="DB_PASSWORD")
+    db_pool_size: int = Field(default=5, alias="DB_POOL_SIZE")
+    db_max_overflow: int = Field(default=10, alias="DB_MAX_OVERFLOW")
+    
+    @property
+    def get_database_url(self) -> str:
+        """
+        Generate PostgreSQL database URL.
+        Uses DATABASE_URL if provided, otherwise constructs from individual components.
+        """
+        if self.database_url:
+            return self.database_url
+        
+        return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+    
     @property
     def table_name(self) -> str:
         """
@@ -78,5 +99,18 @@ class Settings(BaseSettings):
             return f"{base_name}-sandbox"
         else:  # PRODUCTION
             return f"{base_name}-prod"
+    
+    def initialize_langsmith(self):
+        """Initialize LangSmith tracing if configured."""
+        import os
+        
+        if self.langsmith_tracing and self.langsmith_api_key:
+            os.environ["LANGCHAIN_TRACING_V2"] = self.langsmith_tracing
+            os.environ["LANGCHAIN_API_KEY"] = self.langsmith_api_key
+            
+            if self.langsmith_endpoint:
+                os.environ["LANGCHAIN_ENDPOINT"] = self.langsmith_endpoint
+            if self.langsmith_project:
+                os.environ["LANGCHAIN_PROJECT"] = self.langsmith_project
 
 settings = Settings()

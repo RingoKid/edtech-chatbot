@@ -1,0 +1,151 @@
+{
+  "form_d": {
+    "title": "Suggested Activities for Handwriting & Spelling",
+    "adaptation_1_activities": [
+      {
+        "name": "Tap that sound",
+        "description": "Children can keep sticky notes with the sound on it. Before beginning a new lesson have children stick some of their sound cards on their desk. The teacher provides the sound and children tap the correct sound card."
+      },
+      {
+        "name": "Sound Spark",
+        "description": "The teacher points to a sound card and children must chorally pronounce the sound."
+      },
+      {
+        "name": "Sound Detective",
+        "description": "Children focus on listening to the beginning, middle, or end sound. The teacher says a word and indicates to children where in the word they should listen for that sound. Children then point to the correct sound."
+      },
+      {
+        "name": "Write the sound",
+        "description": "The teacher says a sound, and children write the letter that corresponds to that sound on a mini whiteboard. This can also be done with writing the sound at the beginning, middle, and end for more advanced students."
+      },
+      {
+        "name": "How many sounds",
+        "description": "The teacher says a word. Children use a manipulative to count and show how many sounds. This activity should be used for children at more advanced stages of phonemic awareness."
+      },
+      {
+        "name": "Sort the sound",
+        "description": "The teacher says a sound and children sort by either voiced or unvoiced, continuous or stops."
+      }
+    ],
+    "adaptation_2_activities": [
+      {
+        "name": "Sound Hunt",
+        "description": "Teacher says words; children must listen to beginning, middle, or end sound to identify the target phoneme. Children can indicate that they hear target sound by lifting a card with the target sound."
+      },
+      {
+        "name": "Hide-and-Seek Sound",
+        "description": "Teacher says words that have the target sound in different positions; it could be at the beginning, middle, or end position. Children must find where the sound is by holding up a beginning, middle, or end card."
+      },
+      {
+        "name": "Chop-a-Sound",
+        "description": "Children are given words with the target sound. They either chop the target sound or another previously learned sound and say what is left."
+      },
+      {
+        "name": "Sound Puzzle",
+        "description": "Children are given two previously learned sounds at a time; they must add in the target sound to create a word."
+      },
+      {
+        "name": "Sound Switch-a-Roo",
+        "description": "Children are given words that include previously learned sounds. They are asked to change a beginning, middle, or end sound by substituting in the new sound."
+      },
+      {
+        "name": "Spell Aloud",
+        "description": "Teacher takes previously sound patterns of words and asks children to change a sound to the target sound and spell aloud."
+      },
+      {
+        "name": "Silly Sentence",
+        "description": "Teacher asks children to think of words that contain the target sound or sound pattern. Then collaboratively build a sentence using as many of those words as possible."
+      },
+      {
+        "name": "How Many Sounds",
+        "description": "Teacher provides children with words that include previously learned sounds and the target sound. Children must segment the sounds in each word."
+      }
+    ],
+    "adaptation_3_activities": {
+      "level_1_motor_foundation": [
+        {
+          "name": "Finger Run",
+          "description": "Children run their finger from left to right across the handwriting lines, pointing to the top, middle, and bottom lines as the teacher names them.",
+          "level": "low"
+        },
+        {
+          "name": "Magic Finger Write",
+          "description": "Children use their 'magic' pointer finger to trace letter shapes on the lines, following the teacher's modeling and verbal stroke cues.",
+          "level": "low"
+        },
+        {
+          "name": "Sky Writing",
+          "description": "With big arm movements, children write letters in the air while saying the strokes aloud, using shoulders and elbows to build motor memory.",
+          "level": "low"
+        },
+        {
+          "name": "Bumpy Road Letters",
+          "description": "Children trace textured letter cards (made from sandpaper or raised paint) with their fingers, following the correct stroke path by feel.",
+          "level": "low"
+        }
+      ],
+      "level_2_guided_formation": [
+        {
+          "name": "Trace & Say",
+          "description": "Children trace letters on dotted-line templates with a pencil, saying the strokes aloud."
+        },
+        {
+          "name": "Start Dot Letters",
+          "description": "Letters are printed with start dots and arrows. Children follow the marks to complete each letter step-by-step."
+        },
+        {
+          "name": "Rainbow Write",
+          "description": "Children trace the same letter multiple times with different colored pencils, following correct formation for each layer."
+        },
+        {
+          "name": "Letter Ladder",
+          "description": "A visual with steps for each part of the letter. Children write each step, climbing the 'ladder' to finish the full letter."
+        }
+      ],
+      "level_3_semi_independent": [
+        {
+          "name": "Top to Bottom Challenge",
+          "description": "Children write letters using correct formation, earning a star or check each time they start at the top and follow the correct stroke order."
+        },
+        {
+          "name": "Line Talkers",
+          "description": "Children describe how the letter touches the lines."
+        },
+        {
+          "name": "Cover & Try",
+          "description": "Children trace a letter, then cover the model and try writing it on their own, focusing on correct sequence and placement."
+        },
+        {
+          "name": "Letter Coach",
+          "description": "Children work in pairs—one child 'coaches' by checking if the other starts in the right place and follows the stroke order, using friendly reminders."
+        }
+      ]
+    },
+    "adaptation_4_activities": [
+      {
+        "name": "Trace the Sound You Hear",
+        "description": "Teacher says a sound, but includes multiple opportunities for children to hear the target sound, and children trace the matching letter or letter pattern."
+      },
+      {
+        "name": "Write the Sound You Hear",
+        "description": "Teacher says a sound, and children write the matching letter or letter pattern."
+      },
+      {
+        "name": "Sound-Letter Hunt",
+        "description": "Teacher says words; children must listen to either the beginning, middle, or end sound to identify the target phoneme. Children then write the corresponding sound they hear."
+      },
+      {
+        "name": "Mystery Word Builder",
+        "description": "Teacher gives sounds one at a time, and children write each sound as they hear it to form a word. Then they blend and read the completed word."
+      },
+      {
+        "name": "Sound Switch Writing",
+        "description": "Children write a simple word, then change one sound when prompted to create a new word. Focus should be on the target letter-sound."
+      },
+      {
+        "name": "What's that Pattern",
+        "description": "Teacher provides children with words that include previously learned sounds and the target sound. Children must segment the sounds in each word and write the corresponding letter or letter patterns."
+      }
+    ]
+  }
+}

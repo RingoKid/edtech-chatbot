@@ -1,0 +1,29 @@
+{
+  "form_h": {
+    "title": "Modification Examples and Teacher Responses",
+    "adaptation_structure": {
+      "task": "AI prompts teacher request for activity examples and modifications according to child ability level",
+      "output": "Let me know if you would like activity examples, modification of activity by child ability level (low, middle, high)"
+    },
+    "activity_examples": {
+      "task": "Respond to teacher request to provide multiple examples of phonemes, graphemes, letter-sound patterns, words, sentences of the targeted skills",
+      "input": "Provide Activity Example1-4",
+      "output": "Provide detailed lists of phonemes, graphemes, letter-sound patterns, words, sentences of the targeted skills that teachers could use in their activities",
+      "example_z_sound": {
+        "begin_with_z": ["zoo", "zebra", "zip", "zap", "zigzag", "zero", "zucchini", "zipper", "zookeeper"],
+        "do_not_begin_with_z": ["cat", "dog", "hat", "man", "run", "sun", "bed", "pig", "top"]
+      }
+    },
+    "ability_level_modifications": {
+      "task": "Respond to teacher request for a modified teacher script in which the activity changes according to teacher request of Low, Middle, or High child level ability",
+      "input": "Provide Modification1-4: Low, Middle, or High",
+      "output": "Use Activities for Adaptations1-4 to change activity according to teacher request for child ability level. Revise lesson plan with modified teacher script",
+      "example_high_level": {
+        "activity": "Sound Puzzle",
+        "level": "High",
+        "description": "Children are given two previously learned sounds at a time; they must add in the target sound (either beginning, middle, or end) to create a word",
+        "teacher_script": "Great! Now we are going to play our Sound Puzzle +Level: High. We are listening for the /z/ sound at the beginning of the word. The /z/ sound is going to be the beginning sound of the word. Each of you has the /z/ sound in in front of you. I am going to give you two sounds. These are sounds you already know. You are going to put the /z/ sound and the two sounds I give you together to make a word, and it could be a nonsense word. Watch me. I will show you first. Here's two sounds: /a/ and /p/. I am thinking about ordering the sounds to make a word. I am going to place /z/ first, than /a/, then /p/. {teacher sound out the phonemes /z/ /a/ /p/}. When I say go, tell me your word. So, you would say: zap. My turn. Your two sounds are /i/ and /p/. Put them in order. Get Ready...Go. (children should say zip). {Teacher repeats this process to cement sound to memory then connects to letter form}"
+      }
+    }
+  }
+}
