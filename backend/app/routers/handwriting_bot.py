@@ -5,8 +5,10 @@ Provides endpoints to test the handwriting bot graph.
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional
+from langchain_core.messages import HumanMessage, AIMessage
 from app.graph.handwriting_graph import run_handwriting_bot, stream_handwriting_bot
 from app.service.form_retrieval_service import form_retrieval_service
+from app.service.conversation_memory import conversation_memory
 
 router = APIRouter(prefix="/handwriting-bot", tags=["Handwriting Bot"])
 
@@ -55,24 +57,45 @@ async def chat_with_handwriting_bot(request: HandwritingQuery):
     
     try:
         start_time = time.time()
-        
+
         print(f"🎯 Handwriting Bot Request: '{request.query[:50]}...'")
         print(f"👤 Teacher ID: {request.teacher_id}")
         print(f"💬 Session ID: {request.session_id}")
-        
-        # Run the handwriting bot graph
+
+        # Retrieve conversation history and metadata from memory
+        conversation_data = conversation_memory.get_conversation_with_metadata(
+            session_id=request.session_id,
+            teacher_id=request.teacher_id
+        )
+
+        # Extract conversation history and previous metadata
+        if conversation_data:
+            conversation_history = conversation_data.get("messages", [])
+            previous_metadata = conversation_data.get("metadata", {})
+            conversation_history.append(HumanMessage(content=request.query))
+            print(f"📜 Continuing conversation with {len(conversation_history)} messages")
+            print(f"📌 Previous metadata: {previous_metadata}")
+        else:
+            # Start a new conversation
+            conversation_history = [HumanMessage(content=request.query)]
+            previous_metadata = {}
+            print(f"🆕 Starting new conversation")
+
+        # Run the handwriting bot graph with conversation history and previous metadata
         final_state = await run_handwriting_bot(
             teacher_query=request.query,
             teacher_id=request.teacher_id,
-            session_id=request.session_id
+            session_id=request.session_id,
+            conversation_history=conversation_history,  # Pass the full conversation history
+            previous_metadata=previous_metadata  # Pass previous analysis metadata
         )
-        
+
         processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
-        
+
         # Extract the bot's response from the final state
         messages = final_state.get("messages", [])
         bot_response = ""
-        
+
         # Find the last AI message
         for message in reversed(messages):
             if hasattr(message, 'type') and message.type == 'ai':
@@ -81,17 +104,29 @@ async def chat_with_handwriting_bot(request: HandwritingQuery):
             elif hasattr(message, 'content') and isinstance(message.content, str):
                 bot_response = message.content
                 break
-        
+
         if not bot_response:
             bot_response = "I apologize, but I wasn't able to generate a proper response. Please try rephrasing your question."
-        
+
+        # Save the updated conversation history (includes both user message and bot response)
+        conversation_memory.save_conversation(
+            session_id=request.session_id,
+            teacher_id=request.teacher_id,
+            messages=messages,
+            metadata={
+                "query_type": final_state.get("query_type"),
+                "target_letters": final_state.get("target_letters", []),
+                "grade_level": final_state.get("grade_level")
+            }
+        )
+
         # Extract relevant form letters from the forms that were used
         relevant_forms = final_state.get("relevant_forms", [])
         form_letters = []
         for form in relevant_forms:
             if 'form_letter' in form:
                 form_letters.append(f"Form {form['form_letter']}")
-        
+
         # Build response
         response = HandwritingResponse(
             query=request.query,
@@ -104,11 +139,12 @@ async def chat_with_handwriting_bot(request: HandwritingQuery):
             conversation_depth=final_state.get("conversation_depth", 1),
             processing_time_ms=round(processing_time, 2)
         )
-        
+
         print(f"✅ Handwriting Bot Response generated in {processing_time:.2f}ms")
         print(f"📝 Query Type: {response.query_type}")
         print(f"📚 Forms Used: {len(form_letters)}")
-        
+        print(f"💾 Conversation saved ({len(messages)} total messages)")
+
         return response
         
     except Exception as e:

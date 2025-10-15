@@ -264,7 +264,7 @@ def create_handwriting_graph():
 handwriting_graph = create_handwriting_graph()
 
 # Function to run the graph with a teacher's query
-async def run_handwriting_bot(teacher_query: str, teacher_id: str = "teacher_001", session_id: str = "session_001", conversation_history: list = None):
+async def run_handwriting_bot(teacher_query: str, teacher_id: str = "teacher_001", session_id: str = "session_001", conversation_history: list = None, previous_metadata: dict = None):
     """
     Run the handwriting bot with a teacher's query.
 
@@ -273,6 +273,7 @@ async def run_handwriting_bot(teacher_query: str, teacher_id: str = "teacher_001
         teacher_id: Unique identifier for the teacher
         session_id: Unique identifier for the conversation session
         conversation_history: Optional list of previous messages for context
+        previous_metadata: Optional dict with previous analysis (query_type, target_letters, grade_level)
 
     Returns:
         Final state with the bot's response
@@ -288,15 +289,19 @@ async def run_handwriting_bot(teacher_query: str, teacher_id: str = "teacher_001
     else:
         messages = [HumanMessage(content=teacher_query)]
 
-    # Create initial state
+    # Use previous metadata if available (for follow-up queries)
+    if previous_metadata is None:
+        previous_metadata = {}
+
+    # Create initial state with previous metadata to preserve context
     initial_state = {
         "messages": messages,  # Use full conversation history
         "teacher_id": teacher_id,
         "session_id": session_id,
         "original_query": teacher_query,
-        "query_type": None,
-        "target_letters": [],
-        "grade_level": None,
+        "query_type": previous_metadata.get("query_type"),  # Preserve previous query type
+        "target_letters": previous_metadata.get("target_letters", []),  # Preserve previous target letters
+        "grade_level": previous_metadata.get("grade_level"),  # Preserve previous grade level
         "relevant_forms": [],
         "form_context": "",
         "response_generated": False,
@@ -308,6 +313,8 @@ async def run_handwriting_bot(teacher_query: str, teacher_id: str = "teacher_001
         "previous_topics": [],
         "follow_up_questions": []
     }
+
+    print(f"🔍 Initial state - Target letters: {initial_state['target_letters']}, Grade: {initial_state['grade_level']}")
     
     # Configuration for the graph execution
     config = {

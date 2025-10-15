@@ -5,12 +5,14 @@ Provides endpoints for the master routing graph that handles all educational dom
 import time
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any, List, Optional
+from langchain_core.messages import HumanMessage, AIMessage
 from app.schemas.intent import (
     IntentRequest, IntentResult, ChatRequest, ChatResponse, BotResponse
 )
 from app.service.intent_classification_service import intent_service
 from app.graph.routing_graph import run_educational_chatbot, stream_educational_chatbot
 from app.service.form_retrieval_service import form_retrieval_service
+from app.service.conversation_memory import conversation_memory
 
 router = APIRouter(prefix="/educational-bot", tags=["Educational Bot"])
 
@@ -74,26 +76,72 @@ async def chat_with_educational_bot(request: ChatRequest):
     try:
         start_time = time.time()
 
-        
-        # Run the complete educational chatbot routing
+        print(f"🎯 Educational Bot Request: '{request.message[:50]}...'")
+        print(f"👤 Teacher ID: {request.teacher_id}")
+        print(f"💬 Session ID: {request.session_id}")
+
+        # Retrieve conversation history from memory
+        conversation_history = conversation_memory.get_conversation(
+            session_id=request.session_id,
+            teacher_id=request.teacher_id
+        )
+
+        # If there's existing conversation, append the new user message
+        if conversation_history:
+            conversation_history.append(HumanMessage(content=request.message))
+            print(f"📜 Continuing conversation with {len(conversation_history)} messages")
+        else:
+            # Start a new conversation
+            conversation_history = [HumanMessage(content=request.message)]
+            print(f"🆕 Starting new conversation")
+
+        # Run the complete educational chatbot routing with conversation history
         final_state = await run_educational_chatbot(
             teacher_query=request.message,
             teacher_id=request.teacher_id,
-            session_id=request.session_id
+            session_id=request.session_id,
+            conversation_history=conversation_history  # Pass full conversation history
         )
-        
+
         total_processing_time = (time.time() - start_time) * 1000
-        
+
+        # Extract bot response
+        bot_response = final_state.get("bot_response", "I apologize, but I wasn't able to generate a proper response.")
+
+        # Save the updated conversation history
+        # Get all messages from the final state
+        all_messages = final_state.get("messages", conversation_history)
+
+        # If the bot generated a response, make sure it's in the messages
+        if bot_response and (not all_messages or all_messages[-1].content != bot_response):
+            all_messages.append(AIMessage(content=bot_response))
+
+        conversation_memory.save_conversation(
+            session_id=request.session_id,
+            teacher_id=request.teacher_id,
+            messages=all_messages,
+            metadata={
+                "intent": final_state.get("intent"),
+                "confidence": final_state.get("confidence"),
+                "bot_type": final_state.get("bot_type")
+            }
+        )
+
         # Extract response details from final state
         response = ChatResponse(
             intent=final_state.get("intent", "general"),
             confidence=final_state.get("confidence", 0.0),
-            response=final_state.get("bot_response", "I apologize, but I wasn't able to generate a proper response."),
+            response=bot_response,
             bot_type=final_state.get("bot_type", "unknown"),
             relevant_forms=final_state.get("relevant_forms", []),
             follow_up_questions=final_state.get("follow_up_questions", []),
             processing_time_ms=round(total_processing_time, 2)
         )
+
+        print(f"✅ Educational Bot Response generated in {total_processing_time:.2f}ms")
+        print(f"🤖 Bot Type: {response.bot_type}")
+        print(f"🎯 Intent: {response.intent} (confidence: {response.confidence:.2f})")
+        print(f"💾 Conversation saved ({len(all_messages)} total messages)")
 
         return response
         
