@@ -10,6 +10,14 @@ export const chat = {
   , send: (message) => client.apiPost('/message', { message })
 };
 
+// WebSocket helper (uses Vite env var VITE_WS_BASE_URL)
+import createWsClient from '../utils/wsClient';
+export function createChatWsClient() {
+  const base = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000';
+  const wsUrl = base.replace(/\/$/, '') + '/api/v1/chat/ws/message';
+  return createWsClient(wsUrl, { maxRetries: 10, baseDelay: 500 });
+}
+
 export const users = {
   status: () => client.apiGet('/users')
 };

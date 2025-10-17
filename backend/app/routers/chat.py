@@ -1,54 +1,13 @@
 """
 Chat router for the FastAPI application.
-Contains HTTP endpoints for chat functionality using LangGraph.
+Contains HTTP and WebSocket endpoints for chat functionality.
+Production logic is delegated to `ChatService`.
 """
-<<<<<<< HEAD
+
 from fastapi import APIRouter, HTTPException, Depends, WebSocket
 from fastapi.responses import JSONResponse
-=======
-from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional
->>>>>>> 1c9c86b (feat(chat): wire frontend chat UI to demo backend POST and add api client + dev status panel)
-
-from app.service.chat_service import ChatService
-from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
-
-
-<<<<<<< HEAD
-router = APIRouter(prefix="/chat", tags=["Chat"])
-
-
-def get_chat_service() -> ChatService:
-=======
-class MessageIn(BaseModel):
-    message: str
-    conversation_id: Optional[str] = None
-
-
-class MessageOut(BaseModel):
-    reply: str
-    conversation_id: Optional[str] = None
-
-
-@router.get("/chat", tags=["Chat"])
-def get_chat_status():
->>>>>>> 1c9c86b (feat(chat): wire frontend chat UI to demo backend POST and add api client + dev status panel)
-    """
-    Dependency function to get ChatService instance.
-    This creates a new instance for each request.
-    """
-<<<<<<< HEAD
-    return ChatService()
-
-
-@router.post("/message", response_model=ChatMessageResponse)
-"""
-Chat router for the FastAPI application.
-Contains HTTP endpoints for chat functionality using LangGraph (production) and a simple demo POST for local testing.
-"""
-from fastapi import APIRouter, HTTPException, Depends, WebSocket
-from fastapi.responses import JSONResponse
 
 from app.service.chat_service import ChatService
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
@@ -71,7 +30,6 @@ def get_chat_status():
     Simple status endpoint for the chat router (returns at /api/v1/chat).
     """
     return {"router": "chat", "status": "active", "message": "Chat router is working"}
-
 
 
 @router.post("/message", response_model=ChatMessageResponse)
