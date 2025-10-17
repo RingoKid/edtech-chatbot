@@ -148,22 +148,31 @@ class ChatService:
                 }
 
                 # Stream events from the graph
-                async for event in self.graph.astream_events(input_state, config=config, version="v1"):
-                    # Filter for chat model stream events
-                    if event["event"] == "on_chat_model_stream":
-                        ## Extract the content chunk from the event
-                        chunk_content = event["data"]["chunk"].content
+                try:
+                    async for event in self.graph.astream_events(input_state, config=config, version="v1"):
+                        # Filter for chat model stream events
+                        if event["event"] == "on_chat_model_stream":
+                            ## Extract the content chunk from the event
+                            chunk_content = event["data"]["chunk"].content
 
-                        # Only send non-empty chunks
-                        if chunk_content:
-                            # Construct a ChatMessageResponse with the chunk
-                            response = ChatMessageResponse(
-                                thread_id=thread_id,
-                                reply=chunk_content
-                            )
+                            # Only send non-empty chunks
+                            if chunk_content:
+                                # Construct a ChatMessageResponse with the chunk
+                                response = ChatMessageResponse(
+                                    thread_id=thread_id,
+                                    reply=chunk_content
+                                )
 
-                            # Send the chunk as JSON over the WebSocket
-                            await websocket.send_text(response.model_dump_json())
+                                # Send the chunk as JSON over the WebSocket
+                                await websocket.send_text(response.model_dump_json())
+                finally:
+                    # After streaming completes (or if an error occurs), send a final done marker so clients can stop any typing indicators
+                    try:
+                        await websocket.send_text(json.dumps({"thread_id": thread_id, "done": True}))
+                        print(f"Sent done marker for thread {thread_id}")
+                    except Exception:
+                        # If the websocket is closed or send fails, ignore
+                        print(f"Failed to send done marker for thread {thread_id}")
 
         except WebSocketDisconnect:
             print("WebSocket client disconnected")

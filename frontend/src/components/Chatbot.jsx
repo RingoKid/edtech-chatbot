@@ -23,6 +23,8 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
   const wsRef = useRef(null)
+  const placeholderIdRef = useRef(null)
+  const chunkTimeoutRef = useRef(null)
 
   // Check if user is at the bottom of the chat
   const isAtBottom = () => {
@@ -33,15 +35,25 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
 
   // Auto-scroll to latest message only if user is at bottom
   const scrollToBottom = () => {
-    if (!isUserScrolling || isAtBottom()) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    const el = messagesContainerRef.current
+    if (!el) return
+    // Only auto-scroll if user is not actively scrolling and chat is at (or near) bottom
+    if (!isUserScrolling && isAtBottom()) {
+      // Only scroll the chat container if it can scroll; avoid scrolling the whole page
+      if (el.scrollHeight > el.clientHeight) {
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+      }
       setIsUserScrolling(false)
     }
   }
 
   // Force scroll to bottom (used by the scroll-to-bottom button)
   const forceScrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    const el = messagesContainerRef.current
+    if (!el) return
+    if (el.scrollHeight > el.clientHeight) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    }
     setIsUserScrolling(false)
   }
 
@@ -57,6 +69,25 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
     }
   }
 
+  // Wheel handler: allow page to scroll when chat is at top/bottom; otherwise keep wheel for chat
+  const handleWheel = (e) => {
+    const el = messagesContainerRef.current
+    if (!el) return
+    const { scrollTop, scrollHeight, clientHeight } = el
+    const delta = e.deltaY
+
+    const atTop = scrollTop <= 0
+    const atBottom = scrollTop + clientHeight >= scrollHeight - 1
+
+    // If user scrolls up but chat already at top -> allow page to scroll (do nothing)
+    // If user scrolls down but chat already at bottom -> allow page to scroll
+    // Otherwise stop propagation so the chat scrolls instead of the page
+    if ((delta < 0 && !atTop) || (delta > 0 && !atBottom)) {
+      e.stopPropagation()
+    }
+    // else: let the event bubble so the outer page can scroll
+  }
+
   useEffect(() => {
     scrollToBottom()
   }, [messages, isTyping])
@@ -69,25 +100,53 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
     // store the unsubscribe function so we can remove listener on cleanup
     unsub = client.subscribe((evt) => {
       if (evt.type === 'open') setWsConnected(true)
-      if (evt.type === 'close') setWsConnected(false)
-      if (evt.type === 'error') setWsConnected(false)
+      if (evt.type === 'close') {
+        setWsConnected(false)
+        // Streaming finished (connection closed) -> stop typing indicator
+        setIsTyping(false)
+        placeholderIdRef.current = null
+      }
+      if (evt.type === 'error') {
+        setWsConnected(false)
+        setIsTyping(false)
+      }
       if (evt.type === 'message') {
         const data = evt.data || {}
-        // Expect data to be { response, thread_id } per API
-        if (data.response) {
-          const botMessage = {
-            id: Date.now() + Math.floor(Math.random() * 1000),
-            type: 'bot',
-            content: data.response,
-            timestamp: new Date()
+        // If server signals done, clear typing indicator and placeholder
+        if (data.done) {
+          setIsTyping(false)
+          placeholderIdRef.current = null
+          return
+        }
+        // Backend token stream may use `reply` (accumulated chunk) or `response`.
+        const chunk = data.reply ?? data.response ?? data.message ?? data.content ?? null
+        if (chunk) {
+          // If we have a placeholder message id, append to that message; otherwise create a new bot message
+          if (placeholderIdRef.current) {
+            const pid = placeholderIdRef.current
+            setMessages(prev => prev.map(m => m.id === pid ? { ...m, content: (m.content || '') + chunk } : m))
+          } else {
+            const botMessage = {
+              id: Date.now() + Math.floor(Math.random() * 1000),
+              type: 'bot',
+              content: chunk,
+              timestamp: new Date()
+            }
+            setMessages(prev => [...prev, botMessage])
           }
-          setMessages(prev => [...prev, botMessage])
         }
         if (data.thread_id) {
           setThreadId(data.thread_id)
           try { localStorage.setItem('chat_thread_id', data.thread_id) } catch (e) {}
         }
       }
+          // reset idle timeout: if no more chunks arrive within 800ms, consider stream finished
+          if (chunkTimeoutRef.current) clearTimeout(chunkTimeoutRef.current)
+          chunkTimeoutRef.current = setTimeout(() => {
+            setIsTyping(false)
+            placeholderIdRef.current = null
+            chunkTimeoutRef.current = null
+          }, 800)
     })
     client.connect().catch(err => console.warn('WS connect failed', err))
 
@@ -155,16 +214,24 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
     }
 
     // Use WebSocket if connected; otherwise fallback to HTTP POST or local generator
-    setIsTyping(true)
     const client = wsRef.current
     if (client && client.isConnected && client.isConnected()) {
       try {
+        // Create a single placeholder bot message that will be appended to as tokens arrive
+        const placeholderId = Date.now() + Math.floor(Math.random() * 1000)
+        const placeholder = { id: placeholderId, type: 'bot', content: '', timestamp: new Date() }
+        placeholderIdRef.current = placeholderId
+        setMessages(prev => [...prev, placeholder])
+        setIsTyping(true)
+
         const payload = { message: inputValue }
         if (threadId) payload.thread_id = threadId
         client.send(payload)
-        // Server will send back messages which we append via subscription
+        // Server will stream back tokens and we'll append them to the placeholder
       } catch (err) {
         console.warn('WS send failed, falling back to HTTP', err)
+        placeholderIdRef.current = null
+        setIsTyping(true)
         try {
           const res = await chat.send(inputValue)
           const botResponse = {
@@ -178,12 +245,13 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
           const response = generateResponse(inputValue)
           const botResponse = { id: Date.now() + 1, type: 'bot', content: response, timestamp: new Date() }
           setMessages(prev => [...prev, botResponse])
+        } finally {
+          setIsTyping(false)
         }
-      } finally {
-        setIsTyping(false)
       }
     } else {
       // No WS connection — fallback to HTTP
+      setIsTyping(true)
       try {
         const res = await chat.send(inputValue)
         const botResponse = {
@@ -254,7 +322,8 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
       <div 
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 space-y-4 relative min-h-0"
+        onWheel={handleWheel}
+        className="flex-1 overflow-y-auto p-4 space-y-4 relative min-h-0 overscroll-auto"
       >
         <AnimatePresence>
           {messages.map((message) => (
@@ -313,7 +382,7 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
               </div>
               <div className="bg-gray-100 rounded-lg px-4 py-2 flex items-center space-x-1">
                 <Loader className="w-4 h-4 animate-spin text-gray-500" />
-                <span className="text-sm text-gray-500">Thinking...</span>
+                {/* No text label - visual loader is sufficient */}
               </div>
             </div>
           </motion.div>

@@ -6,8 +6,12 @@ export const health = {
 };
 
 export const chat = {
-  status: () => client.apiGet('/chat')
-  , send: (message) => client.apiPost('/message', { message })
+  status: () => client.apiGet('/chat'),
+  // send(message, thread_id?) -> POST /api/v1/chat/message
+  send: (message, thread_id = undefined) => {
+    const body = thread_id ? { message, thread_id } : { message };
+    return client.apiPost('/chat/message', body);
+  }
 };
 
 // WebSocket helper (uses Vite env var VITE_WS_BASE_URL)
