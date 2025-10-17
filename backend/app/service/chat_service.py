@@ -23,7 +23,8 @@ class ChatService:
         """
         Initialize the ChatService with LangGraph.
         """
-        self.graph = create_graph()
+        # Use checkpointer for FastAPI application to enable DynamoDB persistence
+        self.graph = create_graph(use_checkpointer=True)
 
     def create_new_thread(self, user_id: str) -> str:
         """

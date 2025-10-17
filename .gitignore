@@ -322,3 +322,7 @@ public
 # Vite
 dist-ssr
 *.tsbuildinfo
+
+
+# macOS
+.DS_Store

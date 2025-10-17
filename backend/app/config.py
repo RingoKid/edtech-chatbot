@@ -3,6 +3,7 @@ from pydantic import Field, SecretStr
 from typing import Optional
 from enum import Enum
 import os
+import boto3
 from dotenv import load_dotenv
 
 
@@ -93,5 +94,23 @@ class Settings(BaseSettings):
             return f"{base_name}-sandbox"
         else:  # PRODUCTION
             return f"{base_name}-prod"
+
+    def configure_boto3_for_dynamodb(self) -> None:
+        """
+        Configure boto3 session for DynamoDB access.
+        This sets up the default boto3 session with AWS credentials and region,
+        and configures the DynamoDB endpoint URL if specified (for local development).
+        """
+        # Configure boto3 to use the AWS credentials and region
+        boto3.setup_default_session(
+            region_name=self.aws_region,
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key
+        )
+
+        # Set the endpoint URL via environment variable (boto3 will pick this up)
+        # This is needed for local DynamoDB development
+        if self.dynamodb_endpoint_url:
+            os.environ['AWS_ENDPOINT_URL_DYNAMODB'] = self.dynamodb_endpoint_url
 
 settings = Settings()
