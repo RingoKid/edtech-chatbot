@@ -14,7 +14,7 @@ const MainLayout = () => {
       </main>
       <Footer />
       <ChatBubble />
-      {import.meta.env.DEV && <ApiStatus />}
+
     </div>
   )
 }

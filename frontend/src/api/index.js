@@ -6,8 +6,8 @@ export const health = {
 };
 
 export const chat = {
-  status: () => client.apiGet('/chat')
-  , send: (message) => client.apiPost('/message', { message })
+  status: () => client.apiGet('/chat/ws/info'),
+  send: (message, threadId = null) => client.apiPost('/chat/message', { message, thread_id: threadId })
 };
 
 export const users = {

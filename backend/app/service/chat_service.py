@@ -8,7 +8,7 @@ import uuid
 import json
 
 from fastapi import WebSocket, WebSocketDisconnect
-from app.graph.graph import create_graph
+from app.graph.studio_routing_graph import studio_routing_graph
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 
@@ -21,9 +21,10 @@ class ChatService:
 
     def __init__(self):
         """
-        Initialize the ChatService with LangGraph.
+        Initialize the ChatService with the complete routing graph.
+        This graph routes to specialized bots: handwriting, vocabulary, ideas, and general.
         """
-        self.graph = create_graph()
+        self.graph = studio_routing_graph
 
     def create_new_thread(self, user_id: str) -> str:
         """
