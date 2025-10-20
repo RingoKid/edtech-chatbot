@@ -1,15 +1,31 @@
 # docker-compose.override.yml
+# This file overrides settings in docker-compose.yml for local development with debugging enabled.
+# It automatically merges with docker-compose.yml when you run `docker-compose up`.
+
 services:
   backend:
     ports:
-      # Expose the debugger port 5678 to your local machine
+      # Expose the debugger port 5678 to your local machine for VS Code/PyCharm debugging
       - "5678:5678"
 
+    env_file:
+      # Load environment variables from both .env files
+      # .env.local will override values from .env for local development
+      - ./backend/.env
+      - ./backend/.env.local
+
     environment:
-      # Enable debug mode to start FastAPI with debugger
+      # Enable debug mode - this tells startup.sh to start FastAPI with debugpy debugger
+      # When DEBUG_MODE=true, startup.sh will run:
+      #   python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      # When DEBUG_MODE is not set or false, startup.sh will run:
+      #   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       - DEBUG_MODE=true
 
-    # Use the startup script which now supports debug mode
-    command: >
-      sh -c "chmod +x ./startup.sh && ./startup.sh"
-
+    # Use the startup.sh script which handles:
+    # 1. Waiting for DynamoDB to be ready
+    # 2. Loading educational forms into DynamoDB
+    # 3. Starting LangGraph Studio on port 2024 (in background)
+    # 4. Starting FastAPI on port 8000 (with debugger when DEBUG_MODE=true)
+    # 5. Graceful shutdown handling for both services
+    command: ["bash", "-c", "chmod +x ./startup.sh && ./startup.sh"]

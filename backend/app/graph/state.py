@@ -5,7 +5,6 @@ from langgraph.graph.message import add_messages
 
 class GraphState(TypedDict):
     """
-    State schema for the lesson planning graph.
 
     Attributes:
         messages: List of conversation messages (automatically managed by LangGraph)

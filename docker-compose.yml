@@ -1,47 +1,71 @@
 # docker-compose.yml
+# Base configuration for the EdTech Chatbot application.
+# This file defines the core services: backend (FastAPI + LangGraph), frontend (React), and DynamoDB.
+# For local development with debugging, see docker-compose.override.yml
+
 services:
   backend:
     build:
       context: .
       target: final
     ports:
-      - "8000:8000"
-      - "2024:2024"  # LangGraph Studio port
+      - "8000:8000"    # FastAPI server
+      - "2024:2024"    # LangGraph Studio
     volumes:
+      # Mount your local backend source code into the container.
+      # Changes on your host will be reflected immediately inside the container (hot reload).
       - ./backend:/app
-      - ./data:/app/data  # Mount data directory for forms
+      # Mount data directory for educational forms and DynamoDB data
+      - ./data:/app/data
+    # Use startup.sh script which handles:
+    # 1. Waiting for DynamoDB to be ready
+    # 2. Loading educational forms into DynamoDB
+    # 3. Starting LangGraph Studio on port 2024
+    # 4. Starting FastAPI on port 8000 (with optional debugger if DEBUG_MODE=true)
     command: ["bash", "-c", "chmod +x ./startup.sh && ./startup.sh"]
+    env_file:
+      # Load environment variables from .env files
+      - ./backend/.env
+      - ./backend/.env.local
     environment:
+      # Define development-specific environment variables here.
       - ENV=development
       - PYTHONPATH=/app
-      - APP_ENV=local
-      - DYNAMODB_ENDPOINT_URL=http://dynamodb-local:8000
-      - DYNAMODB_TABLE_NAME=EdTechChatbotTable
-      - AWS_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=dummy
-      - AWS_SECRET_ACCESS_KEY=dummy
-    depends_on:
-      - dynamodb-local
 
   frontend:
+    # Use the base node image directly for the React development server.
     image: node:22-alpine
     working_dir: /app/frontend
     ports:
-      - "3000:5173"
+      - "3000:5173"    # Map host port 3000 to container port 5173 (Vite dev server)
     volumes:
+      # Mount the frontend source code for hot reload
       - ./frontend:/app/frontend
+      # Use a named volume for node_modules to prevent host OS from overwriting it.
+      # This isolates dependencies inside the container for performance and consistency.
       - node_modules:/app/frontend/node_modules
+    # Install dependencies and start Vite dev server with host 0.0.0.0 for external access
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
 
   dynamodb-local:
+    # Amazon DynamoDB Local for development/testing without AWS credentials
     image: amazon/dynamodb-local:latest
     ports:
-      - "8001:8000"
+      - "8001:8000"    # Map host port 8001 to DynamoDB's internal port 8000
     volumes:
+      # Use a bind mount to persist DynamoDB data on the host filesystem
+      # This ensures data persists between container restarts
       - ./data/dynamodb:/home/dynamodblocal/data
     working_dir: /home/dynamodblocal
+    # Start DynamoDB with shared DB mode and optimize on startup
+    # -sharedDb: Use a single database file for all regions/credentials
+    # -optimizeDbBeforeStartup: Improve performance by optimizing the database on start
+    # -dbPath: Specify where to store the database file
     command: [ "-jar", "DynamoDBLocal.jar", "-sharedDb", "-optimizeDbBeforeStartup", "-dbPath", "./data" ]
 
 volumes:
+  # Named volume for frontend node_modules
+  # This prevents the host's node_modules from interfering with the container's dependencies
   node_modules:
+  # Named volume for DynamoDB data persistence (currently using bind mount instead)
   dynamodb_data:

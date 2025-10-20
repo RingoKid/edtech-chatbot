@@ -5,7 +5,6 @@ Test script to verify the environment-aware configuration is working correctly.
 
 import os
 import sys
-sys.path.append('/Users/rifat/Documents/Work/edtech/edtech-chatbot/backend')
 
 from app.config import settings, AppEnv
 
