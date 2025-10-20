@@ -99,6 +99,12 @@ class HandwritingNodes:
             extracted_grade = analysis_result.get("grade_level", "not_specified")
             extracted_query_type = analysis_result.get("query_type", "general")
 
+            # FALLBACK: If no letters were extracted from JSON, try regex extraction
+            if not extracted_letters:
+                extracted_letters = self._extract_letters_with_regex(query)
+                if extracted_letters:
+                    print(f"🔍 DEBUG - Fallback regex extraction found letters: {extracted_letters}")
+
             print(f"🔍 DEBUG - Query: '{query}'")
             print(f"🔍 DEBUG - Extracted from current query - target_letters: {extracted_letters}, grade: {extracted_grade}")
 
@@ -148,6 +154,7 @@ class HandwritingNodes:
         try:
             query_type = state.get("query_type", "general")
             target_letters = state.get("target_letters", [])
+            grade_level = state.get("grade_level", "not_specified")
             
             # Retrieve forms based on query type
             if target_letters:
@@ -157,29 +164,78 @@ class HandwritingNodes:
                 # Get forms by query type
                 relevant_forms = await form_retrieval_service.get_forms_by_query_type(query_type)
 
-            # Also get standards if grade level is specified
-            grade_level = state.get("grade_level", "not_specified")
+            # Get specific form content for target letters
+            specific_form_content = {}
+            if target_letters:
+                for letter in target_letters:
+                    # Get letter formation cues from Form F
+                    formation_cues = await form_retrieval_service.get_letter_formation_cues(letter)
+                    specific_form_content[f"{letter}_formation"] = formation_cues
+                    
+                    # Get phoneme gesture from Form G (convert letter to sound)
+                    sound = f"/{letter.lower()}/"
+                    gesture_data = await form_retrieval_service.get_phoneme_gesture(sound)
+                    specific_form_content[f"{letter}_gesture"] = gesture_data
+
+            # Get ability-level activities from Form D
+            ability_activities = {}
+            for level in ["low", "middle", "high"]:
+                activities = await form_retrieval_service.get_handwriting_activities_by_level(level)
+                ability_activities[level] = activities
+
+            # Get standards if grade level is specified
             standards_data = {}
             if grade_level in ["prek", "kindergarten"]:
                 standards_data = await form_retrieval_service.get_standards_by_grade(grade_level)
             
-            # Build context string for LLM
-            form_context = form_retrieval_service.build_context_string(relevant_forms, max_length=3500)
+            # Build enhanced context string for LLM
+            form_context = form_retrieval_service.build_context_string(relevant_forms, max_length=2500)
+            
+            # Add specific form content
+            specific_context = "\n\n=== SPECIFIC FORM CONTENT ===\n"
+            
+            # Add letter-specific content
+            if target_letters:
+                for letter in target_letters:
+                    specific_context += f"\n--- LETTER {letter.upper()} ---\n"
+                    
+                    # Add formation cues
+                    if f"{letter}_formation" in specific_form_content:
+                        formation = specific_form_content[f"{letter}_formation"]
+                        specific_context += f"Uppercase Formation: {formation['uppercase']}\n"
+                        specific_context += f"Lowercase Formation: {formation['lowercase']}\n"
+                    
+                    # Add gesture
+                    if f"{letter}_gesture" in specific_form_content:
+                        gesture = specific_form_content[f"{letter}_gesture"]
+                        specific_context += f"Sound: {gesture['sound_word']}\n"
+                        specific_context += f"Gesture: {gesture['gesture']}\n"
+            
+            # Add ability-level activities
+            specific_context += "\n--- ACTIVITIES BY ABILITY LEVEL ---\n"
+            for level, activities in ability_activities.items():
+                specific_context += f"\n{level.upper()} LEVEL ACTIVITIES:\n"
+                for activity in activities[:3]:  # Limit to first 3 activities per level
+                    specific_context += f"- {activity['name']}: {activity['description'][:100]}...\n"
             
             # Add standards context if available
             if standards_data:
-                standards_summary = f"\n=== {grade_level.upper()} STANDARDS ===\n"
+                specific_context += f"\n--- {grade_level.upper()} STANDARDS ---\n"
                 if 'handwriting_standards' in standards_data:
-                    standards_summary += "Handwriting Standards:\n"
                     for standard in standards_data['handwriting_standards'][:3]:  # Limit to first 3
-                        standards_summary += f"- {standard}\n"
-                form_context += standards_summary
+                        specific_context += f"- {standard}\n"
             
-            print(f"✅ Retrieved {len(relevant_forms)} forms for query type: {query_type}")
+            # Combine all context
+            full_context = form_context + specific_context
+            
+            print(f"✅ Retrieved {len(relevant_forms)} forms + specific content for query type: {query_type}")
+            print(f"✅ Target letters: {target_letters}")
             
             return {
                 "relevant_forms": relevant_forms,
-                "form_context": form_context,
+                "form_context": full_context,
+                "specific_form_content": specific_form_content,
+                "ability_activities": ability_activities,
                 "retry_count": 0
             }
             
@@ -188,6 +244,8 @@ class HandwritingNodes:
             return {
                 "relevant_forms": [],
                 "form_context": "Error retrieving educational forms. Using general handwriting knowledge.",
+                "specific_form_content": {},
+                "ability_activities": {},
                 "last_error": f"Form retrieval failed: {str(e)}",
                 "retry_count": state.get("retry_count", 0) + 1
             }
@@ -221,6 +279,9 @@ class HandwritingNodes:
                 not target_letters  # No letter specified
             )
 
+            # Check if we have no target letters at all (regardless of teaching keywords)
+            has_no_target_letters = not target_letters
+
             needs_context = (
                 is_lesson_request and
                 conversation_depth <= 1 and  # First interaction
@@ -228,12 +289,17 @@ class HandwritingNodes:
             )
 
             # If query is incomplete (no letter specified), ask for which letter
-            if is_incomplete_query:
-                clarification_message = """I'd be happy to help you teach handwriting!
+            if is_incomplete_query or has_no_target_letters:
+                clarification_message = f"""I'd be happy to help you teach handwriting!
 
-Which letter would you like to teach? Please specify the letter, and I'll create a complete lesson plan for you.
+I didn't catch which specific letter you'd like to focus on. Could you please tell me which letter you want to teach?
 
-For example: "letter A", "letter M", "letter Z", etc."""
+For example:
+• "letter A" or "teach letter A"
+• "letter M" or "help with letter M" 
+• "letter Z" or "Z formation"
+
+Just mention the letter name and I'll create a complete, scripted lesson plan for you! ✏️"""
 
                 ai_response = AIMessage(content=clarification_message)
                 return {
@@ -332,15 +398,16 @@ Once I know these details, I'll create a complete, scripted lesson plan tailored
 
             **CRITICAL INSTRUCTIONS:**
 
-            1. **USE THE PROVIDED FORMS DATA** - The educational forms content below contains:
-               - Form F: Exact sequence verbal cues for every letter
-               - Form G: Exact gestures for every phoneme
-               - You MUST use these exact cues and gestures in your lesson plan
+            1. **USE THE EXACT FORM CONTENT PROVIDED** - The specific form content below contains:
+               - EXACT sequence verbal cues for the target letter(s)
+               - EXACT gestures for the target phoneme(s)
+               - You MUST use these EXACT cues and gestures in your lesson plan
+               - Do NOT modify or paraphrase the formation cues or gestures
 
             2. **LETTER-SPECIFIC CONTENT** - Generate everything for the specific TARGET LETTER:
-               - Use the correct phoneme sound
-               - Use the correct gesture from Form G
-               - Use the correct sequence verbal cues from Form F
+               - Use the EXACT phoneme sound provided
+               - Use the EXACT gesture from the form content
+               - Use the EXACT sequence verbal cues from the form content
                - Use appropriate picture cards (e.g., if 'm', use 'mouse' or 'monkey' cards)
 
             3. **OUTPUT REQUIREMENTS:**
@@ -352,6 +419,7 @@ Once I know these details, I'll create a complete, scripted lesson plan tailored
             ✅ Clean formatting - NO hashtags (#), plus signs (+), or asterisks (*) in user-facing output
             ✅ NEVER mention "Form A-H" or any form references to users
             ✅ Write as the expert, not referencing external sources
+            ✅ Use the EXACT formation cues and gestures provided in the specific form content
 
             **EVIDENCE-BASED PRACTICES TO INCORPORATE:**
             - Proper pencil grip and left-to-right writing
@@ -383,8 +451,10 @@ Once I know these details, I'll create a complete, scripted lesson plan tailored
             ---
             """
 
-            # Build the target letter instruction
+            # Build the target letter instruction with specific form content
             target_letter_instruction = ""
+            specific_form_content = state.get("specific_form_content", {})
+            
             if target_letters:
                 letter_str = ', '.join(target_letters)
                 target_letter_instruction = f"""
@@ -397,6 +467,30 @@ Once I know these details, I'll create a complete, scripted lesson plan tailored
             - Use {letter_str.lower()}-related visual aids and materials (e.g., if 'z', use zebra; if 'a', use apple)
 
             DO NOT use examples from other letters. The entire lesson must be about letter {letter_str.upper()}.
+            """
+                
+                # Add specific form content for each letter
+                for letter in target_letters:
+                    letter_key = letter.lower()
+                    
+                    # Add formation cues
+                    if f"{letter_key}_formation" in specific_form_content:
+                        formation = specific_form_content[f"{letter_key}_formation"]
+                        target_letter_instruction += f"""
+
+            **SPECIFIC FORMATION CUES FOR LETTER {letter.upper()}:**
+            - Uppercase {letter.upper()}: {formation['uppercase']}
+            - Lowercase {letter.lower()}: {formation['lowercase']}
+            """
+                    
+                    # Add gesture information
+                    if f"{letter_key}_gesture" in specific_form_content:
+                        gesture = specific_form_content[f"{letter_key}_gesture"]
+                        target_letter_instruction += f"""
+
+            **SPECIFIC GESTURE FOR /{letter_key}/ SOUND:**
+            - Sound word: {gesture['sound_word']}
+            - Gesture: {gesture['gesture']}
             """
 
             # Build specific response prompt based on query analysis
@@ -606,6 +700,43 @@ Once I know these details, I'll create a complete, scripted lesson plan tailored
                 "retry_count": state.get("retry_count", 0) + 1
             }
     
+    def _extract_letters_with_regex(self, query: str) -> List[str]:
+        """
+        Fallback method to extract letters using regex when JSON parsing fails.
+        
+        Args:
+            query: The teacher's query text
+            
+        Returns:
+            List of extracted letters
+        """
+        # Pattern to match single letters (A-Z, a-z) that might be target letters
+        # Look for patterns like "letter J", "for J", "teach J", "J letter", etc.
+        letter_patterns = [
+            r'\bletter\s+([A-Za-z])\b',  # "letter J"
+            r'\bfor\s+([A-Za-z])\b',     # "for J"
+            r'\bteach\s+([A-Za-z])\b',   # "teach J"
+            r'\b([A-Za-z])\s+letter\b',  # "J letter"
+            r'\b([A-Za-z])\s+formation\b', # "J formation"
+            r'\b([A-Za-z])\s+writing\b',   # "J writing"
+            r'\b([A-Za-z])\s+handwriting\b', # "J handwriting"
+            r'\b([A-Za-z])\b(?=\s|$)',   # Single letter at end or before space
+        ]
+        
+        extracted_letters = []
+        for pattern in letter_patterns:
+            matches = re.findall(pattern, query, re.IGNORECASE)
+            for match in matches:
+                letter = match.upper()
+                if letter not in extracted_letters:
+                    extracted_letters.append(letter)
+        
+        # Filter out common words that might be mistaken for letters
+        common_words = {'A', 'I', 'O', 'U'}  # These could be words or letters
+        # For now, include them but could be filtered based on context
+        
+        return extracted_letters
+
     def _parse_json_response(self, response_content: str) -> Dict[str, Any]:
         """
         Parse JSON response from LLM, with fallback handling.

@@ -250,91 +250,37 @@ For your question: "{query}"
     }
 
 async def execute_general_bot_node(state: RoutingState) -> Dict[str, Any]:
-    """General Education Bot - For unclear queries or multi-domain questions."""
-    query = state.get("original_query", "")
-    confidence = state.get("confidence", 0.0)
-    reasoning = state.get("classification_reasoning", "")
-    
-    # Check if this is a greeting
-    is_greeting = "greeting detected" in reasoning.lower()
-    
-    if is_greeting:
-        # Natural greeting response
-        response = f"""👋 **Hello there!**
+    """General Education Bot - Uses the actual GeneralBot implementation."""
+    try:
+        from app.service.specialized_bots import GeneralBot
 
-Welcome to your Educational Assistant! I'm here to help you with early childhood education strategies and lesson planning.
+        query = state.get("original_query", "")
+        messages = state.get("messages", [])
 
-**I can assist you with:**
+        print(f"🎓 Executing real GeneralBot for query: {query}")
 
-🖊️ **Handwriting & Fine Motor Skills**
-   • Letter formation, pencil grip, writing posture, fine motor development
+        # Create and use the actual GeneralBot
+        general_bot = GeneralBot()
+        result = await general_bot.process_message(query, conversation_history=messages)
 
-📚 **Vocabulary & Sentence Structure**
-   • Vocabulary building, sentence patterns, word recognition strategies
+        return {
+            "messages": [AIMessage(content=result.response)],
+            "bot_response": result.response,
+            "bot_type": result.bot_type,
+            "relevant_forms": result.relevant_forms or [],
+            "follow_up_questions": result.follow_up_questions or []
+        }
 
-💡 **Idea Generation & Writing Organization**
-   • Brainstorming strategies, story planning, writing across different genres
-
-🎓 **General Teaching Strategies**
-   • Classroom management, assessment, differentiation, lesson planning
-
-**What would you like help with today?** Just ask me about any teaching challenge you're facing!
-
-*Examples: "How do I teach letter Z formation?" or "I need vocabulary activities" or "Help with brainstorming for narrative writing"*
-"""
-    elif confidence < 0.5:
-        # Low confidence - ask for clarification  
-        response = f"""🎓 **I'd love to help you!**
-
-I want to give you the most helpful response possible. Could you help me understand what you're looking for?
-
-**Are you asking about:**
-
-🖊️ **Handwriting & Fine Motor Skills**
-   • Letter formation, pencil grip, writing posture
-   
-📚 **Vocabulary & Reading**
-   • Sight words, phonics, spelling, word recognition
-   
-💡 **Creative Writing & Ideas**
-   • Story prompts, brainstorming, narrative development
-   
-🎓 **General Teaching Strategies**
-   • Classroom management, assessment, differentiation
-
-**Just let me know which area interests you, and I'll provide targeted strategies and resources!**
-"""
-    else:
-        # General multi-domain response
-        response = f"""🎓 **Educational Strategies & Tips**
-
-**Cross-Domain Approach:**
-• Integrate handwriting practice with vocabulary lessons
-• Use creative writing to reinforce letter formation
-• Combine phonics instruction with story writing activities
-
-**General Teaching Best Practices:**
-• Differentiate instruction for diverse learners
-• Use ongoing assessment to guide instruction
-• Create supportive, engaging learning environments
-• Foster strong family and community connections
-
-**Implementation Tips:**
-• Start with foundational skills (handwriting, phonics)
-• Gradually build towards creative expression
-• Maintain consistent practice and feedback cycles
-• Celebrate student progress and achievements
-
-**Need More Specific Help?** I can provide detailed strategies for handwriting, vocabulary, or creative writing - just let me know which area you'd like to focus on!
-"""
-    
-    return {
-        "messages": [AIMessage(content=response)],
-        "bot_response": response,
-        "bot_type": "general_education_bot",
-        "relevant_forms": ["All Forms A-Q"],
-        "follow_up_questions": ["Which specific area would you like to focus on?", "Need more targeted strategies?"]
-    }
+    except Exception as e:
+        print(f"❌ Error in studio general bot: {str(e)}")
+        fallback_response = f"I apologize, but I'm having trouble. Please try rephrasing your question."
+        return {
+            "messages": [AIMessage(content=fallback_response)],
+            "bot_response": fallback_response,
+            "bot_type": "general_bot_error",
+            "relevant_forms": [],
+            "follow_up_questions": []
+        }
 
 # Conditional routing functions
 def should_clarify(state: RoutingState) -> str:

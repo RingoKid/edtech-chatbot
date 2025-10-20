@@ -3,7 +3,7 @@ Intent Classification Service using OpenAI for educational domain routing.
 """
 import re
 import json
-from typing import Dict, Any
+from typing import Dict, Any, List
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from app.config import settings
@@ -112,7 +112,13 @@ class IntentClassificationService:
         **CONVERSATION HISTORY (for context):**
         {conversation_context}
 
-        IMPORTANT: Use the conversation history to understand follow-up requests. If the teacher previously asked about a specific letter, topic, or lesson type, maintain that context when classifying their follow-up message.
+        **CRITICAL INSTRUCTIONS FOR FOLLOW-UP MESSAGES:**
+        - If the teacher previously asked about a specific LETTER (A, B, C, etc.), ANY follow-up question should be classified as "handwriting"
+        - If the teacher previously asked about handwriting, letter formation, or spelling, maintain "handwriting" intent
+        - If the teacher previously asked about vocabulary, sentence structure, or grammar, maintain "vocabulary" intent  
+        - If the teacher previously asked about ideas, brainstorming, or creative writing, maintain "ideas" intent
+        - Follow-up questions like "What about...", "How do I...", "Can you explain...", "Tell me more..." should inherit the previous intent
+        - Only classify as "general" if the conversation context doesn't provide clear domain context
         """
 
         return f"""
@@ -149,13 +155,15 @@ class IntentClassificationService:
         **CURRENT TEACHER'S REQUEST:** "{message}"
 
         **CLASSIFICATION GUIDELINES:**
-        - **IMPORTANT**: For follow-up messages, use conversation history to maintain intent continuity
-        - If the teacher previously asked about letter formation/handwriting, classify follow-ups as "handwriting"
+        - **CRITICAL**: For follow-up messages, ALWAYS use conversation history to maintain intent continuity
+        - If conversation history shows handwriting context (letters, formation, spelling), classify follow-ups as "handwriting" with high confidence (0.8+)
+        - If conversation history shows vocabulary context (sentence structure, grammar), classify follow-ups as "vocabulary" with high confidence (0.8+)
+        - If conversation history shows ideas context (brainstorming, creative writing), classify follow-ups as "ideas" with high confidence (0.8+)
         - Use confidence 0.9+ for very clear requests mentioning specific lesson components or objectives
-        - Use confidence 0.8+ for requests clearly aligned with one lesson type's scope
+        - Use confidence 0.8+ for requests clearly aligned with one lesson type's scope OR follow-up questions with clear context
         - Use confidence 0.7+ for moderately clear requests with some ambiguity
         - Use confidence 0.5-0.7 for somewhat ambiguous requests requiring clarification
-        - Use confidence below 0.5 for unclear general requests (route to general)
+        - Use confidence below 0.5 ONLY for unclear general requests with NO conversation context
 
         **FORM MAPPING:**
         - Handwriting/Spelling: Forms A (objectives), B (structure), C (template), D (activities), E (practices), F (verbal cues), G (gestures), H (adaptations)

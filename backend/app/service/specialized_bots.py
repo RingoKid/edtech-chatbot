@@ -2,7 +2,7 @@
 Specialized Educational Bots for Vocabulary and Ideas domains.
 These bots work alongside the existing handwriting bot to provide domain-specific expertise.
 """
-from typing import List, Optional
+from typing import List, Optional, Any
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from app.config import settings
@@ -240,7 +240,7 @@ class VocabularyBot:
                 response=response.content,
                 bot_type="vocabulary_specialist",
                 relevant_forms=used_form_ids,
-                suggested_activities=suggested_activities
+                follow_up_questions=suggested_activities
             )
             
         except Exception as e:
@@ -249,7 +249,7 @@ class VocabularyBot:
                 response=f"I apologize, but I'm having trouble processing your vocabulary question right now. Please try rephrasing your question or contact support if the issue persists.",
                 bot_type="vocabulary_specialist_error",
                 relevant_forms=[],
-                suggested_activities=[]
+                follow_up_questions=[]
             )
 
 class IdeasBot:
@@ -455,7 +455,7 @@ class IdeasBot:
                 response=response.content,
                 bot_type="ideas_specialist",
                 relevant_forms=used_form_ids,
-                suggested_activities=suggested_activities
+                follow_up_questions=suggested_activities
             )
             
         except Exception as e:
@@ -464,7 +464,7 @@ class IdeasBot:
                 response=f"I apologize, but I'm having trouble processing your creative writing question right now. Please try rephrasing your question or contact support if the issue persists.",
                 bot_type="ideas_specialist_error",
                 relevant_forms=[],
-                suggested_activities=[]
+                follow_up_questions=[]
             )
 
 class GeneralBot:
@@ -497,6 +497,13 @@ class GeneralBot:
 
         When questions span multiple domains (handwriting, vocabulary, creative writing),
         provide balanced guidance across all relevant areas.
+
+        **CONVERSATION STYLE**:
+        - For greetings (hi, hello, hey) or vague messages: Respond warmly and ask how you can help with their teaching needs
+        - For unclear requests: Ask clarifying questions to understand what they need
+        - For specific educational questions: Provide detailed, structured guidance
+        - Always be conversational, warm, and natural - avoid overly templated responses
+        - Engage in a dialogue, not a monologue
 
         **IMPORTANT**:
         - NEVER mention "Forms A-H", "Forms I-L", "Forms M-Q" or any form letters/numbers to users
@@ -549,29 +556,24 @@ class GeneralBot:
             ---
             """
 
+            # Simple, natural prompt for all messages - let the LLM decide how to respond
             prompt = f"""
-            A teacher is asking a general education question that may span multiple learning domains. Use your broad expertise to provide helpful guidance.
+            {context_summary}Current teacher's message: "{message}"
 
-            {context_summary}Sample Educational Content (representing all domains):
+            Respond naturally and conversationally based on what the teacher needs:
+
+            - If they're just greeting you (hi, hello, hey, etc.): Greet them warmly back and ask how you can help with their teaching today. Mention you can help with handwriting, vocabulary, creative writing, lesson planning, and classroom strategies. Keep it brief (2-3 sentences).
+
+            - If they're being casual or chatty (yay, cool, nice, etc.): Respond naturally to their tone and ask what they'd like to work on.
+
+            - If they're asking a vague question: Ask friendly clarifying questions to understand what they need help with (specific area, grade level, challenge/goal).
+
+            - If they're asking a specific educational question: Provide helpful, actionable guidance that includes practical strategies, differentiation tips, and assessment ideas when relevant.
+
+            Always be warm, friendly, and conversational. Match their energy. If they're casual, be casual. If they're asking for serious help, be thorough and professional.
+
+            Sample educational content is available below if needed for specific questions:
             {form_context}
-
-            Current teacher's question: "{message}"
-
-            **IMPORTANT**: Use the conversation history above to understand the full context of the teacher's request. If they're following up on a previous question, continue that discussion naturally.
-
-            Provide a comprehensive response that includes:
-            1. **Direct Answer**: Address the teacher's specific question
-
-            2. **Cross-Domain Connections**: How this relates to handwriting, vocabulary, and creative writing when relevant
-
-            3. **Practical Strategies**: Actionable approaches teachers can implement
-
-            4. **Differentiation**: Ways to adapt for various student needs
-
-            5. **Assessment and Progress Monitoring**: How to track success in relevant areas
-
-            Draw from your knowledge across handwriting, vocabulary, and creative writing as appropriate.
-            Focus on holistic educational approaches that support the whole child.
             """
 
             response = await self.llm.ainvoke([
@@ -594,14 +596,14 @@ class GeneralBot:
                 response=response.content,
                 bot_type="general_education_specialist",
                 relevant_forms=used_form_ids,
-                suggested_activities=suggested_activities
+                follow_up_questions=suggested_activities
             )
-            
+
         except Exception as e:
             print(f"Error in GeneralBot: {str(e)}")
             return BotResponse(
                 response=f"I apologize, but I'm having trouble processing your question right now. Please try rephrasing your question or contact support if the issue persists.",
                 bot_type="general_education_specialist_error",
                 relevant_forms=[],
-                suggested_activities=[]
+                follow_up_questions=[]
             )

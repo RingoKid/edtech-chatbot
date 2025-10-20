@@ -185,6 +185,196 @@ class FormRetrievalService:
         # Always include core forms that contain letter formation patterns
         return await self.get_handwriting_forms(["A", "B", "C", "F", "G"])
 
+    async def get_letter_formation_cues(self, letter: str) -> Dict[str, str]:
+        """
+        Get specific sequence verbal cues for a letter from Form F.
+        
+        Args:
+            letter: The letter to get formation cues for (e.g., "J", "z")
+            
+        Returns:
+            Dictionary with uppercase and lowercase formation cues
+        """
+        try:
+            # Get Form F which contains sequence verbal cues
+            form_f = await self.get_handwriting_forms(["F"])
+            
+            if not form_f:
+                return {"uppercase": "Letter formation cues not available", "lowercase": "Letter formation cues not available"}
+            
+            # Extract the content from Form F
+            form_content = form_f[0].get('content', {})
+            form_f_data = form_content.get('form_f', {})
+            
+            uppercase_cues = form_f_data.get('uppercase_letters', {})
+            lowercase_cues = form_f_data.get('lowercase_letters', {})
+            
+            # Get the specific letter cues
+            letter_upper = letter.upper()
+            letter_lower = letter.lower()
+            
+            return {
+                "uppercase": uppercase_cues.get(letter_upper, f"Formation cues for {letter_upper} not found"),
+                "lowercase": lowercase_cues.get(letter_lower, f"Formation cues for {letter_lower} not found")
+            }
+            
+        except Exception as e:
+            print(f"❌ Error getting letter formation cues for {letter}: {e}")
+            return {"uppercase": "Error retrieving formation cues", "lowercase": "Error retrieving formation cues"}
+
+    async def get_phoneme_gesture(self, sound: str) -> Dict[str, str]:
+        """
+        Get specific gesture for a phoneme from Form G.
+        
+        Args:
+            sound: The phoneme sound (e.g., "/z/", "/m/", "/s/")
+            
+        Returns:
+            Dictionary with gesture and sound word
+        """
+        try:
+            # Get Form G which contains phoneme gestures
+            form_g = await self.get_handwriting_forms(["G"])
+            
+            if not form_g:
+                return {"gesture": "Gesture not available", "sound_word": "Sound word not available"}
+            
+            # Extract the content from Form G
+            form_content = form_g[0].get('content', {})
+            form_g_data = form_content.get('form_g', {})
+            
+            # Check different phoneme categories
+            consonant_phonemes = form_g_data.get('consonant_phonemes', {})
+            short_vowel_phonemes = form_g_data.get('short_vowel_phonemes', {})
+            long_vowel_phonemes = form_g_data.get('long_vowel_phonemes', {})
+            digraphs_blends = form_g_data.get('digraphs_blends', {})
+            r_controlled_vowels = form_g_data.get('r_controlled_vowels', {})
+            
+            # Search for the sound in all categories
+            sound_data = None
+            if sound in consonant_phonemes:
+                sound_data = consonant_phonemes[sound]
+            elif sound in short_vowel_phonemes:
+                sound_data = short_vowel_phonemes[sound]
+            elif sound in long_vowel_phonemes:
+                sound_data = long_vowel_phonemes[sound]
+            elif sound in digraphs_blends:
+                sound_data = digraphs_blends[sound]
+            elif sound in r_controlled_vowels:
+                sound_data = r_controlled_vowels[sound]
+            
+            if sound_data:
+                return {
+                    "gesture": sound_data.get('gesture', f"Gesture for {sound} not found"),
+                    "sound_word": sound_data.get('sound', f"Sound word for {sound} not found")
+                }
+            else:
+                return {"gesture": f"Gesture for {sound} not found", "sound_word": f"Sound word for {sound} not found"}
+                
+        except Exception as e:
+            print(f"❌ Error getting phoneme gesture for {sound}: {e}")
+            return {"gesture": "Error retrieving gesture", "sound_word": "Error retrieving sound word"}
+
+    async def get_ability_modifications(self, activity: str, level: str) -> List[Dict[str, str]]:
+        """
+        Get specific modifications from Form H for different ability levels.
+        
+        Args:
+            activity: The activity name (e.g., "Sound Sparks", "Magic Finger Write")
+            level: The ability level ("low", "middle", "high")
+            
+        Returns:
+            List of modification dictionaries
+        """
+        try:
+            # Get Form H which contains modification examples
+            form_h = await self.get_handwriting_forms(["H"])
+            
+            if not form_h:
+                return [{"modification": "Modifications not available", "level": level}]
+            
+            # Extract the content from Form H
+            form_content = form_h[0].get('content', {})
+            form_h_data = form_content.get('form_h', {})
+            
+            # Get ability level modifications
+            ability_modifications = form_h_data.get('ability_level_modifications', {})
+            
+            # Look for the specific activity and level
+            modifications = []
+            
+            # Check if there's a specific example for this activity and level
+            if 'example_high_level' in ability_modifications:
+                example = ability_modifications['example_high_level']
+                if level == "high" and activity.lower() in example.get('activity', '').lower():
+                    modifications.append({
+                        "modification": example.get('description', ''),
+                        "level": level,
+                        "activity": example.get('activity', '')
+                    })
+            
+            # If no specific match, return general guidance
+            if not modifications:
+                modifications.append({
+                    "modification": f"Modify {activity} for {level} level students - adjust pace, complexity, and support level",
+                    "level": level,
+                    "activity": activity
+                })
+            
+            return modifications
+            
+        except Exception as e:
+            print(f"❌ Error getting ability modifications for {activity} at {level} level: {e}")
+            return [{"modification": "Error retrieving modifications", "level": level}]
+
+    async def get_handwriting_activities_by_level(self, level: str) -> List[Dict[str, str]]:
+        """
+        Get handwriting activities from Form D by ability level.
+        
+        Args:
+            level: The ability level ("low", "middle", "high")
+            
+        Returns:
+            List of activity dictionaries
+        """
+        try:
+            # Get Form D which contains suggested activities
+            form_d = await self.get_handwriting_forms(["D"])
+            
+            if not form_d:
+                return [{"name": "Activities not available", "description": "No activities found"}]
+            
+            # Extract the content from Form D
+            form_content = form_d[0].get('content', {})
+            form_d_data = form_content.get('form_d', {})
+            
+            activities = []
+            
+            # Get activities by level from adaptation_3_activities
+            adaptation_3 = form_d_data.get('adaptation_3_activities', {})
+            
+            if level == "low":
+                level_activities = adaptation_3.get('level_1_motor_foundation', [])
+            elif level == "middle":
+                level_activities = adaptation_3.get('level_2_guided_formation', [])
+            elif level == "high":
+                level_activities = adaptation_3.get('level_3_semi_independent', [])
+            else:
+                level_activities = []
+            
+            for activity in level_activities:
+                activities.append({
+                    "name": activity.get('name', 'Unknown Activity'),
+                    "description": activity.get('description', 'No description available'),
+                    "level": level
+                })
+            
+            return activities
+            
+        except Exception as e:
+            print(f"❌ Error getting handwriting activities for {level} level: {e}")
+            return [{"name": "Error retrieving activities", "description": "Error occurred", "level": level}]
+
     def build_context_string(self, forms: List[Dict[str, Any]], max_length: int = 4000) -> str:
         """
         Build a context string from form content for LLM processing.

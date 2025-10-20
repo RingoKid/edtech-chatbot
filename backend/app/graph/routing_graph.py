@@ -55,19 +55,29 @@ async def classify_intent_node(state: RoutingState) -> Dict[str, Any]:
         # Build conversation context for better intent classification
         conversation_context = ""
         if len(messages) > 1:
-            # Include previous messages for context
+            # Include previous messages for context with more detail
             previous_messages = []
-            for msg in messages[:-1]:  # All except latest
+            for i, msg in enumerate(messages[:-1]):  # All except latest
                 if hasattr(msg, 'content'):
                     role = "Teacher" if hasattr(msg, 'type') and msg.type == 'human' else "Assistant"
-                    previous_messages.append(f"{role}: {msg.content[:100]}")
+                    # Include more context for better domain detection
+                    content = msg.content[:200] if len(msg.content) > 200 else msg.content
+                    previous_messages.append(f"{role}: {content}")
 
             if previous_messages:
-                conversation_context = "\n".join(previous_messages[-3:])  # Last 3 exchanges
+                # Include more exchanges for better context (last 4 instead of 3)
+                conversation_context = "\n".join(previous_messages[-4:])
+                print(f"🔍 Conversation context for intent classification: {conversation_context[:200]}...")
 
         # Classify intent using the service with conversation context
         intent_result = await intent_service.classify_intent(query, conversation_context=conversation_context)
         processing_time = time.time() - start_time
+        
+        print(f"🎯 Intent Classification Result:")
+        print(f"   Query: '{query[:50]}...'")
+        print(f"   Intent: {intent_result.intent}")
+        print(f"   Confidence: {intent_result.confidence:.2f}")
+        print(f"   Reasoning: {intent_result.reasoning}")
         
         return {
             "original_query": query,
@@ -429,27 +439,10 @@ async def execute_general_bot_node(state: RoutingState) -> Dict[str, Any]:
         # Use the routing nodes instance
         routing_nodes = RoutingNodes()
 
-        # If this is a low-confidence routing, add clarification
-        if confidence < 0.5:
-            clarification_prompt = f"""
-            I want to make sure I give you the most helpful response. Your question was: "{original_query}"
-            
-            Could you help me understand if you're asking about:
-            1. **Handwriting and fine motor skills** - Letter formation, pencil grip, writing posture
-            2. **Vocabulary and reading** - Sight words, phonics, spelling, word recognition  
-            3. **Creative writing and ideas** - Story prompts, brainstorming, narrative development
-            4. **Something else entirely** - General classroom strategies, assessment, management
-            
-            Once I know the focus area, I can provide more targeted assistance!
-            """
-            
-            result_response = clarification_prompt
-            bot_type = "clarification_request"
-        else:
-            # Process as general education query with conversation history
-            result = await routing_nodes.general_bot.process_message(original_query, conversation_history=messages)
-            result_response = result.response
-            bot_type = result.bot_type
+        # Always process through the GeneralBot (it handles greetings, clarifications, and general questions)
+        result = await routing_nodes.general_bot.process_message(original_query, conversation_history=messages)
+        result_response = result.response
+        bot_type = result.bot_type
         
         processing_time = time.time() - start_time
         
