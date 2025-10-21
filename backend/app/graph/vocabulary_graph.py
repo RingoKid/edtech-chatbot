@@ -14,7 +14,7 @@ if settings.langsmith_api_key and settings.langsmith_tracing:
     os.environ["LANGCHAIN_TRACING_V2"] = str(settings.langsmith_tracing)
     os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
     os.environ["LANGCHAIN_PROJECT"] = settings.langsmith_project or "vocabulary-bot"
-    print(f"✅ LangSmith tracing enabled for project: {settings.langsmith_project}")
+    print(f"LangSmith tracing enabled for project: {settings.langsmith_project}")
 
 def should_retry(state: VocabularyState) -> str:
     """
@@ -33,7 +33,7 @@ def should_retry(state: VocabularyState) -> str:
         print(f"🔄 Retrying due to error (attempt {retry_count + 1}/3): {last_error}")
         return "analyze_query"
     elif retry_count >= 3:
-        print(f"❌ Max retries reached, ending with error")
+        print(f"Max retries reached, ending with error")
         return "end_with_error"
     else:
         return "generate_response"
@@ -75,7 +75,7 @@ def route_after_analysis(state: VocabularyState) -> str:
     elif query_type in ["sentence_structure", "vocabulary_building", "grammar", "genre_writing", "general"]:
         return "retrieve_forms"
     else:
-        print(f"⚠️ Unknown query type: {query_type}, defaulting to general")
+        print(f"Unknown query type: {query_type}, defaulting to general")
         return "retrieve_forms"
 
 async def handle_error_node(state: VocabularyState) -> dict:
@@ -167,13 +167,13 @@ def create_vocabulary_graph():
     Returns:
         Compiled LangGraph for vocabulary instruction
     """
-    print("🔧 Building Vocabulary Bot Graph...")
+    print("Building Vocabulary Bot Graph...")
 
     # Initialize the graph with our state schema
     graph = StateGraph(VocabularyState)
 
     # Add all nodes to the graph
-    print("📍 Adding nodes...")
+    print("Adding nodes...")
     graph.add_node("analyze_query", vocabulary_nodes.analyze_query_node)
     graph.add_node("retrieve_forms", vocabulary_nodes.retrieve_forms_node)
     graph.add_node("generate_response", vocabulary_nodes.generate_response_node)
@@ -183,11 +183,11 @@ def create_vocabulary_graph():
     graph.add_node("end_with_error", end_with_error_node)
 
     # Set the entry point
-    print("🚀 Setting entry point...")
+    print("Setting entry point...")
     graph.add_edge(START, "analyze_query")
 
     # Add conditional edges with routing logic
-    print("🔀 Adding conditional edges...")
+    print("Adding conditional edges...")
 
     # After query analysis, route based on success/error
     graph.add_conditional_edges(
@@ -216,9 +216,9 @@ def create_vocabulary_graph():
         """Check if we should end after generation."""
         needs_clarification = state.get("needs_clarification", False)
         if needs_clarification:
-            print("⏭️ Clarification question sent - ending")
+            print("Clarification question sent - ending")
         else:
-            print("⏭️ Response generated - ending (quality check disabled)")
+            print("Response generated - ending (quality check disabled)")
         return "END"
 
     graph.add_conditional_edges(
@@ -243,11 +243,11 @@ def create_vocabulary_graph():
     graph.add_edge("end_with_error", END)
 
     # Compile the graph
-    print("⚙️ Compiling graph...")
+    print("Compiling graph...")
     compiled_graph = graph.compile()
 
-    print("✅ Vocabulary Bot Graph compiled successfully!")
-    print("📊 Graph structure:")
+    print("Vocabulary Bot Graph compiled successfully!")
+    print("Graph structure:")
     print("   START -> analyze_query -> retrieve_forms -> generate_response -> quality_check -> follow_up -> END")
     print("   Error handling: handle_error -> end_with_error -> END")
     print("   Retry logic: Up to 3 retries for errors, up to 2 retries for low-quality responses")
@@ -316,14 +316,14 @@ async def run_vocabulary_bot(teacher_query: str, teacher_id: str = "teacher_001"
 
     try:
         # Execute the graph
-        print("🚀 Executing vocabulary bot graph...")
+        print("Executing vocabulary bot graph...")
         final_state = await vocabulary_graph.ainvoke(initial_state, config)
 
-        print("✅ Graph execution completed!")
+        print("Graph execution completed!")
         return final_state
 
     except Exception as e:
-        print(f"❌ Error executing vocabulary bot: {str(e)}")
+        print(f"Error executing vocabulary bot: {str(e)}")
         # Return error state
         from langchain_core.messages import AIMessage
         error_message = AIMessage(content=f"I apologize, but I encountered an error: {str(e)}. Please try again.")
@@ -385,14 +385,14 @@ async def stream_vocabulary_bot(teacher_query: str, teacher_id: str = "teacher_0
 
     try:
         # Stream the graph execution
-        print("🚀 Streaming vocabulary bot graph...")
+        print("Streaming vocabulary bot graph...")
         async for chunk in vocabulary_graph.astream(initial_state, config):
             yield chunk
 
-        print("✅ Graph streaming completed!")
+        print("Graph streaming completed!")
 
     except Exception as e:
-        print(f"❌ Error streaming vocabulary bot: {str(e)}")
+        print(f"Error streaming vocabulary bot: {str(e)}")
         # Yield error state
         error_message = AIMessage(content=f"I apologize, but I encountered an error: {str(e)}. Please try again.")
         yield {

@@ -14,7 +14,7 @@ class ConversationMemory:
     def __init__(self):
         """Initialize the conversation memory service."""
         self.table = get_db()
-        print("✅ ConversationMemory service initialized")
+        print("ConversationMemory service initialized")
 
     def _serialize_message(self, message: BaseMessage) -> Dict[str, Any]:
         """

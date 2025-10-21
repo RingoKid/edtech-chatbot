@@ -73,7 +73,7 @@ def load_form_from_file(filepath):
         category = extract_category_from_filename(filename)
 
         if not category:
-            print(f"⚠️  Skipping {filename} - no category found")
+            print(f"Skipping {filename} - no category found")
             return None
 
         # Generate form ID
@@ -111,10 +111,10 @@ def load_form_from_file(filepath):
         return item
 
     except json.JSONDecodeError as e:
-        print(f"❌ Error parsing {filepath}: {e}")
+        print(f"Error parsing {filepath}: {e}")
         return None
     except Exception as e:
-        print(f"❌ Error loading {filepath}: {e}")
+        print(f"Error loading {filepath}: {e}")
         return None
 
 
@@ -131,17 +131,17 @@ def load_all_forms(forms_directory):
     forms_dir = Path(forms_directory)
 
     if not forms_dir.exists():
-        print(f"❌ Forms directory not found: {forms_directory}")
+        print(f"Forms directory not found: {forms_directory}")
         return 0, 0
 
     # Get all JSON files
     json_files = list(forms_dir.glob('*.json'))
 
     if not json_files:
-        print(f"⚠️  No JSON files found in {forms_directory}")
+        print(f"No JSON files found in {forms_directory}")
         return 0, 0
 
-    print(f"📚 Found {len(json_files)} JSON files")
+    print(f"Found {len(json_files)} JSON files")
 
     # Get DynamoDB table
     table = get_db()
@@ -154,34 +154,34 @@ def load_all_forms(forms_directory):
 
         # Skip non-form files
         if filename in ['prek_standards.json', 'kindergarten_standards.json', 'Untitled.rtf']:
-            print(f"⏭️  Skipping {filename} - not a form file")
+            print(f"Skipping {filename} - not a form file")
             continue
 
-        print(f"📄 Processing {filename}...")
+        print(f"Processing {filename}...")
 
         # Load form data
         item = load_form_from_file(json_file)
 
         if item:
             try:
-                # Check if form already exists (by source file)
-                response = table.scan(
-                    FilterExpression='source_file = :filename',
-                    ExpressionAttributeValues={':filename': filename}
-                )
+                # Check if form already exists (by source file) - COMMENTED OUT TO FORCE RELOAD
+                # response = table.scan(
+                #     FilterExpression='source_file = :filename',
+                #     ExpressionAttributeValues={':filename': filename}
+                # )
 
-                if response['Items']:
-                    print(f"   ⏭️  Already exists, skipping")
-                    success_count += 1
-                    continue
+                # if response['Items']:
+                #     print(f"   Already exists, skipping")
+                #     success_count += 1
+                #     continue
 
                 # Insert into DynamoDB
                 table.put_item(Item=item)
-                print(f"   ✅ Loaded Form {item['category']}: {item['title']}")
+                print(f"   Loaded Form {item['category']}: {item['title']}")
                 success_count += 1
 
             except Exception as e:
-                print(f"   ❌ Failed to insert: {e}")
+                print(f"   Failed to insert: {e}")
                 error_count += 1
         else:
             error_count += 1
@@ -192,13 +192,13 @@ def load_all_forms(forms_directory):
 def main():
     """Main execution function."""
     print("=" * 50)
-    print("📚 EdTech Chatbot - Form Loader")
+    print("EdTech Chatbot - Form Loader")
     print("=" * 50)
 
     # Initialize database
-    print("\n🔧 Initializing DynamoDB...")
+    print("\nInitializing DynamoDB...")
     if not initialize_database():
-        print("❌ Failed to initialize database")
+        print("Failed to initialize database")
         sys.exit(1)
 
     # Determine forms directory
@@ -217,28 +217,28 @@ def main():
             break
 
     if not forms_dir:
-        print(f"❌ Could not find Forms_Json directory")
+        print(f"Could not find Forms_Json directory")
         print(f"   Tried: {possible_paths}")
         sys.exit(1)
 
-    print(f"\n📂 Loading forms from: {forms_dir}")
+    print(f"\nLoading forms from: {forms_dir}")
 
     # Load all forms
     success_count, error_count = load_all_forms(forms_dir)
 
     # Print summary
     print("\n" + "=" * 50)
-    print("📊 Summary")
+    print("Summary")
     print("=" * 50)
-    print(f"✅ Successfully loaded: {success_count}")
-    print(f"❌ Errors: {error_count}")
-    print(f"📈 Total processed: {success_count + error_count}")
+    print(f"Successfully loaded: {success_count}")
+    print(f"Errors: {error_count}")
+    print(f"Total processed: {success_count + error_count}")
     print("=" * 50)
 
     if error_count > 0:
         sys.exit(1)
 
-    print("\n🎉 Form loading complete!")
+    print("\nForm loading complete!")
 
 
 if __name__ == '__main__':

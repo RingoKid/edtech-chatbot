@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     """Configuration settings for the EdTech Chatbot application."""
     
     # Application environment - loaded from environment variable APP_ENV
-    app_env: AppEnv = Field(default=AppEnv.LOCAL, alias="APP_ENV")
+    app_env: AppEnv = Field(default=AppEnv.SANDBOX, alias="APP_ENV")
     
     model_config = SettingsConfigDict(
         env_file=get_env_files(),

@@ -14,7 +14,7 @@ if settings.langsmith_api_key and settings.langsmith_tracing:
     os.environ["LANGCHAIN_TRACING_V2"] = str(settings.langsmith_tracing)
     os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key  # langsmith_api_key is already a string
     os.environ["LANGCHAIN_PROJECT"] = settings.langsmith_project or "handwriting-bot"
-    print(f"✅ LangSmith tracing enabled for project: {settings.langsmith_project}")
+    print(f"LangSmith tracing enabled for project: {settings.langsmith_project}")
 
 def should_retry(state: HandwritingState) -> str:
     """
@@ -75,7 +75,7 @@ def route_after_analysis(state: HandwritingState) -> str:
     elif query_type in ["letter_formation", "fine_motor", "spelling", "assessment", "posture_grip", "general"]:
         return "retrieve_forms"
     else:
-        print(f"⚠️ Unknown query type: {query_type}, defaulting to general")
+        print(f"Unknown query type: {query_type}, defaulting to general")
         return "retrieve_forms"
 
 async def handle_error_node(state: HandwritingState) -> dict:
@@ -160,13 +160,13 @@ def create_handwriting_graph():
     Returns:
         Compiled LangGraph for handwriting instruction
     """
-    print("🔧 Building Handwriting Bot Graph...")
+    print("Building Handwriting Bot Graph...")
     
     # Initialize the graph with our state schema
     graph = StateGraph(HandwritingState)
     
     # Add all nodes to the graph
-    print("📍 Adding nodes...")
+    print("Adding nodes...")
     graph.add_node("analyze_query", handwriting_nodes.analyze_query_node)
     graph.add_node("retrieve_forms", handwriting_nodes.retrieve_forms_node)
     graph.add_node("generate_response", handwriting_nodes.generate_response_node)
@@ -176,11 +176,11 @@ def create_handwriting_graph():
     graph.add_node("end_with_error", end_with_error_node)
     
     # Set the entry point
-    print("🚀 Setting entry point...")
+    print("Setting entry point...")
     graph.add_edge(START, "analyze_query")
     
     # Add conditional edges with routing logic
-    print("🔀 Adding conditional edges...")
+    print("Adding conditional edges...")
     
     # After query analysis, route based on success/error
     graph.add_conditional_edges(
@@ -208,7 +208,7 @@ def create_handwriting_graph():
         """Skip quality check if we're asking for clarification."""
         needs_clarification = state.get("needs_clarification", False)
         if needs_clarification:
-            print("⏭️ Skipping quality check - clarification question sent")
+            print("Skipping quality check - clarification question sent")
             return "END"
         return "quality_check"
 
@@ -249,11 +249,11 @@ def create_handwriting_graph():
     
     # Compile the graph WITHOUT checkpointer for LangGraph Studio
     # LangGraph Studio/API handles persistence automatically
-    print("⚙️ Compiling graph...")
+    print("Compiling graph...")
     compiled_graph = graph.compile()
     
-    print("✅ Handwriting Bot Graph compiled successfully!")
-    print("📊 Graph structure:")
+    print("Handwriting Bot Graph compiled successfully!")
+    print("Graph structure:")
     print("   START -> analyze_query -> retrieve_forms -> generate_response -> quality_check -> follow_up -> END")
     print("   Error handling: handle_error -> end_with_error -> END")
     print("   Retry logic: Up to 3 retries for errors, up to 2 retries for low-quality responses")
@@ -325,10 +325,10 @@ async def run_handwriting_bot(teacher_query: str, teacher_id: str = "teacher_001
     
     try:
         # Execute the graph
-        print("🚀 Executing handwriting bot graph...")
+        print("Executing handwriting bot graph...")
         final_state = await handwriting_graph.ainvoke(initial_state, config)
         
-        print("✅ Graph execution completed!")
+        print("Graph execution completed!")
         return final_state
         
     except Exception as e:
@@ -390,11 +390,11 @@ async def stream_handwriting_bot(teacher_query: str, teacher_id: str = "teacher_
     
     try:
         # Stream the graph execution
-        print("🚀 Streaming handwriting bot graph...")
+        print("Streaming handwriting bot graph...")
         async for chunk in handwriting_graph.astream(initial_state, config):
             yield chunk
             
-        print("✅ Graph streaming completed!")
+        print("Graph streaming completed!")
         
     except Exception as e:
         print(f"❌ Error streaming handwriting bot: {str(e)}")

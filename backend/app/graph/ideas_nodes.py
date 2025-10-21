@@ -16,19 +16,19 @@ class IdeasNodes:
 
     def __init__(self):
         """Initialize the ideas nodes with OpenAI model."""
-        if not settings.openai_api_key:
-            raise ValueError("OpenAI API key not configured")
+        # Allow dummy API key for development
+        api_key = settings.openai_api_key.get_secret_value() if settings.openai_api_key else "dummy-key"
 
         self.llm = ChatOpenAI(
             model="gpt-4o",
             temperature=0.8,  # Higher temperature for creativity
-            api_key=settings.openai_api_key.get_secret_value()
+            api_key=api_key
         )
 
         # Define target forms for ideas instruction
         self.target_forms = ["M", "N", "O", "P", "Q"]
 
-        print("✅ IdeasNodes initialized with GPT-4 Omni")
+        print("IdeasNodes initialized with GPT-4 Omni")
 
     async def analyze_query_node(self, state: IdeasState) -> Dict[str, Any]:
         """

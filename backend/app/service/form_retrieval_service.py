@@ -13,7 +13,8 @@ class FormRetrievalService:
 
     def __init__(self):
         """Initialize the form retrieval service."""
-        self.table = get_db()
+        # Don't get database connection here - get it dynamically in methods
+        # self.table = get_db()
 
         # Define all form categories by domain
         self.handwriting_forms = ["A", "B", "C", "D", "E", "F", "G", "H"]
@@ -21,7 +22,7 @@ class FormRetrievalService:
         self.ideas_forms = ["M", "N", "O", "P", "Q"]
         self.all_forms = self.handwriting_forms + self.vocabulary_forms + self.ideas_forms
 
-        print("✅ FormRetrievalService initialized with DynamoDB backend")
+        print("FormRetrievalService initialized")
 
     def _get_forms_by_categories_sync(self, categories: List[str]) -> List[Dict[str, Any]]:
         """
@@ -36,10 +37,11 @@ class FormRetrievalService:
         """
         try:
             forms = []
+            table = get_db()  # Get database connection dynamically
 
             # Query DynamoDB using CategoryIndex
             for category in categories:
-                response = self.table.query(
+                response = table.query(
                     IndexName='CategoryIndex',
                     KeyConditionExpression='category = :cat',
                     ExpressionAttributeValues={':cat': category.upper()}
@@ -60,7 +62,7 @@ class FormRetrievalService:
             return forms
 
         except Exception as e:
-            print(f"❌ Error retrieving forms from DynamoDB: {e}")
+            print(f"Error retrieving forms from DynamoDB: {e}")
             return []
 
     async def _get_forms_by_categories(self, categories: List[str]) -> List[Dict[str, Any]]:
@@ -251,7 +253,8 @@ class FormRetrievalService:
         """
         try:
             # Scan DynamoDB table for forms
-            response = self.table.scan(
+            table = get_db()  # Get database connection dynamically
+            response = table.scan(
                 FilterExpression=Attr('type').eq('Form')
             )
 
@@ -273,7 +276,7 @@ class FormRetrievalService:
             return matching_forms
 
         except Exception as e:
-            print(f"❌ Error searching forms: {e}")
+            print(f"Error searching forms: {e}")
             return []
 
     async def search_forms_for_keyword(self, keyword: str) -> List[Dict[str, Any]]:
@@ -316,7 +319,8 @@ class FormRetrievalService:
             normalized_grade = grade_map.get(grade_level.lower(), grade_level)
 
             # Query DynamoDB for standards
-            response = self.table.query(
+            table = get_db()  # Get database connection dynamically
+            response = table.query(
                 IndexName='TypeIndex',
                 KeyConditionExpression='#type = :type_val',
                 FilterExpression='grade = :grade',
@@ -330,7 +334,7 @@ class FormRetrievalService:
             items = response.get('Items', [])
 
             if not items:
-                print(f"⚠️ No standards found for grade: {normalized_grade}")
+                print(f"No standards found for grade: {normalized_grade}")
                 return {}
 
             # Extract standards data
@@ -363,7 +367,7 @@ class FormRetrievalService:
             }
 
         except Exception as e:
-            print(f"❌ Error retrieving standards for grade {grade_level}: {e}")
+            print(f"Error retrieving standards for grade {grade_level}: {e}")
             return {}
 
     async def get_standards_by_grade(self, grade_level: str) -> Dict[str, Any]:
@@ -388,7 +392,8 @@ class FormRetrievalService:
         """
         try:
             # Count forms by category
-            response = self.table.scan(
+            table = get_db()  # Get database connection dynamically
+            response = table.scan(
                 FilterExpression=Attr('type').eq('Form')
             )
 
@@ -404,7 +409,7 @@ class FormRetrievalService:
             }
 
         except Exception as e:
-            print(f"❌ Error getting cache status: {e}")
+            print(f"Error getting cache status: {e}")
             return {
                 "error": str(e),
                 "total_forms_loaded": 0

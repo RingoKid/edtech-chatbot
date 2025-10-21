@@ -1,11 +1,16 @@
 import os
+
+# Set environment variables BEFORE any imports
+os.environ['APP_ENV'] = 'local'
+os.environ['DYNAMODB_TABLE_NAME'] = 'EdTechChatbotTable'
+
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
-from app.routers import health, chat, auth, users, handwriting_bot
+from app.routers import health, chat, auth, users, handwriting_bot, admin
 # Temporarily disable educational_bot due to LangGraph installation issue
 # from app.routers import educational_bot
 
@@ -14,6 +19,21 @@ API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
 
 # Initialize the FastAPI application
 app = FastAPI()
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database and load forms on application startup."""
+    from app.database import initialize_database
+    print("Starting EdTech Chatbot Backend...")
+    
+    # Initialize database
+    if initialize_database():
+        print("Database initialized successfully")
+    else:
+        print("Database initialization failed, but continuing...")
+    
+    print("FastAPI server ready!")
 
 # Define allowed origins for CORS
 allowed_origins = ['*']
@@ -34,5 +54,6 @@ app.include_router(chat.router, prefix=API_PREFIX, tags=["Chat"])
 app.include_router(auth.router, prefix=API_PREFIX, tags=["Authentication"])
 app.include_router(users.router, prefix=API_PREFIX, tags=["Users"])
 app.include_router(handwriting_bot.router, prefix=API_PREFIX, tags=["Handwriting Bot"])
+app.include_router(admin.router, prefix=API_PREFIX, tags=["Admin"])
 # Temporarily disable educational_bot router due to LangGraph installation issue
 # app.include_router(educational_bot.router, prefix=API_PREFIX, tags=["Educational Bot"])

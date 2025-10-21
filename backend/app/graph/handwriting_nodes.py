@@ -16,19 +16,19 @@ class HandwritingNodes:
     
     def __init__(self):
         """Initialize the handwriting nodes with OpenAI model."""
-        if not settings.openai_api_key:
-            raise ValueError("OpenAI API key not configured")
+        # Allow dummy API key for development
+        api_key = settings.openai_api_key.get_secret_value() if settings.openai_api_key else "dummy-key"
         
         self.llm = ChatOpenAI(
             model="gpt-4o",  # Using GPT-4 Omni for better reasoning
             temperature=0.7,  # Balanced creativity and consistency
-            api_key=settings.openai_api_key.get_secret_value()
+            api_key=api_key
         )
         
         # Define target forms for handwriting instruction
         self.target_forms = ["A", "B", "C", "D", "E", "F", "G", "H"]
         
-        print("✅ HandwritingNodes initialized with GPT-4 Omni")
+        print("HandwritingNodes initialized with GPT-4 Omni")
     
     async def analyze_query_node(self, state: HandwritingState) -> Dict[str, Any]:
         """
