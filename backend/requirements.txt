@@ -43,7 +43,7 @@ langchain-core==0.3.76
 langchain-openai==0.3.33
 langchain-text-splitters==0.3.11
 langgraph==1.0.0a3
-langgraph-api==0.4.32
+langgraph-api==0.4.45
 langgraph-checkpoint==2.1.1
 langgraph-dynamodb-checkpoint
 langgraph-cli==0.4.2
