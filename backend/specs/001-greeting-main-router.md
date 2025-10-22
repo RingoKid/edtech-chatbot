@@ -86,10 +86,15 @@ class GraphState(TypedDict):
 **Action:** Define the graph structure and compile with a persistent \`SqliteSaver\`.
 
 **Logic:**
-1.  **Import:** \`from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver\`
-2.  **Checkpointer:** Instantiate the checkpointer: \`checkpointer = await AsyncSqliteSaver.from_conn_string("checkpointer.sqlite")\`
+1.  **Import:** \`from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver\` and \`import aiosqlite\`
+2.  **Checkpointer:** Instantiate the checkpointer:
+    ```python
+    conn = await aiosqlite.connect("checkpointer.sqlite")
+    checkpointer = AsyncSqliteSaver(conn)
+    await checkpointer.setup()
+    ```
     * *Note on Change: Using \`AsyncSqliteSaver\` for persistent, shareable state with async support, replacing DynamoDB for local dev.*
-    * *Note: The \`from_conn_string\` method accepts a SQLite connection string (file path or ":memory:") and handles the connection setup internally.*
+    * *Note: We create an aiosqlite connection first, then pass it to AsyncSqliteSaver, then call setup() to initialize the database schema.*
 3.  **Graph:** Instantiate \`StateGraph(GraphState)\`.
 4.  **Add Nodes:**
     * \`graph.add_node("greeting_node", greeting_node)\`
@@ -108,6 +113,42 @@ class GraphState(TypedDict):
     * Call \`graph.compile(checkpointer=checkpointer, interrupt_after=["greeting_node"])\`.
     * *Note: \`interrupt_after\` is the correct parameter name (not \`interrupt_after_nodes\`).*
     * *Note: Since we're using \`AsyncSqliteSaver\`, the graph creation should be wrapped in an async function that can be awaited.*
+
+#### 4a. File: \`app/routers/chat.py\`
+
+**Action:** Implement singleton pattern for ChatService to ensure the same graph instance (with persistent checkpointer) is shared across all API requests.
+
+**Logic:**
+1.  **Singleton Instance:** Create a module-level variable \`_chat_service_instance = None\`
+2.  **Dependency Function:** Modify \`get_chat_service()\` to implement singleton pattern:
+    ```python
+    def get_chat_service() -> ChatService:
+        global _chat_service_instance
+        if _chat_service_instance is None:
+            _chat_service_instance = ChatService()
+        return _chat_service_instance
+    ```
+    * *Note: This is CRITICAL for persistence. Without this, each API request would create a new graph with a new database connection, breaking state persistence.*
+
+#### 4b. File: \`app/service/chat_service.py\`
+
+**Action:** Implement proper graph resumption logic to handle interrupted conversations.
+
+**Logic in \`handle_message()\`:**
+1.  **Get Graph:** Call \`graph = await self._get_graph()\` (lazy initialization)
+2.  **Thread ID:** If no \`thread_id\` provided, create new one
+3.  **Config:** Create config dict: \`{"configurable": {"thread_id": thread_id}}\`
+4.  **Check State:** Call \`current_state = await graph.aget_state(config)\`
+5.  **Conditional Invocation:**
+    * **If \`current_state\` exists and \`current_state.next\` is truthy** (thread is interrupted):
+        * Call \`await graph.aupdate_state(config, {"messages": [HumanMessage(content=user_message)]})\` to add user's message
+        * Call \`result = await graph.ainvoke(None, config=config)\` to resume from checkpoint
+    * **Else** (new thread or completed thread):
+        * Create input state: \`{"messages": [HumanMessage(content=user_message)]}\`
+        * Call \`result = await graph.ainvoke(input_state, config=config)\`
+6.  **Extract Response:** Get the last message from \`result["messages"]\`
+
+* *Note on Change: This is the CORRECT LangGraph pattern for handling interrupted graphs with persistent checkpointers. Using \`ainvoke()\` with full state always replaces the state, which would restart the conversation. The \`aget_state()\` + \`aupdate_state()\` + \`ainvoke(None)\` pattern properly resumes from the interrupted checkpoint.*
 
 #### 5. LangSmith Evaluation Strategy
 
