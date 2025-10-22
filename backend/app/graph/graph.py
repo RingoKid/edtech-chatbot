@@ -1,6 +1,14 @@
-from langgraph.prebuilt import create_react_agent
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-from app.graph.context import Context
+from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
+from app.graph.state import GraphState
+from app.graph.nodes import (
+    greeting_node,
+    main_router,
+    stub_handwriting_node,
+    stub_vocabulary_node,
+    stub_idea_generation_node,
+    route_from_main_router
+)
 
 
 async def create_graph():
@@ -11,23 +19,39 @@ async def create_graph():
     Returns:
         CompiledStateGraph: The compiled LangGraph agent
     """
-    # Get the model from context
-    context = Context()
-    model = context.model
+    # Use MemorySaver for simpler in-memory checkpointing
+    # This is suitable for development and testing
+    checkpointer = MemorySaver()
 
-    system_prompt = "You are a helpful AI teaching assistant for educators."
+    # Create the state graph
+    graph = StateGraph(GraphState)
 
-    # Initialize the async SQLite checkpointer
-    # This will create the database file if it doesn't exist
-    checkpointer = AsyncSqliteSaver.from_conn_string("checkpointer.sqlite")
+    # Add nodes
+    graph.add_node("greeting_node", greeting_node)
+    graph.add_node("main_router", main_router)
+    graph.add_node("handwriting", stub_handwriting_node)
+    graph.add_node("vocabulary", stub_vocabulary_node)
+    graph.add_node("idea_generation", stub_idea_generation_node)
 
-    # Pass the checkpointer to the prebuilt agent factory function
-    return create_react_agent(
-        model=model,
-        tools=[],
-        checkpointer=checkpointer,
-        prompt=system_prompt
+    # Add edges
+    graph.set_entry_point("greeting_node")
+    graph.add_edge("greeting_node", "main_router")
+    graph.add_conditional_edges(
+        "main_router",
+        route_from_main_router,
+        {
+            "handwriting": "handwriting",
+            "vocabulary": "vocabulary",
+            "idea_generation": "idea_generation",
+            "greeting_node": "greeting_node"
+        }
     )
+    graph.add_edge("handwriting", END)
+    graph.add_edge("vocabulary", END)
+    graph.add_edge("idea_generation", END)
+
+    # Compile the graph with checkpointer and interrupt_after
+    return graph.compile(checkpointer=checkpointer, interrupt_after=["greeting_node"])
 
 
 # Create the graph instance at module level for langgraph.json

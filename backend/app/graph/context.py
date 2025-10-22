@@ -1,4 +1,4 @@
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI  # type: ignore[import-not-found]
 from app.graph.prompts import SYSTEM_PROMPT
 from app.config import settings
 
@@ -10,10 +10,12 @@ class Context:
     @property
     def model(self) -> ChatOpenAI:
         """Lazy-load the model to avoid initialization issues."""
+        model_kwargs = {"model": "gpt-4o", "temperature": 0}
+
         if settings.openai_api_key:
             return ChatOpenAI(
-                model="gpt-4o",
-                api_key=settings.openai_api_key.get_secret_value()
+                api_key=settings.openai_api_key.get_secret_value(),
+                **model_kwargs,
             )
-        else:
-            return ChatOpenAI(model="gpt-4o")
+
+        return ChatOpenAI(**model_kwargs)
