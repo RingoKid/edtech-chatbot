@@ -22,8 +22,18 @@ class ChatService:
     def __init__(self):
         """
         Initialize the ChatService with LangGraph.
+        Uses lazy initialization for the graph since create_graph() is async.
         """
-        self.graph = create_graph()
+        self._graph = None
+
+    async def _get_graph(self):
+        """
+        Lazy initialization of the graph.
+        Creates the graph on first use in an async context.
+        """
+        if self._graph is None:
+            self._graph = await create_graph()
+        return self._graph
 
     def create_new_thread(self, user_id: str) -> str:
         """
@@ -92,8 +102,11 @@ class ChatService:
             "messages": [HumanMessage(content=user_message)]
         }
 
+        # Get the graph instance (lazy initialization)
+        graph = await self._get_graph()
+
         # Invoke the graph with the user message
-        result = await self.graph.ainvoke(input_state, config=config)
+        result = await graph.ainvoke(input_state, config=config)
 
         # Extract the AI response from the result
         messages = result.get("messages", [])
@@ -147,8 +160,11 @@ class ChatService:
                     "messages": [HumanMessage(content=request.message)]
                 }
 
+                # Get the graph instance (lazy initialization)
+                graph = await self._get_graph()
+
                 # Stream events from the graph
-                async for event in self.graph.astream_events(input_state, config=config, version="v1"):
+                async for event in graph.astream_events(input_state, config=config, version="v1"):
                     # Filter for chat model stream events
                     if event["event"] == "on_chat_model_stream":
                         ## Extract the content chunk from the event
