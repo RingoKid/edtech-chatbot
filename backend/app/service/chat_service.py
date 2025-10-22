@@ -90,23 +90,34 @@ class ChatService:
         Returns:
             Dict[str, Any]: Dictionary containing the chatbot's response and thread_id
         """
+        # Get the graph instance (lazy initialization)
+        graph = await self._get_graph()
+
         # Handle thread_id logic
-        if thread_id is None:
+        is_new_thread = thread_id is None
+        if is_new_thread:
             thread_id = self.create_new_thread(user_id)
         
         # Create config with thread_id for graph execution
         config = {"configurable": {"thread_id": thread_id}}
 
-        # Create the input state with the user's message
-        input_state = {
-            "messages": [HumanMessage(content=user_message)]
-        }
+        # Check if this thread has an existing state (interrupted at greeting_node)
+        current_state = await graph.aget_state(config)
 
-        # Get the graph instance (lazy initialization)
-        graph = await self._get_graph()
-
-        # Invoke the graph with the user message
-        result = await graph.ainvoke(input_state, config=config)
+        if current_state and current_state.next:
+            # Thread exists and is interrupted - resume with user's message by updating state
+            await graph.aupdate_state(
+                config,
+                {"messages": [HumanMessage(content=user_message)]}
+            )
+            # Continue from the interrupted point with None input
+            result = await graph.ainvoke(None, config=config)
+        else:
+            # New thread or completed thread - start fresh
+            input_state = {
+                "messages": [HumanMessage(content=user_message)]
+            }
+            result = await graph.ainvoke(input_state, config=config)
 
         # Extract the AI response from the result
         messages = result.get("messages", [])

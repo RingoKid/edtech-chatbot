@@ -1,5 +1,6 @@
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+import aiosqlite
 from app.graph.state import GraphState
 from app.graph.nodes import (
     greeting_node,
@@ -19,9 +20,11 @@ async def create_graph():
     Returns:
         CompiledStateGraph: The compiled LangGraph agent
     """
-    # Use MemorySaver for simpler in-memory checkpointing
-    # This is suitable for development and testing
-    checkpointer = MemorySaver()
+    # Use AsyncSqliteSaver for persistent checkpointing across runs
+    # This stores conversation state in a SQLite database file
+    conn = await aiosqlite.connect("checkpointer.sqlite")
+    checkpointer = AsyncSqliteSaver(conn)
+    await checkpointer.setup()
 
     # Create the state graph
     graph = StateGraph(GraphState)

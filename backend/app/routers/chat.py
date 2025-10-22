@@ -11,13 +11,20 @@ from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
+# Create a single ChatService instance that will be reused across all requests
+# This ensures the graph (with its persistent checkpointer) is shared
+_chat_service_instance = None
+
 
 def get_chat_service() -> ChatService:
     """
-    Dependency function to get ChatService instance.
-    This creates a new instance for each request.
+    Dependency function to get the singleton ChatService instance.
+    This ensures the same graph (with persistent checkpointer) is used across all requests.
     """
-    return ChatService()
+    global _chat_service_instance
+    if _chat_service_instance is None:
+        _chat_service_instance = ChatService()
+    return _chat_service_instance
 
 
 @router.post("/message", response_model=ChatMessageResponse)
