@@ -1,11 +1,9 @@
 from langchain_openai import ChatOpenAI  # type: ignore[import-not-found]
-from app.graph.prompts import SYSTEM_PROMPT
 from app.config import settings
 
 
 class Context:
     """Configuration container for the AI agent."""
-    system_prompt: str = SYSTEM_PROMPT
 
     @property
     def model(self) -> ChatOpenAI:

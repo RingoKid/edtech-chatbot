@@ -2,6 +2,14 @@ from langchain_core.messages import AIMessage, SystemMessage  # type: ignore[imp
 from app.graph.state import GraphState
 from app.schemas.task_route import TaskRoute
 from app.graph.context import Context
+from app.graph.prompts import (
+    GREETING_WELCOME_MESSAGE,
+    MAIN_ROUTER_SYSTEM_PROMPT,
+    MAIN_ROUTER_ERROR_MESSAGE,
+    HANDWRITING_STUB_MESSAGE,
+    VOCABULARY_STUB_MESSAGE,
+    IDEA_GENERATION_STUB_MESSAGE,
+)
 
 
 ALLOWED_TASKS = {"Handwriting", "Vocabulary", "Idea Generation"}
@@ -16,9 +24,7 @@ def greeting_node(state: GraphState) -> dict:
     """
     Greets the user and presents the main task options.
     """
-    welcome_message = AIMessage(
-        content="Welcome! I'm here to help you build lesson plans. \n\nWhat would you like to work on?\n- Handwriting\n- Vocabulary\n- Idea Generation"
-    )
+    welcome_message = AIMessage(content=GREETING_WELCOME_MESSAGE)
     return {"messages": [welcome_message]}
 
 
@@ -43,9 +49,7 @@ def main_router(state: GraphState) -> dict:
             return {"task_name": task}
 
     # Create a system message to guide the classification
-    system_prompt = SystemMessage(
-        content="You are a routing assistant. The user must choose one of: Handwriting, Vocabulary, or Idea Generation. Classify their response into exactly one of these three options based on their intent."
-    )
+    system_prompt = SystemMessage(content=MAIN_ROUTER_SYSTEM_PROMPT)
 
     try:
         # Invoke the LLM with structured output, including system prompt
@@ -61,9 +65,7 @@ def main_router(state: GraphState) -> dict:
     except Exception as e:
         # On failure (e.g., invalid choice like "spanish")
         print(f"DEBUG: Routing failed with error: {e}")
-        error_message = AIMessage(
-            content="I'm sorry, I didn't understand that choice. Can you please pick from Handwriting, Vocabulary, or Idea Generation?"
-        )
+        error_message = AIMessage(content=MAIN_ROUTER_ERROR_MESSAGE)
         return {"messages": [error_message], "task_name": "__ERROR__"}
 
 
@@ -71,7 +73,7 @@ def stub_handwriting_node(state: GraphState) -> dict:
     """
     Placeholder for the Handwriting feature.
     """
-    stub_message = AIMessage(content="*Handwriting feature coming soon!*")
+    stub_message = AIMessage(content=HANDWRITING_STUB_MESSAGE)
     return {"messages": [stub_message]}
 
 
@@ -79,7 +81,7 @@ def stub_vocabulary_node(state: GraphState) -> dict:
     """
     Placeholder for the Vocabulary feature.
     """
-    stub_message = AIMessage(content="*Vocabulary feature coming soon!*")
+    stub_message = AIMessage(content=VOCABULARY_STUB_MESSAGE)
     return {"messages": [stub_message]}
 
 
@@ -87,7 +89,7 @@ def stub_idea_generation_node(state: GraphState) -> dict:
     """
     Placeholder for the Idea Generation feature.
     """
-    stub_message = AIMessage(content="*Idea Generation feature coming soon!*")
+    stub_message = AIMessage(content=IDEA_GENERATION_STUB_MESSAGE)
     return {"messages": [stub_message]}
 
 
