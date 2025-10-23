@@ -42,10 +42,7 @@ def main_router(state: GraphState) -> dict:
     try:
         # Invoke the LLM with structured output, including system prompt
         route = structured_llm.invoke([system_prompt, last_message])
-        task_name = route.task_name if getattr(route, "task_name", None) in ALLOWED_TASKS else None
-
-        if not task_name:
-            raise ValueError(f"Unexpected task classification: {getattr(route, 'task_name', None)}")
+        task_name = route.task_name
 
         # On success, update task_name
         print(f"DEBUG: Successfully routed to {task_name}")
