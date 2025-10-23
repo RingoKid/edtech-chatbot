@@ -6,6 +6,7 @@ from app.graph.prompts import (
     GREETING_WELCOME_MESSAGE,
     MAIN_ROUTER_SYSTEM_PROMPT,
     MAIN_ROUTER_ERROR_MESSAGE,
+    MAIN_ROUTER_CLARIFICATION_MESSAGE,
     HANDWRITING_STUB_MESSAGE,
     VOCABULARY_STUB_MESSAGE,
     IDEA_GENERATION_STUB_MESSAGE,
@@ -27,6 +28,7 @@ def main_router(state: GraphState) -> dict:
     """
     Routes the user's choice to the appropriate task node.
     Uses structured output with Pydantic to classify the user's intent.
+    If the intent is unclear, sets task_name to __CLARIFY__.
     """
     # Get the context and LLM with structured output
     context = Context()
@@ -44,14 +46,26 @@ def main_router(state: GraphState) -> dict:
         route = structured_llm.invoke([system_prompt, last_message])
         task_name = route.task_name
 
-        # On success, update task_name
+        # Check if LLM explicitly requested clarification
+        if task_name == "__CLARIFY__":
+            print(f"DEBUG: LLM requested clarification")
+            return {"task_name": "__CLARIFY__"}
+        
+        # On successful task classification, update task_name
         print(f"DEBUG: Successfully routed to {task_name}")
         return {"task_name": task_name}
     except Exception as e:
-        # On failure (e.g., invalid choice like "spanish")
+        # On failure (e.g., validation error), treat as clarification needed
         print(f"DEBUG: Routing failed with error: {e}")
-        error_message = AIMessage(content=MAIN_ROUTER_ERROR_MESSAGE)
-        return {"messages": [error_message], "task_name": "__ERROR__"}
+        return {"task_name": "__CLARIFY__"}
+
+
+def clarification_node(state: GraphState) -> dict:
+    """
+    Sends a clarification message when the user's intent is unclear.
+    """
+    clarification_message = AIMessage(content=MAIN_ROUTER_CLARIFICATION_MESSAGE)
+    return {"messages": [clarification_message]}
 
 
 def stub_handwriting_node(state: GraphState) -> dict:
@@ -91,6 +105,9 @@ def route_from_main_router(state: GraphState) -> str:
         return "vocabulary"
     elif task_name == "Idea Generation":
         return "idea_generation"
+    elif task_name == "__CLARIFY__":
+        # Route to clarification node
+        return "clarification"
     else:
-        # If __ERROR__ or None, loop back to greeting
-        return "greeting_node"
+        # Fallback - should not happen
+        return "clarification"

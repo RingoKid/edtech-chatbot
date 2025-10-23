@@ -145,10 +145,10 @@ def test_routing_to_idea_generation_task(client):
 
 def test_routing_with_unclear_input_loops_back(client):
     """
-    Test that unclear/ambiguous input causes the router to loop back to greeting.
+    Test that unclear/ambiguous input causes the router to ask for clarification.
 
-    According to the architecture, if the LLM cannot classify the input using
-    the Pydantic TaskRoute tool, it should route back to greeting_node.
+    According to Feature 002, if the LLM cannot classify the input using
+    the Pydantic TaskRoute tool, it should return __CLARIFY__ and loop back to main_router.
     """
     # Start conversation
     request = {"message": "Hello"}
@@ -166,9 +166,9 @@ def test_routing_with_unclear_input_loops_back(client):
     assert unclear_response.status_code == 200
     reply = unclear_response.json()["reply"]
 
-    # Should get a response that re-presents the options or asks for clarification
-    # (The greeting node or a clarification message)
-    assert len(reply) > 0
+    # Should get the clarification message
+    assert "Sorry" in reply or "didn't quite catch" in reply
+    assert "Handwriting" in reply and "Vocabulary" in reply and "Idea Generation" in reply
 
 
 def test_routing_maintains_thread_context(client):
@@ -329,6 +329,129 @@ async def test_routing_no_manual_if_elif_logic():
     # Get the routing decision
     route = route_from_main_router(result)
 
-    # Should be a valid route
-    assert route in ["handwriting", "vocabulary", "idea_generation", "greeting_node"]
+    # Should be a valid route (updated to include clarification route)
+    assert route in ["handwriting", "vocabulary", "idea_generation", "clarification"]
+
+
+def test_clarification_loop_success(client):
+    """
+    Test that the clarification loop works: ambiguous input gets clarification,
+    then clear input routes correctly.
+    
+    Conversation flow:
+    1. User: "hi" -> AI: (Greeting)
+    2. User: "help me plan something" -> AI: (Clarification Prompt)
+    3. User: "Handwriting" -> Graph routes to handwriting node
+    """
+    # Start conversation
+    request = {"message": "hi"}
+    response = client.post("/api/v1/chat/message", json=request)
+    assert response.status_code == 200
+    thread_id = response.json()["thread_id"]
+    
+    # Send ambiguous input
+    ambiguous_request = {
+        "message": "help me plan something",
+        "thread_id": thread_id
+    }
+    ambiguous_response = client.post("/api/v1/chat/message", json=ambiguous_request)
+    assert ambiguous_response.status_code == 200
+    clarification_reply = ambiguous_response.json()["reply"]
+    
+    # Should get clarification message
+    assert "Sorry" in clarification_reply or "didn't quite catch" in clarification_reply
+    
+    # Send clear task selection
+    clear_request = {
+        "message": "Handwriting",
+        "thread_id": thread_id
+    }
+    clear_response = client.post("/api/v1/chat/message", json=clear_request)
+    assert clear_response.status_code == 200
+    final_reply = clear_response.json()["reply"]
+    
+    # Should route to handwriting
+    assert "Handwriting" in final_reply or "handwriting" in final_reply.lower()
+
+
+def test_multiple_clarifications(client):
+    """
+    Test that the clarification loop can handle multiple unclear inputs
+    before finally routing correctly.
+    
+    Conversation flow:
+    1. User: "hi" -> AI: (Greeting)
+    2. User: "not sure" -> AI: (Clarification)
+    3. User: "maybe something else" -> AI: (Clarification again)
+    4. User: "Vocabulary" -> Graph routes to vocabulary node
+    """
+    # Start conversation
+    request = {"message": "hi"}
+    response = client.post("/api/v1/chat/message", json=request)
+    assert response.status_code == 200
+    thread_id = response.json()["thread_id"]
+    
+    # First ambiguous input
+    first_ambiguous = {
+        "message": "not sure",
+        "thread_id": thread_id
+    }
+    first_response = client.post("/api/v1/chat/message", json=first_ambiguous)
+    assert first_response.status_code == 200
+    first_reply = first_response.json()["reply"]
+    assert "Sorry" in first_reply or "didn't quite catch" in first_reply
+    
+    # Second ambiguous input
+    second_ambiguous = {
+        "message": "maybe something else",
+        "thread_id": thread_id
+    }
+    second_response = client.post("/api/v1/chat/message", json=second_ambiguous)
+    assert second_response.status_code == 200
+    second_reply = second_response.json()["reply"]
+    assert "Sorry" in second_reply or "didn't quite catch" in second_reply
+    
+    # Finally, clear input
+    clear_request = {
+        "message": "Vocabulary",
+        "thread_id": thread_id
+    }
+    clear_response = client.post("/api/v1/chat/message", json=clear_request)
+    assert clear_response.status_code == 200
+    final_reply = clear_response.json()["reply"]
+    
+    # Should route to vocabulary
+    assert "Vocabulary" in final_reply or "vocabulary" in final_reply.lower()
+
+
+@pytest.mark.asyncio
+async def test_clarification_sets_correct_state():
+    """
+    Test that when clarification is needed, the state is set to __CLARIFY__
+    and the next node would be main_router (creating the loop).
+    """
+    from app.graph.graph import create_graph
+    from langchain_core.messages import HumanMessage
+    
+    graph = await create_graph()
+    config = {"configurable": {"thread_id": "test-clarify-state"}}
+    
+    # Start conversation (will interrupt after greeting)
+    await graph.ainvoke({"messages": []}, config=config)
+    
+    # Update state with ambiguous input
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="something unclear")]}
+    )
+    
+    # Resume - should trigger clarification
+    result = await graph.ainvoke(None, config=config)
+    
+    # Verify task_name is __CLARIFY__
+    assert result.get("task_name") == "__CLARIFY__"
+    
+    # Verify the last AI message is the clarification prompt
+    last_message = result["messages"][-1]
+    assert "Sorry" in last_message.content or "didn't quite catch" in last_message.content
 

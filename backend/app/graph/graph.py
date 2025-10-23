@@ -5,6 +5,7 @@ from app.graph.state import GraphState
 from app.graph.nodes import (
     greeting_node,
     main_router,
+    clarification_node,
     stub_handwriting_node,
     stub_vocabulary_node,
     stub_idea_generation_node,
@@ -32,6 +33,7 @@ async def create_graph():
     # Add nodes
     graph.add_node("greeting_node", greeting_node)
     graph.add_node("main_router", main_router)
+    graph.add_node("clarification", clarification_node)
     graph.add_node("handwriting", stub_handwriting_node)
     graph.add_node("vocabulary", stub_vocabulary_node)
     graph.add_node("idea_generation", stub_idea_generation_node)
@@ -46,15 +48,17 @@ async def create_graph():
             "handwriting": "handwriting",
             "vocabulary": "vocabulary",
             "idea_generation": "idea_generation",
-            "greeting_node": "greeting_node"
+            "clarification": "clarification"  # Route to clarification node
         }
     )
+    graph.add_edge("clarification", "main_router")  # Loop back to main_router after clarification
     graph.add_edge("handwriting", END)
     graph.add_edge("vocabulary", END)
     graph.add_edge("idea_generation", END)
 
     # Compile the graph with checkpointer and interrupt_after
-    return graph.compile(checkpointer=checkpointer, interrupt_after=["greeting_node"])
+    # Interrupt after greeting_node and clarification node (for clarification loop)
+    return graph.compile(checkpointer=checkpointer, interrupt_after=["greeting_node", "clarification"])
 
 
 # Create the graph instance at module level for langgraph.json
