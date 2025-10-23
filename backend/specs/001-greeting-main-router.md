@@ -119,16 +119,21 @@ class GraphState(TypedDict):
 **Action:** Implement singleton pattern for ChatService to ensure the same graph instance (with persistent checkpointer) is shared across all API requests.
 
 **Logic:**
-1.  **Singleton Instance:** Create a module-level variable \`_chat_service_instance = None\`
-2.  **Dependency Function:** Modify \`get_chat_service()\` to implement singleton pattern:
+1.  **Import:** \`from functools import lru_cache\`
+2.  **Dependency Function:** Implement \`get_chat_service()\` using \`lru_cache\` for singleton pattern:
     ```python
+    @lru_cache(maxsize=1)
     def get_chat_service() -> ChatService:
-        global _chat_service_instance
-        if _chat_service_instance is None:
-            _chat_service_instance = ChatService()
-        return _chat_service_instance
+        """
+        Returns a singleton ChatService instance for the application lifecycle.
+        Uses lru_cache to ensure only one instance is created and reused across requests.
+        Can be overridden in tests via dependency injection to avoid event loop conflicts.
+        """
+        return ChatService()
     ```
+    * *Note: \`@lru_cache(maxsize=1)\` provides a cleaner singleton pattern than global variables. With \`maxsize=1\`, the function caches its result and returns the same \`ChatService\` instance on all subsequent calls.*
     * *Note: This is CRITICAL for persistence. Without this, each API request would create a new graph with a new database connection, breaking state persistence.*
+    * *Note: This can be overridden in tests using \`app.dependency_overrides\` to provide fresh instances per test, avoiding asyncio event loop conflicts.*
 
 #### 4b. File: \`app/service/chat_service.py\`
 
@@ -145,7 +150,54 @@ class GraphState(TypedDict):
         * Call \`result = await graph.ainvoke(None, config=config)\` to resume from checkpoint
     * **Else** (new thread or completed thread):
         * Create input state: \`{"messages": [HumanMessage(content=user_message)]}\`
-        * Call \`result = await graph.ainvoke(input_state, config=config)\`
+#### 5. Testing Considerations
+
+**Event Loop Conflict Resolution:**
+The singleton \`ChatService\` instance binds to the event loop that exists when it's first created. In production, this is fine (one event loop for the app lifetime). However, pytest creates fresh event loops per test, causing \`RuntimeError: attached to a different event loop\` if tests try to use the cached singleton.
+
+**Solution: Dependency Override in Tests**
+
+In test files, override \`get_chat_service()\` to provide fresh instances:
+
+```python
+from app.routers.chat import get_chat_service
+from app.service.chat_service import ChatService
+
+def get_test_chat_service() -> ChatService:
+    """
+    Creates a fresh ChatService instance for each test.
+    This avoids event loop conflicts when the singleton is reused across tests.
+    """
+    return ChatService()
+
+@pytest.fixture
+def client():
+    """
+    Pytest fixture that creates a TestClient instance for testing.
+    Overrides the get_chat_service dependency to provide fresh instances per test.
+    """
+    app.dependency_overrides[get_chat_service] = get_test_chat_service
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
+```
+
+**Why This Works:**
+* Production: Singleton runs with stable event loop throughout app lifetime
+* Tests: Each test gets fresh \`ChatService\` with current test's event loop
+* Graph persistence still works via the SQLite checkpointer (thread_id based)
+
+**Important Note on \`main_router\` Node:**
+The \`main_router\` node is a **synchronous function** that uses \`.invoke()\` (not \`.ainvoke()\`) to call the LLM. When testing it directly:
+```python
+# Correct - no await
+result = main_router(test_state)
+
+# Incorrect - will raise TypeError
+result = await main_router(test_state)
+```
+
+#### 6. LangSmith Evaluation Strategy
 6.  **Extract Response:** Get the last message from \`result["messages"]\`
 
 * *Note on Change: This is the CORRECT LangGraph pattern for handling interrupted graphs with persistent checkpointers. Using \`ainvoke()\` with full state always replaces the state, which would restart the conversation. The \`aget_state()\` + \`aupdate_state()\` + \`ainvoke(None)\` pattern properly resumes from the interrupted checkpoint.*
