@@ -1,9 +1,3 @@
-Okay dude, got it. Providing the common spec (`000`) every time is the right way to keep things consistent.
-
-Here's the combined spec file for Feature 002, incorporating the common project rules and removing the redundant execution instructions.
-
------
-
 ### FEATURE SPEC: 000 - Project Common
 
 *(Included for context - see original file for full content)*
@@ -42,9 +36,25 @@ class TaskRoute(BaseModel):
 
   * **Rationale:** Adding `__CLARIFY__` allows the LLM to explicitly signal ambiguity.
 
-#### 2\. File: `app/graph/nodes.py`
+#### 2\. File: `app/graph/prompts.py`
 
-**Action:** Update the logic within the `main_router` node.
+**Action:** Add the clarification message constant.
+
+**Content:**
+
+```python
+MAIN_ROUTER_CLARIFICATION_MESSAGE = "Sorry, I didn't quite catch that. Could you please specify if you'd like help with Handwriting, Vocabulary, or Idea Generation?"
+```
+
+**Action:** Update the system prompt to instruct the LLM about clarification.
+
+```python
+MAIN_ROUTER_SYSTEM_PROMPT = "You are a routing assistant. The user must choose one of: Handwriting, Vocabulary, or Idea Generation. Classify their response into exactly one of these three options based on their intent. If the user's intent is unclear or they mention something that doesn't clearly map to one of these three tasks, return '__CLARIFY__' to ask for clarification."
+```
+
+#### 3\. File: `app/graph/nodes.py`
+
+**Action:** Update the logic within the `main_router` node and add a new `clarification_node`.
 
 **Node: `main_router`**
 
@@ -55,13 +65,18 @@ class TaskRoute(BaseModel):
     3.  Invoke the structured-output LLM with the user's message.
     4.  **Handle LLM Output:**
           * **On Explicit Clarification (`route.task_name == "__CLARIFY__"`):**
-              * Create clarification `AIMessage`: "Sorry, I didn't quite catch that. Could you please specify if you'd like help with Handwriting, Vocabulary, or Idea Generation?"
-              * Return state update: `{"messages": [clarification_message], "task_name": "__CLARIFY__"}`.
+              * Return state update: `{"task_name": "__CLARIFY__"}`.
           * **On Successful Task Classification:**
               * Return state update: `{"task_name": route.task_name}`.
           * **On LLM Invocation Error (in `except` block):**
-              * Create the same clarification `AIMessage`.
-              * Return state update: `{"messages": [clarification_message], "task_name": "__CLARIFY__"}`.
+              * Return state update: `{"task_name": "__CLARIFY__"}`.
+
+**Node: `clarification_node` (NEW)**
+
+  * **Purpose:** Sends the clarification message when user intent is unclear.
+  * **Logic:**
+    1.  Create clarification `AIMessage` using `MAIN_ROUTER_CLARIFICATION_MESSAGE`.
+    2.  Return state update: `{"messages": [clarification_message]}`.
 
 **Action:** Update the `route_from_main_router` function.
 
@@ -72,17 +87,22 @@ class TaskRoute(BaseModel):
     2.  If "Handwriting", return `"handwriting"`.
     3.  If "Vocabulary", return `"vocabulary"`.
     4.  If "Idea Generation", return `"idea_generation"`.
-    5.  **If `__CLARIFY__` or `None`:** Return `"main_router"`. *(Creates the loop)*.
+    5.  **If `__CLARIFY__`:** Return `"clarification"`. *(Routes to clarification node)*.
+    6.  **If `None` or other:** Return `"clarification"`. *(Fallback)*.
 
-#### 3\. File: `app/graph/graph.py`
+#### 4\. File: `app/graph/graph.py`
 
-**Action:** Update the conditional edges for the `main_router`.
+**Action:** Add the `clarification` node and update the edges to create the clarification loop.
 
 **Logic:**
 
-1.  **Modify `add_conditional_edges`:**
+1.  **Add the clarification node:**
     ```python
-    # [Modify Edge Logic]
+    graph.add_node("clarification", clarification_node)
+    ```
+
+2.  **Modify `add_conditional_edges` for main_router:**
+    ```python
     graph.add_conditional_edges(
         "main_router",
         route_from_main_router,
@@ -90,27 +110,59 @@ class TaskRoute(BaseModel):
             "handwriting": "handwriting",
             "vocabulary": "vocabulary",
             "idea_generation": "idea_generation",
-            "main_router": "main_router" # Added loop back
+            "clarification": "clarification"  # Route to clarification node
         }
     )
     ```
 
-#### 4\. File: `app/service/chat_service.py`
+3.  **Add edge from clarification back to main_router:**
+    ```python
+    graph.add_edge("clarification", "main_router")  # Loop back to main_router after clarification
+    ```
 
-**Action:** No changes required.
+4.  **Update interrupt configuration:**
+    ```python
+    # Interrupt after greeting_node and clarification node (for clarification loop)
+    return graph.compile(checkpointer=checkpointer, interrupt_after=["greeting_node", "clarification"])
+    ```
 
-#### 5\. Testing Considerations (Descriptions Only)
+  * **Rationale:** By interrupting after the `clarification` node, the graph pauses after sending the clarification message, allowing the user to respond. The response then triggers the graph to resume at `main_router`, creating the clarification loop.
+
+#### 6\. File: `app/service/chat_service.py`
+
+**Action:** No changes required. The existing resumption logic correctly handles resuming execution after the `clarification` node interrupts.
+
+#### 7\. Unit Tests
 
 **File:** `tests/test_chat_routing.py`
 
-  * **Modify Existing Tests:** Ensure tests expecting the old error loop now check for `task_name == "__CLARIFY__"` and the correct clarification message. Assert the next node would be `main_router`.
+  * **Modify Existing Tests:** 
+      * Update `test_routing_with_unclear_input_loops_back` to check for the clarification message containing "Sorry" and the three task options.
+      * Update `test_routing_no_manual_if_elif_logic` to include `"clarification"` as a valid route.
+  
   * **Add New Tests:**
-      * **Clarification Loop Success:** Verify the sequence: ambiguous input -\> clarification prompt -\> valid input -\> correct task node.
-      * **Multiple Clarifications:** Test the loop handles several rounds of ambiguous input before succeeding.
+      * **`test_clarification_loop_success`:** Verify the sequence: 
+        1. User: "hi" → AI: (Greeting)
+        2. User: "help me plan something" → AI: (Clarification Prompt)
+        3. User: "Handwriting" → Graph routes correctly to handwriting node
+      
+      * **`test_multiple_clarifications`:** Test the loop handles multiple rounds:
+        1. User: "hi" → AI: (Greeting)
+        2. User: "not sure" → AI: (Clarification)
+        3. User: "maybe something else" → AI: (Clarification again)
+        4. User: "Vocabulary" → Graph routes correctly to vocabulary node
+      
+      * **`test_clarification_sets_correct_state`:** Verify that when clarification is needed, `state.task_name == "__CLARIFY__"` and the AI message is the clarification prompt.
 
-*(Refer to `FEATURE SPEC: 000` for how to execute these tests using Docker)*
+**Run tests:**
 
-#### 6\. LangSmith Evaluation Strategy
+```bash
+docker compose exec backend pytest tests/test_chat_routing.py -v
+```
+
+*(Refer to `FEATURE SPEC: 000` for full Docker execution workflow)*
+
+#### 8\. LangSmith Evaluation Strategy
 
   * **Dataset:** "Feature 2: Router Clarification" (or update "Feature 1")
   * **Examples:** Include multi-turn examples demonstrating the clarification loop.
@@ -119,5 +171,32 @@ class TaskRoute(BaseModel):
   * **Evaluators:**
     1.  **"Router Correctness" (Updated Custom Evaluator):** Check `task_name` is `__CLARIFY__` after ambiguous input and the correct task name after valid input following clarification. Verify the AI message content matches the clarification prompt.
     2.  **"Clarification Loop Count" (Optional):** Count occurrences of `__CLARIFY__`.
+
+-----
+
+### Implementation Summary
+
+**Key Design Decision:** The implementation uses a dedicated `clarification_node` rather than having `main_router` send the clarification message directly. This approach provides several benefits:
+
+1. **Separation of Concerns:** The `main_router` focuses solely on classification, while `clarification_node` handles messaging.
+2. **Proper Interrupts:** By interrupting after `clarification_node`, the graph naturally pauses after sending the clarification message, waiting for user input.
+3. **Clean Loop:** The flow is: `main_router` → `clarification_node` (interrupt) → user responds → `main_router` (re-evaluates).
+
+**Graph Flow:**
+```
+greeting_node → main_router → {
+    Handwriting → handwriting → END
+    Vocabulary → vocabulary → END
+    Idea Generation → idea_generation → END
+    __CLARIFY__ → clarification → main_router (loop)
+}
+```
+
+**Test Results:** All tests passing, including:
+- Basic routing to all three task types
+- Clarification on ambiguous input
+- Single clarification loop success
+- Multiple clarification loops
+- State management verification
 
 -----
