@@ -2,6 +2,7 @@
 Chat router for the FastAPI application.
 Contains HTTP endpoints for chat functionality using LangGraph.
 """
+from functools import lru_cache
 from fastapi import APIRouter, HTTPException, Depends, WebSocket
 from fastapi.responses import JSONResponse
 
@@ -11,20 +12,15 @@ from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
-# Create a single ChatService instance that will be reused across all requests
-# This ensures the graph (with its persistent checkpointer) is shared
-_chat_service_instance = None
 
-
+@lru_cache(maxsize=1)
 def get_chat_service() -> ChatService:
     """
-    Dependency function to get the singleton ChatService instance.
-    This ensures the same graph (with persistent checkpointer) is used across all requests.
+    Returns a singleton ChatService instance for the application lifecycle.
+    Uses lru_cache to ensure only one instance is created and reused across requests.
+    Can be overridden in tests via dependency injection to avoid event loop conflicts.
     """
-    global _chat_service_instance
-    if _chat_service_instance is None:
-        _chat_service_instance = ChatService()
-    return _chat_service_instance
+    return ChatService()
 
 
 @router.post("/message", response_model=ChatMessageResponse)
