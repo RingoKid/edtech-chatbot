@@ -202,7 +202,31 @@ result = await main_router(test_state)
 
 * *Note on Change: This is the CORRECT LangGraph pattern for handling interrupted graphs with persistent checkpointers. Using \`ainvoke()\` with full state always replaces the state, which would restart the conversation. The \`aget_state()\` + \`aupdate_state()\` + \`ainvoke(None)\` pattern properly resumes from the interrupted checkpoint.*
 
-#### 5. LangSmith Evaluation Strategy
+#### 5. Unit Tests
+
+**File:** \`tests/test_chat_message_api.py\`
+Tests the REST API endpoint for chat messages:
+* New thread creation (without thread_id)
+* Continuing conversations (with thread_id)
+* Request validation (missing/empty fields)
+* Response schema validation
+* Custom thread IDs, long messages, special characters
+
+**File:** \`tests/test_chat_routing.py\`
+Tests the routing functionality:
+* Routes to correct task (Handwriting, Vocabulary, Idea Generation)
+* Handles ambiguous input (loops back to greeting)
+* Case-insensitive routing
+* Natural language variations
+* Validates Pydantic tool usage (no manual if/elif)
+
+**Run tests:**
+```bash
+docker compose exec backend pytest tests/test_chat_message_api.py -v
+docker compose exec backend pytest tests/test_chat_routing.py -v
+```
+
+#### 6. LangSmith Evaluation Strategy
 
 * **Dataset:** "Feature 1: Main Routing"
 * **Examples:** Create ~20 examples, each with two turns (or more for failure cases).
