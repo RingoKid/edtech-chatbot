@@ -13,11 +13,6 @@ from app.graph.prompts import (
 
 
 ALLOWED_TASKS = {"Handwriting", "Vocabulary", "Idea Generation"}
-TASK_KEYWORDS = {
-    "Handwriting": ("handwriting", "write", "writing", "penmanship", "letters"),
-    "Vocabulary": ("vocabulary", "words", "spelling", "definitions", "lexicon"),
-    "Idea Generation": ("idea", "brainstorm", "creative", "plan", "story"),
-}
 
 
 def greeting_node(state: GraphState) -> dict:
@@ -40,13 +35,6 @@ def main_router(state: GraphState) -> dict:
 
     # Get the last message (user's choice)
     last_message = state["messages"][-1]
-    user_text = last_message.content.lower()
-
-    # Fast keyword routing for determinism without invoking the LLM
-    for task, keywords in TASK_KEYWORDS.items():
-        if any(keyword in user_text for keyword in keywords):
-            print(f"DEBUG: Keyword routed to {task}")
-            return {"task_name": task}
 
     # Create a system message to guide the classification
     system_prompt = SystemMessage(content=MAIN_ROUTER_SYSTEM_PROMPT)
@@ -109,4 +97,3 @@ def route_from_main_router(state: GraphState) -> str:
     else:
         # If __ERROR__ or None, loop back to greeting
         return "greeting_node"
-
