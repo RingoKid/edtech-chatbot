@@ -71,8 +71,8 @@ def test_routing_to_handwriting_task(client):
         reply = task_response.json()["reply"]
 
         # Verify the response indicates handwriting routing
-        # (Based on stub_handwriting_node which says "Handwriting feature coming soon")
-        assert "Handwriting" in reply or "handwriting" in reply.lower()
+        # Should now ask for grade parameter
+        assert "target grade level" in reply.lower() or "handwriting" in reply.lower()
 
 
 def test_routing_to_vocabulary_task(client):
@@ -106,7 +106,8 @@ def test_routing_to_vocabulary_task(client):
         reply = task_response.json()["reply"]
 
         # Verify the response indicates vocabulary routing
-        assert "Vocabulary" in reply or "vocabulary" in reply.lower()
+        # Should now ask for grade parameter
+        assert "target grade level" in reply.lower() or "vocabulary" in reply.lower()
 
 
 def test_routing_to_idea_generation_task(client):
@@ -140,7 +141,8 @@ def test_routing_to_idea_generation_task(client):
         reply = task_response.json()["reply"]
 
         # Verify the response indicates idea generation routing
-        assert "Idea" in reply or "idea" in reply.lower()
+        # Should now ask for grade parameter
+        assert "target grade level" in reply.lower() or "idea" in reply.lower()
 
 
 def test_routing_with_unclear_input_loops_back(client):
@@ -228,7 +230,8 @@ def test_routing_case_insensitive(client):
         reply = task_response.json()["reply"]
 
         # All should route to handwriting
-        assert "Handwriting" in reply or "handwriting" in reply.lower()
+        # Should now ask for grade parameter
+        assert "target grade level" in reply.lower() or "handwriting" in reply.lower()
 
 
 def test_routing_with_natural_language_variations(client):
@@ -374,8 +377,8 @@ def test_clarification_loop_success(client):
     assert clear_response.status_code == 200
     final_reply = clear_response.json()["reply"]
     
-    # Should route to handwriting
-    assert "Handwriting" in final_reply or "handwriting" in final_reply.lower()
+    # Should route to handwriting and ask for grade
+    assert "target grade level" in final_reply.lower() or "handwriting" in final_reply.lower()
 
 
 def test_multiple_clarifications(client):
@@ -424,8 +427,8 @@ def test_multiple_clarifications(client):
     assert clear_response.status_code == 200
     final_reply = clear_response.json()["reply"]
     
-    # Should route to vocabulary
-    assert "Vocabulary" in final_reply or "vocabulary" in final_reply.lower()
+    # Should route to vocabulary and ask for grade
+    assert "target grade level" in final_reply.lower() or "vocabulary" in final_reply.lower()
 
 
 @pytest.mark.asyncio

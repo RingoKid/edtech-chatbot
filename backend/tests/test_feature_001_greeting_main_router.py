@@ -61,9 +61,12 @@ async def test_main_router_classifies_handwriting():
         # Check that task_name was set correctly
         assert result.get("task_name") == "Handwriting"
 
-        # Check that we got the stub message
+        # Check that we got the parameter collection question
         last_message = result["messages"][-1]
-        assert "Handwriting feature coming soon" in last_message.content
+        assert "target grade level" in last_message.content.lower()
+        assert "Pre-K" in last_message.content
+        assert "Kindergarten" in last_message.content
+        assert "First Grade" in last_message.content
     finally:
         await graph.checkpointer.conn.close()
 
@@ -91,9 +94,12 @@ async def test_main_router_classifies_vocabulary():
         # Check that task_name was set correctly
         assert result.get("task_name") == "Vocabulary"
 
-        # Check that we got the stub message
+        # Check that we got the parameter collection question
         last_message = result["messages"][-1]
-        assert "Vocabulary feature coming soon" in last_message.content
+        assert "target grade level" in last_message.content.lower()
+        assert "Pre-K" in last_message.content
+        assert "Kindergarten" in last_message.content
+        assert "First Grade" in last_message.content
     finally:
         await graph.checkpointer.conn.close()
 
@@ -121,9 +127,12 @@ async def test_main_router_classifies_idea_generation():
         # Check that task_name was set correctly
         assert result.get("task_name") == "Idea Generation"
 
-        # Check that we got the stub message
+        # Check that we got the parameter collection question
         last_message = result["messages"][-1]
-        assert "Idea Generation feature coming soon" in last_message.content
+        assert "target grade level" in last_message.content.lower()
+        assert "Pre-K" in last_message.content
+        assert "Kindergarten" in last_message.content
+        assert "First Grade" in last_message.content
     finally:
         await graph.checkpointer.conn.close()
 

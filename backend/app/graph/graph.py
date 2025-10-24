@@ -6,10 +6,14 @@ from app.graph.nodes import (
     greeting_node,
     main_router,
     clarification_node,
-    stub_handwriting_node,
-    stub_vocabulary_node,
-    stub_idea_generation_node,
-    route_from_main_router
+    setup_handwriting,
+    setup_vocabulary,
+    setup_idea_generation,
+    collect_parameters_node,
+    wait_for_user_input,
+    stub_generate_lesson_node,
+    route_from_main_router,
+    route_parameter_collection
 )
 
 
@@ -34,9 +38,12 @@ async def create_graph():
     graph.add_node("greeting_node", greeting_node)
     graph.add_node("main_router", main_router)
     graph.add_node("clarification", clarification_node)
-    graph.add_node("handwriting", stub_handwriting_node)
-    graph.add_node("vocabulary", stub_vocabulary_node)
-    graph.add_node("idea_generation", stub_idea_generation_node)
+    graph.add_node("setup_handwriting", setup_handwriting)
+    graph.add_node("setup_vocabulary", setup_vocabulary)
+    graph.add_node("setup_idea_generation", setup_idea_generation)
+    graph.add_node("collect_parameters", collect_parameters_node)
+    graph.add_node("wait_for_input", wait_for_user_input)
+    graph.add_node("generate_lesson", stub_generate_lesson_node)
 
     # Add edges
     graph.set_entry_point("greeting_node")
@@ -45,20 +52,33 @@ async def create_graph():
         "main_router",
         route_from_main_router,
         {
-            "handwriting": "handwriting",
-            "vocabulary": "vocabulary",
-            "idea_generation": "idea_generation",
+            "handwriting": "setup_handwriting",
+            "vocabulary": "setup_vocabulary",
+            "idea_generation": "setup_idea_generation",
             "clarification": "clarification"  # Route to clarification node
         }
     )
     graph.add_edge("clarification", "main_router")  # Loop back to main_router after clarification
-    graph.add_edge("handwriting", END)
-    graph.add_edge("vocabulary", END)
-    graph.add_edge("idea_generation", END)
+    
+    # Add edges for parameter collection flow
+    graph.add_edge("setup_handwriting", "collect_parameters")
+    graph.add_edge("setup_vocabulary", "collect_parameters")
+    graph.add_edge("setup_idea_generation", "collect_parameters")
+    graph.add_conditional_edges(
+        "collect_parameters",
+        route_parameter_collection,
+        {
+            "wait_for_input": "wait_for_input",
+            "generate_lesson": "generate_lesson"
+        }
+    )
+    graph.add_edge("wait_for_input", "collect_parameters")  # Loop back after user input
+    graph.add_edge("generate_lesson", END)
 
     # Compile the graph with checkpointer and interrupt_after
-    # Interrupt after greeting_node and clarification node (for clarification loop)
-    return graph.compile(checkpointer=checkpointer, interrupt_after=["greeting_node", "clarification"])
+    # Interrupt after greeting_node, clarification, and wait_for_input
+    # wait_for_input is where we pause to wait for user's parameter responses
+    return graph.compile(checkpointer=checkpointer, interrupt_after=["greeting_node", "clarification", "wait_for_input"])
 
 
 # Create the graph instance at module level for langgraph.json
