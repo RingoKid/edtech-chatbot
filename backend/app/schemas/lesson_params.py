@@ -31,11 +31,60 @@ class HandwritingParams(BaseLessonParams):
 
 class VocabularyParams(BaseLessonParams):
     """Parameters specific to vocabulary lessons."""
-    # Add vocabulary-specific fields here later
-    pass
+    query_type: Literal[
+        "sentence structure",
+        "vocabulary building",
+        "grammar",
+        "genre writing",
+        "general",
+        "__CLARIFY__"
+    ] = Field(
+        ...,
+        description="Which specific aspect of vocabulary or syntax do you want to focus on?"
+    )
+    target_vocabulary: str = Field(
+        ...,
+        description="Are there specific vocabulary words or concepts you want to target? (e.g., 'colors', 'action verbs', 'rhyming words', or 'None')"
+    )
+    target_genre: str = Field(
+        ...,
+        description="If focusing on genre writing, which genre? (e.g., 'narrative', 'informational', or 'Not applicable')"
+    )
 
 
 class IdeaGenerationParams(BaseLessonParams):
     """Parameters specific to idea generation lessons."""
-    # Add idea generation-specific fields here later
-    pass
+    query_type: Literal[
+        "idea generation",
+        "organization",
+        "genre elements",
+        "brainstorming",
+        "general",
+        "__CLARIFY__"
+    ] = Field(
+        ...,
+        description="Which specific aspect of idea generation or organization do you want to focus on?"
+    )
+    target_genre: Literal[
+        "narrative",
+        "informational",
+        "opinion",
+        "personal narrative",
+        "compare contrast",
+        "__CLARIFY__"
+    ] = Field(
+        ...,
+        description="Which writing genre are we planning for?"
+    )
+    target_topic: str = Field(
+        ...,
+        description="What is the specific topic for this writing lesson? (e.g., 'My Family', 'Community Helpers', 'Seasons', or 'Student Choice')"
+    )
+
+
+# Schema registry for looking up classes by name
+SCHEMA_REGISTRY = {
+    "HandwritingParams": HandwritingParams,
+    "VocabularyParams": VocabularyParams,
+    "IdeaGenerationParams": IdeaGenerationParams
+}

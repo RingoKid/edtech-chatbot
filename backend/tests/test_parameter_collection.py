@@ -424,7 +424,7 @@ async def test_parameter_collection_uses_dynamic_schema():
         
         # State should not have collected the invalid value
         assert result.get("collected_parameters") == {}
-        assert result.get("required_parameters") == ["target_grade"]
+        assert result.get("required_parameters") == ["target_grade", "query_type", "target_vocabulary", "target_genre"]
     finally:
         # Close the SQLite connection to prevent hanging
         await graph.checkpointer.conn.close()

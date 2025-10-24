@@ -1,7 +1,7 @@
 from langchain_core.messages import AIMessage, SystemMessage  # type: ignore[import-not-found]
 from app.graph.state import GraphState
 from app.schemas.task_route import TaskRoute
-from app.schemas.lesson_params import HandwritingParams, VocabularyParams, IdeaGenerationParams
+from app.schemas.lesson_params import HandwritingParams, VocabularyParams, IdeaGenerationParams, SCHEMA_REGISTRY
 from app.graph.context import Context
 from app.graph.prompts import (
     GREETING_WELCOME_MESSAGE,
@@ -111,14 +111,6 @@ def setup_idea_generation(state: GraphState) -> dict:
         "current_question": None,
         "collection_error_message": None
     }
-
-
-# Schema registry for looking up classes by name
-SCHEMA_REGISTRY = {
-    "HandwritingParams": HandwritingParams,
-    "VocabularyParams": VocabularyParams,
-    "IdeaGenerationParams": IdeaGenerationParams
-}
 
 
 def collect_parameters_node(state: GraphState) -> dict:
