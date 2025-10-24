@@ -291,7 +291,7 @@ class HandwritingNodes:
 
             # Build comprehensive system prompt
             system_prompt = f"""
-            You are an expert handwriting and fine motor skills instructor for early childhood education.
+            You are an expert handwriting and spelling instructor for early childhood education (Pre-K through 1st grade).
 
             **YOUR EXPERTISE: Handwriting & Spelling Instruction**
 
@@ -511,30 +511,9 @@ class HandwritingNodes:
         except Exception as e:
             print(f"❌ Error in generate_response_node: {str(e)}")
             
-            # Fallback response
-            fallback_response = AIMessage(content=f"""
-            I apologize, but I'm having trouble accessing the specific educational forms right now. 
-            However, I can still help with your handwriting question: "{original_query}"
-            
-            Here are some general handwriting strategies you can try:
-            
-            **For Letter Formation:**
-            - Start with large motor movements (air writing, sand trays)
-            - Use verbal cues for stroke direction ("top to bottom, left to right")
-            - Practice with dotted lines and guided practice
-            
-            **For Fine Motor Development:**
-            - Finger strengthening activities (play dough, tweezers)
-            - Proper pencil grip practice with visual cues
-            - Short, frequent practice sessions
-            
-            **Materials to Try:**
-            - Large crayons or markers for beginners
-            - Pencil grips for support
-            - Various textured surfaces for practice
-            
-            Would you like me to elaborate on any of these strategies, or do you have a more specific aspect of handwriting you'd like to explore?
-            """)
+            # Fallback response using the template from prompts module
+            fallback_content = prompts.FALLBACK_RESPONSE.format(original_query=original_query)
+            fallback_response = AIMessage(content=fallback_content)
             
             return {
                 "messages": [fallback_response],

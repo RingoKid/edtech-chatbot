@@ -8,13 +8,13 @@ Contains all LLM prompts used by handwriting nodes.
 # ============================================================================
 
 QUERY_ANALYSIS_PROMPT = """
-You are an expert in handwriting and fine motor skills education. Analyze this teacher's query and extract key information.
+You are an expert in handwriting and spelling education for early childhood. Analyze this teacher's query and extract key information.
 
 Teacher's Query: "{query}"
 
 Analyze and respond with a JSON object containing:
 {{
-    "query_type": "letter_formation|fine_motor|spelling|assessment|posture_grip|general",
+    "query_type": "letter_formation|spelling|assessment|pencil_grip|general",
     "target_letters": ["list", "of", "specific", "letters", "mentioned"],
     "grade_level": "prek|kindergarten|1st_grade|mixed|not_specified",
     "key_concepts": ["list", "of", "main", "concepts"],
@@ -23,11 +23,10 @@ Analyze and respond with a JSON object containing:
 }}
 
 Query Type Definitions:
-- letter_formation: Questions about how to form specific letters, stroke order, directionality
-- fine_motor: Questions about hand strength, finger dexterity, grip development
-- spelling: Questions about letter-sound connections, phoneme-grapheme relationships
+- letter_formation: Questions about how to form specific letters, stroke order, stroke sequence, directionality
+- spelling: Questions about letter-sound connections, phoneme-grapheme relationships, sound-to-letter matching
 - assessment: Questions about evaluating progress, rubrics, testing handwriting skills
-- posture_grip: Questions about sitting position, pencil grip, paper positioning
+- pencil_grip: Questions about proper pencil grip, paper positioning, handwriting posture
 - general: Broad questions about handwriting instruction that don't fit other categories
 """
 
@@ -61,7 +60,7 @@ To create the most helpful lesson plan for you, could you let me know:
    • Proper stroke sequence and letter formation
    • Linking the /{letter_str}/ sound to the letter
    • Spelling simple words with {letter_str}
-   • Fine motor skills and pencil grip
+   • Proper pencil grip and handwriting posture
    • Other specific goals?
 
 Once I know these details, I'll create a complete, scripted lesson plan tailored to your students! ✏️"""
@@ -71,7 +70,7 @@ Once I know these details, I'll create a complete, scripted lesson plan tailored
 # ============================================================================
 
 LESSON_GENERATION_SYSTEM_PROMPT = """
-You are an expert handwriting and fine motor skills instructor for early childhood education.
+You are an expert handwriting and spelling instructor for early childhood education (Pre-K through 1st grade).
 
 **YOUR EXPERTISE: Handwriting & Spelling Instruction**
 
@@ -240,21 +239,30 @@ However, I can still help with your handwriting question: "{original_query}"
 Here are some general handwriting strategies you can try:
 
 **For Letter Formation:**
-- Start with large motor movements (air writing, sand trays)
-- Use verbal cues for stroke direction ("top to bottom, left to right")
-- Practice with dotted lines and guided practice
+- Start with large motor movements (air writing, sky writing)
+- Use verbal cues for stroke direction and sequence ("Big line down, little line across")
+- Practice with multi-sensory activities (sand trays, textured letters, finger tracing)
+- Progress to guided practice with dotted lines
 
-**For Fine Motor Development:**
-- Finger strengthening activities (play dough, tweezers)
-- Proper pencil grip practice with visual cues
-- Short, frequent practice sessions
+**For Pencil Grip & Handwriting Posture:**
+- Model proper tripod pencil grip
+- Check paper positioning and slant
+- Monitor sitting posture and paper-holding hand
+- Provide visual cues for grip and posture
+
+**For Sound-to-Letter Connections:**
+- Use phoneme gestures to support sound memory
+- Connect sounds to letter formation through multi-sensory practice
+- Practice sound discrimination before letter writing
+- Apply phoneme-grapheme connections in spelling activities
 
 **Materials to Try:**
-- Large crayons or markers for beginners
-- Pencil grips for support
-- Various textured surfaces for practice
+- Sound cards with picture cues for target phonemes
+- Handwriting lines (top, middle, bottom) for letter formation
+- Dotted letter templates for guided practice
+- Visual charts showing proper letter stroke sequences
 
-Would you like me to elaborate on any of these strategies, or do you have a more specific aspect of handwriting you'd like to explore?
+Would you like me to elaborate on any of these strategies, or do you have a more specific aspect of handwriting instruction you'd like to explore?
 """
 
 # ============================================================================
@@ -263,24 +271,29 @@ Would you like me to elaborate on any of these strategies, or do you have a more
 
 FOLLOW_UP_QUESTIONS = {
     "letter_formation": [
-        "Would you like specific verbal cues for teaching letter strokes?",
+        "Would you like specific sequence verbal cues for teaching letter strokes?",
         "Are you interested in multi-sensory activities for letter practice?",
         "Would assessment rubrics for letter formation be helpful?"
     ],
-    "fine_motor": [
-        "Would you like activities to strengthen finger muscles?",
-        "Are you interested in pencil grip development strategies?",
-        "Would pre-writing activities be helpful for your students?"
+    "pencil_grip": [
+        "Would you like strategies for teaching proper pencil grip?",
+        "Are you interested in activities for handwriting posture and paper positioning?",
+        "Would visual cues for grip and posture be helpful?"
     ],
     "spelling": [
         "Would you like phoneme-grapheme connection activities?",
-        "Are you interested in spelling pattern instruction?",
-        "Would multisensory spelling strategies be helpful?"
+        "Are you interested in sound-to-letter matching strategies?",
+        "Would multi-sensory spelling activities be helpful?"
+    ],
+    "assessment": [
+        "Would you like rubrics for assessing letter formation?",
+        "Are you interested in progress monitoring tools for handwriting?",
+        "Would assessment strategies for phoneme-grapheme knowledge be helpful?"
     ],
     "general": [
         "Would you like more specific activities for any particular area?",
         "Are there specific letters or skills you'd like to focus on?",
-        "Would assessment strategies be helpful for tracking progress?"
+        "Would differentiation strategies for different ability levels be helpful?"
     ]
 }
 

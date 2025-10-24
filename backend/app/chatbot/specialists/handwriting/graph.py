@@ -69,10 +69,10 @@ def route_after_analysis(state: HandwritingState) -> str:
     """
     last_error = state.get("last_error")
     query_type = state.get("query_type", "general")
-    
+
     if last_error:
         return "handle_error"
-    elif query_type in ["letter_formation", "fine_motor", "spelling", "assessment", "posture_grip", "general"]:
+    elif query_type in ["letter_formation", "spelling", "assessment", "pencil_grip", "general"]:
         return "retrieve_forms"
     else:
         print(f"⚠️ Unknown query type: {query_type}, defaulting to general")
@@ -102,7 +102,7 @@ async def handle_error_node(state: HandwritingState) -> dict:
         
         **Quick Handwriting Tips:**
         • Start with proper posture and pencil grip
-        • Practice large motor movements before fine motor
+        • Practice with large movements first (air writing, sky writing)
         • Use multi-sensory approaches (visual, auditory, kinesthetic)
         • Keep practice sessions short and frequent
         • Celebrate small improvements to build confidence
