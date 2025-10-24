@@ -128,12 +128,15 @@ def create_table_if_not_exists():
 def test_connection():
     """
     Test the DynamoDB connection.
+    Tests the DynamoDB SERVICE connection, not whether a specific table exists.
 
     Returns:
         bool: True if connection successful, False otherwise
     """
     try:
-        table.load()
+        # Test DynamoDB service connection by listing tables
+        # This works even if no tables exist yet
+        dynamodb.meta.client.list_tables()
         logger.info("✅ DynamoDB connection test successful")
         return True
     except Exception as e:

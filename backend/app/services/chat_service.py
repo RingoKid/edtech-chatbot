@@ -1,6 +1,8 @@
 """
 Chat service module containing the core chatbot logic.
 This service encapsulates LangGraph integration and message handling.
+
+NOW WITH CONVERSATION MEMORY AND CROSS-BOT CONTEXT SHARING!
 """
 
 from typing import Dict, Any
@@ -8,7 +10,7 @@ import uuid
 import json
 
 from fastapi import WebSocket, WebSocketDisconnect
-from app.chatbot.studio.studio_router import studio_router
+from app.chatbot.studio.studio_router import studio_router_with_memory
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 
@@ -17,14 +19,21 @@ class ChatService:
     """
     Service class that encapsulates the core chatbot logic using LangGraph.
     This service will be dependency-injected into the API router.
+
+    Now uses studio_router_with_memory for full conversation history and cross-bot context.
     """
 
     def __init__(self):
         """
-        Initialize the ChatService with the complete routing graph.
+        Initialize the ChatService with the memory-enabled routing graph.
         This graph routes to specialized bots: handwriting, vocabulary, ideas, and general.
+
+        Features:
+        - Full conversation memory across turns
+        - Cross-bot context sharing (handwriting → vocabulary transitions preserve context)
+        - Transparent specialist handoffs
         """
-        self.graph = studio_router
+        self.graph = studio_router_with_memory
 
     def create_new_thread(self, user_id: str) -> str:
         """
@@ -73,6 +82,8 @@ class ChatService:
         """
         Main async method to handle incoming messages and generate responses using the graph.
 
+        NOW WITH MEMORY: Checkpointer automatically manages conversation history via thread_id.
+
         Args:
             user_message (str): The message received from the user
             user_id (str): The user identifier
@@ -88,12 +99,50 @@ class ChatService:
         # Create config with thread_id for graph execution
         config = {"configurable": {"thread_id": thread_id}}
 
-        # Create the input state with the user's message
+        # 🔍 DEBUG: Check what's in the checkpointer BEFORE invocation
+        print(f"🔍 DEBUG - Thread ID: {thread_id}")
+        try:
+            prior_state = await self.graph.aget_state(config)
+            if prior_state and prior_state.values:
+                prior_messages = prior_state.values.get("messages", [])
+                print(f"🔍 DEBUG - Found {len(prior_messages)} messages in checkpointer BEFORE invocation")
+                for i, msg in enumerate(prior_messages):
+                    msg_type = "Human" if hasattr(msg, 'type') and msg.type == "human" else "AI"
+                    content_preview = msg.content[:50] if hasattr(msg, 'content') else str(msg)[:50]
+                    print(f"   [{i}] {msg_type}: {content_preview}...")
+            else:
+                print(f"🔍 DEBUG - No prior state found (first message in thread)")
+        except Exception as e:
+            print(f"🔍 DEBUG - Error checking prior state: {e}")
+
+        # Create the input state with just the new message
+        # The checkpointer will automatically retrieve and append previous messages
         input_state = {
-            "messages": [HumanMessage(content=user_message)]
+            "messages": [HumanMessage(content=user_message)],  # Just the new message
+            "teacher_id": user_id,
+            "session_id": thread_id,
+            "original_query": user_message,
+            "intent": None,
+            "confidence": 0.0,
+            "classification_reasoning": None,
+            "target_bot": None,
+            "routing_decision": None,
+            "needs_specialist": False,  # Critical field for routing
+            "specialist_topic": None,  # Critical field for routing
+            "bot_response": None,
+            "bot_type": None,
+            "relevant_forms": [],
+            "follow_up_questions": [],
+            "processing_steps": [],
+            "total_processing_time": 0.0,
+            "needs_clarification": False,
+            "last_error": None,
+            "retry_count": 0,
+            "conversation_depth": 0,  # Checkpointer will manage this
+            "previous_intents": []
         }
 
-        # Invoke the graph with the user message
+        # Invoke the graph - checkpointer automatically handles conversation continuity
         result = await self.graph.ainvoke(input_state, config=config)
 
         # Extract the AI response from the result
@@ -143,9 +192,31 @@ class ChatService:
                 # Create config with thread_id for graph execution
                 config = {"configurable": {"thread_id": thread_id}}
 
-                # Create the input state with the user's message
+                # Create the input state with just the new message
+                # The checkpointer will automatically retrieve and append previous messages
                 input_state = {
-                    "messages": [HumanMessage(content=request.message)]
+                    "messages": [HumanMessage(content=request.message)],  # Just the new message
+                    "teacher_id": user_id,
+                    "session_id": thread_id,
+                    "original_query": request.message,
+                    "intent": None,
+                    "confidence": 0.0,
+                    "classification_reasoning": None,
+                    "target_bot": None,
+                    "routing_decision": None,
+                    "needs_specialist": False,
+                    "specialist_topic": None,
+                    "bot_response": None,
+                    "bot_type": None,
+                    "relevant_forms": [],
+                    "follow_up_questions": [],
+                    "processing_steps": [],
+                    "total_processing_time": 0.0,
+                    "needs_clarification": False,
+                    "last_error": None,
+                    "retry_count": 0,
+                    "conversation_depth": 0,  # Checkpointer will manage this
+                    "previous_intents": []
                 }
 
                 # Stream events from the graph

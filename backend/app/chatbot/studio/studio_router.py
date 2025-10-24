@@ -1,149 +1,144 @@
 """
-Studio-friendly Routing Graph that shows the complete intent → specialist flow.
-This version removes complex dependencies to ensure it loads in LangGraph Studio.
+General-First Routing Graph - Transparent specialist handoffs.
+Users interact with GeneralBot, which seamlessly routes to specialists when needed.
+The handoff is invisible - users just get their answer.
+
+Now with CONVERSATION MEMORY and CROSS-BOT CONTEXT SHARING!
 """
 from typing import Dict, Any
 from langgraph.graph import StateGraph, END, START
+from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage, AIMessage
 from app.chatbot.routing.router_state import RoutingState
 
+# Import all bots at module level to avoid blocking I/O during async execution
+from app.chatbot.specialists.general.bot import GeneralBot, VocabularyBot, IdeasBot
+from app.chatbot.specialists.handwriting.graph import run_handwriting_bot
 
-# Mock intent classification for studio visualization
-async def classify_intent_node(state: RoutingState) -> Dict[str, Any]:
+
+async def general_bot_hub_node(state: RoutingState) -> Dict[str, Any]:
     """
-    Intent Classification Node - Analyzes teacher query and assigns confidence.
-    In production, this uses OpenAI GPT-4 for classification.
+    PRIMARY HUB: GeneralBot handles all queries and decides routing.
+    - Simple queries: Answers directly
+    - Complex queries: Routes to specialist (invisible to user)
     """
-    messages = state.get("messages", [])
-    if not messages:
-        return {"intent": "general", "confidence": 0.5}
-    
-    # Handle different message formats
-    latest_message = messages[-1]
-    if hasattr(latest_message, 'content'):
-        query = latest_message.content
-    elif isinstance(latest_message, dict) and 'content' in latest_message:
-        query = latest_message['content']
-    elif isinstance(latest_message, list):
-        # Handle LangGraph Studio format: [{'type': 'text', 'text': 'content'}]
-        if len(latest_message) > 0 and isinstance(latest_message[0], dict):
-            if 'text' in latest_message[0]:
-                query = latest_message[0]['text'].strip()
-            elif 'content' in latest_message[0]:
-                query = latest_message[0]['content'].strip()
+    try:
+        messages = state.get("messages", [])
+        if not messages:
+            return {
+                "bot_response": "Hello! How can I help you today?",
+                "messages": [AIMessage(content="Hello! How can I help you today?")],
+                "needs_specialist": False
+            }
+
+        # Extract query from messages
+        latest_message = messages[-1]
+        if hasattr(latest_message, 'content'):
+            query = latest_message.content
+        elif isinstance(latest_message, dict) and 'content' in latest_message:
+            query = latest_message['content']
+        elif isinstance(latest_message, list):
+            if len(latest_message) > 0 and isinstance(latest_message[0], dict):
+                query = latest_message[0].get('text') or latest_message[0].get('content', '')
             else:
-                query = str(latest_message[0])
+                query = " ".join(str(item) for item in latest_message)
         else:
-            query = " ".join(str(item) for item in latest_message)
-    else:
-        query = str(latest_message)
-    
-    # Ensure query is a string and clean it
-    if not isinstance(query, str):
-        query = str(query)
-    query = query.strip()
-    
-    # Demo classification logic (in production, this uses OpenAI)
-    query_lower = query.lower()
+            query = str(latest_message)
 
-    # Check for domain-specific keywords FIRST (before greetings)
-    if any(word in query_lower for word in ["letter", "handwriting", "write", "pencil", "grip", "formation", "stroke"]):
-        intent = "handwriting"
-        confidence = 0.9
-        reasoning = "Strong handwriting keywords detected"
-    elif any(word in query_lower for word in ["word", "vocabulary", "spelling", "reading", "phonics", "sight"]):
-        intent = "vocabulary"
-        confidence = 0.85
-        reasoning = "Strong vocabulary/reading keywords detected"
-    elif any(word in query_lower for word in ["story", "creative", "ideas", "brainstorm", "narrative", "writing"]):
-        intent = "ideas"
-        confidence = 0.8
-        reasoning = "Strong creative writing keywords detected"
-    # Handle pure greetings (with no other content)
-    elif any(word in query_lower for word in ["hi", "hello", "hey", "greetings", "good morning", "good afternoon"]) and len(query_lower.split()) <= 3:
-        intent = "general"
-        confidence = 0.8  # High confidence for greeting - should get natural response
-        reasoning = "Greeting detected - starting conversation"
-    elif any(word in query_lower for word in ["help", "teach", "student", "classroom", "lesson"]):
-        intent = "general"
-        confidence = 0.6
-        reasoning = "General education keywords detected"
-    else:
-        intent = "general"
-        confidence = 0.3
-        reasoning = "No clear domain keywords, low confidence"
-    
-    return {
-        "original_query": query,
-        "intent": intent,
-        "confidence": confidence,
-        "classification_reasoning": reasoning,
-        "processing_steps": [f"Intent: {intent} (confidence: {confidence})"],
-        "needs_clarification": confidence < 0.5
-    }
+        if not isinstance(query, str):
+            query = str(query)
+        query = query.strip()
 
-async def route_to_bot_node(state: RoutingState) -> Dict[str, Any]:
-    """
-    Routing Decision Node - Decides which specialist bot to use based on confidence.
-    This is the core routing logic that sends low confidence queries to general bot.
-    """
-    intent = state.get("intent", "general")
-    confidence = state.get("confidence", 0.0)
-    
-    print(f"🔀 Routing: intent='{intent}', confidence={confidence:.2f}")
-    
-    # CORE ROUTING LOGIC - This is what you wanted to see!
-    if confidence >= 0.7:
-        # High confidence - route to specialist
-        if intent == "handwriting":
-            target_bot = "handwriting"
-            routing_decision = f"HIGH CONFIDENCE ({confidence:.2f}) → Handwriting Specialist"
-        elif intent == "vocabulary":
-            target_bot = "vocabulary"
-            routing_decision = f"HIGH CONFIDENCE ({confidence:.2f}) → Vocabulary Specialist"
-        elif intent == "ideas":
-            target_bot = "ideas"
-            routing_decision = f"HIGH CONFIDENCE ({confidence:.2f}) → Ideas Specialist"
+        print(f"🎓 General Bot Hub processing: '{query[:60]}...'")
+
+        # Create GeneralBot instance
+        general_bot = GeneralBot()
+
+        # Detect complexity using hybrid approach
+        complexity = await general_bot.detect_query_complexity(query, messages)
+
+        if complexity == "simple":
+            # SIMPLE QUERY: General bot answers directly
+            print(f"✅ Simple query - General bot will answer directly")
+            result = await general_bot.process_message(query, conversation_history=messages)
+
+            return {
+                "messages": [AIMessage(content=result.response)],
+                "bot_response": result.response,
+                "bot_type": "general_bot",
+                "needs_specialist": False,
+                "relevant_forms": result.relevant_forms or [],
+                "follow_up_questions": result.follow_up_questions or []
+            }
+
         else:
-            target_bot = "general"
-            routing_decision = f"General intent → General Bot"
-    elif confidence >= 0.5:
-        # Medium confidence - still route to specialist but with caution
-        target_bot = intent
-        routing_decision = f"MEDIUM CONFIDENCE ({confidence:.2f}) → {intent.title()} Specialist (with caution)"
-    else:
-        # LOW CONFIDENCE - route to general bot for clarification
-        target_bot = "general"
-        routing_decision = f"LOW CONFIDENCE ({confidence:.2f}) → General Bot (needs clarification)"
-    
-    return {
-        "target_bot": target_bot,
-        "routing_decision": routing_decision,
-        "processing_steps": state.get("processing_steps", []) + [f"Routing: → {target_bot} bot"]
-    }
+            # COMPLEX QUERY: Need specialist
+            print(f"🔀 Complex query - routing to specialist")
 
-async def execute_handwriting_bot_node(state: RoutingState) -> Dict[str, Any]:
-    """Handwriting Specialist Bot - Uses actual handwriting graph implementation."""
-    from app.chatbot.specialists.handwriting.graph import run_handwriting_bot
+            # Classify which specialist (using conversation history for context)
+            topic = general_bot.classify_topic(query, conversation_history=messages)
+
+            # If no specific topic detected, general bot handles it
+            if topic is None:
+                print(f"📝 Complex but general query - General bot will handle with conversation context")
+                result = await general_bot.process_message(query, conversation_history=messages)
+
+                return {
+                    "messages": [AIMessage(content=result.response)],
+                    "bot_response": result.response,
+                    "bot_type": "general_bot",
+                    "needs_specialist": False,
+                    "relevant_forms": result.relevant_forms or [],
+                    "follow_up_questions": result.follow_up_questions or []
+                }
+
+            # Route to specific specialist
+            return {
+                "original_query": query,
+                "needs_specialist": True,
+                "specialist_topic": topic,
+                "processing_steps": [f"Detected complexity: {complexity}, topic: {topic}"]
+            }
+
+    except Exception as e:
+        print(f"❌ Error in general bot hub: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+        fallback = "I apologize, but I'm having trouble right now. Please try rephrasing your question."
+        return {
+            "messages": [AIMessage(content=fallback)],
+            "bot_response": fallback,
+            "needs_specialist": False,
+            "bot_type": "general_bot_error"
+        }
+
+
+async def execute_handwriting_specialist_node(state: RoutingState) -> Dict[str, Any]:
+    """
+    Handwriting Specialist - Called transparently by general bot.
+    User doesn't know they're being handed off.
+    """
     try:
         query = state.get("original_query", "")
+        messages = state.get("messages", [])
         teacher_id = state.get("teacher_id", "studio_teacher")
         session_id = state.get("session_id", "studio_session")
 
-        print(f"🖊️ Executing real handwriting bot for query: {query}")
+        print(f"🖊️ [TRANSPARENT HANDOFF] Handwriting specialist processing: '{query[:60]}...'")
 
-        # Run the actual handwriting bot graph
-        handwriting_result = await run_handwriting_bot(
+        # Run handwriting bot
+        result = await run_handwriting_bot(
             teacher_query=query,
             teacher_id=teacher_id,
-            session_id=session_id
+            session_id=session_id,
+            conversation_history=messages
         )
 
-        # Extract response from handwriting bot result
-        bot_messages = handwriting_result.get("messages", [])
+        # Extract response
+        bot_messages = result.get("messages", [])
         bot_response = ""
 
-        # Find the last AI message
         for message in reversed(bot_messages):
             if hasattr(message, 'type') and message.type == 'ai':
                 bot_response = message.content
@@ -153,242 +148,252 @@ async def execute_handwriting_bot_node(state: RoutingState) -> Dict[str, Any]:
                 break
 
         if not bot_response:
-            bot_response = "I apologize, but I wasn't able to generate a proper handwriting response."
+            bot_response = "I apologize, but I couldn't generate a proper response."
 
-        # Extract relevant forms
-        relevant_forms = handwriting_result.get("relevant_forms", [])
-        form_letters = [f"Form {form.get('form_letter', 'Unknown')}" for form in relevant_forms] if relevant_forms else []
+        # Extract metadata
+        relevant_forms = result.get("relevant_forms", [])
+        follow_up_questions = result.get("follow_up_questions", [])
 
-        # Extract follow-up questions
-        follow_up_questions = handwriting_result.get("follow_up_questions", [])
+        print(f"✅ [TRANSPARENT] Handwriting specialist completed - user receives seamless response")
 
         return {
             "messages": [AIMessage(content=bot_response)],
             "bot_response": bot_response,
             "bot_type": "handwriting_specialist",
-            "relevant_forms": form_letters,
+            "relevant_forms": relevant_forms,
             "follow_up_questions": follow_up_questions
         }
 
     except Exception as e:
-        print(f"❌ Error in handwriting bot: {str(e)}")
+        print(f"❌ Error in handwriting specialist: {str(e)}")
         import traceback
         traceback.print_exc()
-        fallback_response = f"I apologize, but I'm having trouble with the handwriting bot. Error: {str(e)}"
+
+        # Graceful fallback
+        fallback = "I can help with handwriting instruction, but I'm having a technical issue. Could you try rephrasing your question?"
         return {
-            "messages": [AIMessage(content=fallback_response)],
-            "bot_response": fallback_response,
-            "bot_type": "handwriting_specialist_error",
-            "relevant_forms": [],
-            "follow_up_questions": []
+            "messages": [AIMessage(content=fallback)],
+            "bot_response": fallback,
+            "bot_type": "handwriting_specialist_error"
         }
 
-async def execute_vocabulary_bot_node(state: RoutingState) -> Dict[str, Any]:
-    """Vocabulary Specialist Bot - Forms I-L (Reading, phonics, word recognition)."""
-    query = state.get("original_query", "")
-    
-    response = f"""📚 **VOCABULARY SPECIALIST** (Forms I-L)
 
-For your question: "{query}"
-
-**Phonics Instruction:**
-• Teach letter-sound correspondences systematically
-• Use multi-sensory approaches (visual, auditory, kinesthetic)
-• Practice blending and segmenting activities
-
-**Sight Word Development:**
-• Focus on high-frequency words
-• Use repeated exposure and practice
-• Create word walls and word banks
-
-**Reading Comprehension:**
-• Build background knowledge
-• Teach context clue strategies
-• Practice questioning techniques
-
-**Forms Used:** I (Phonics Framework), J (Word Recognition), K (Vocabulary Activities)
-"""
-    
-    return {
-        "messages": [AIMessage(content=response)],
-        "bot_response": response,
-        "bot_type": "vocabulary_specialist",
-        "relevant_forms": ["Form-I", "Form-J", "Form-K"],
-        "follow_up_questions": ["Need phonics activity ideas?", "Want sight word strategies?"]
-    }
-
-async def execute_ideas_bot_node(state: RoutingState) -> Dict[str, Any]:
-    """Ideas Specialist Bot - Forms M-Q (Creative writing, story development)."""
-    query = state.get("original_query", "")
-    
-    response = f"""💡 **IDEAS SPECIALIST** (Forms M-Q)
-
-For your question: "{query}"
-
-**Creative Writing Prompts:**
-• "What if animals could talk for one day?"
-• "Design your dream playground - what would it have?"
-• "Write about a magic pencil that draws real things"
-
-**Story Development:**
-• Use story maps (beginning, middle, end)
-• Develop characters with interesting traits
-• Create conflicts and resolutions
-
-**Brainstorming Techniques:**
-• Mind mapping for idea generation
-• "What if" scenarios
-• Collaborative storytelling circles
-
-**Forms Used:** M (Genre Elements), N (Creative Techniques), O (Story Development)
-"""
-    
-    return {
-        "messages": [AIMessage(content=response)],
-        "bot_response": response,
-        "bot_type": "ideas_specialist",
-        "relevant_forms": ["Form-M", "Form-N", "Form-O"],
-        "follow_up_questions": ["Want more story prompts?", "Need character development ideas?"]
-    }
-
-async def execute_general_bot_node(state: RoutingState) -> Dict[str, Any]:
-    """General Education Bot - Uses the actual GeneralBot implementation."""
+async def execute_vocabulary_specialist_node(state: RoutingState) -> Dict[str, Any]:
+    """
+    Vocabulary Specialist - Called transparently by general bot.
+    """
     try:
-        from app.chatbot.specialists.general.bot import GeneralBot
-
         query = state.get("original_query", "")
         messages = state.get("messages", [])
 
-        print(f"🎓 Executing real GeneralBot for query: {query}")
+        print(f"📚 [TRANSPARENT HANDOFF] Vocabulary specialist processing: '{query[:60]}...'")
 
-        # Create and use the actual GeneralBot
-        general_bot = GeneralBot()
-        result = await general_bot.process_message(query, conversation_history=messages)
+        vocab_bot = VocabularyBot()
+        result = await vocab_bot.process_message(query, conversation_history=messages)
+
+        print(f"✅ [TRANSPARENT] Vocabulary specialist completed")
 
         return {
             "messages": [AIMessage(content=result.response)],
             "bot_response": result.response,
-            "bot_type": result.bot_type,
+            "bot_type": "vocabulary_specialist",
             "relevant_forms": result.relevant_forms or [],
             "follow_up_questions": result.follow_up_questions or []
         }
 
     except Exception as e:
-        print(f"❌ Error in studio general bot: {str(e)}")
-        fallback_response = f"I apologize, but I'm having trouble. Please try rephrasing your question."
+        print(f"❌ Error in vocabulary specialist: {str(e)}")
+        fallback = "I can help with vocabulary and sentence instruction, but I'm having a technical issue. Please try again."
         return {
-            "messages": [AIMessage(content=fallback_response)],
-            "bot_response": fallback_response,
-            "bot_type": "general_bot_error",
-            "relevant_forms": [],
-            "follow_up_questions": []
+            "messages": [AIMessage(content=fallback)],
+            "bot_response": fallback,
+            "bot_type": "vocabulary_specialist_error"
         }
 
-# Conditional routing functions
-def should_clarify(state: RoutingState) -> str:
-    """
-    CONFIDENCE CHECK - This is the key decision point!
-    Low confidence → General Bot
-    High confidence → Proceed to specialist routing
-    """
-    confidence = state.get("confidence", 0.0)
-    needs_clarification = state.get("needs_clarification", False)
-    
-    if needs_clarification or confidence < 0.5:
-        print(f"🤔 LOW CONFIDENCE ({confidence:.2f}) → Routing to General Bot")
-        return "execute_general_bot"
-    else:
-        print(f"✅ SUFFICIENT CONFIDENCE ({confidence:.2f}) → Proceeding to specialist routing")
-        return "route_to_bot"
 
-def route_to_specialist(state: RoutingState) -> str:
+async def execute_ideas_specialist_node(state: RoutingState) -> Dict[str, Any]:
     """
-    SPECIALIST ROUTING - Routes to the appropriate domain expert.
+    Ideas Specialist - Called transparently by general bot.
     """
-    target_bot = state.get("target_bot", "general")
-    
+    try:
+        query = state.get("original_query", "")
+        messages = state.get("messages", [])
+
+        print(f"💡 [TRANSPARENT HANDOFF] Ideas specialist processing: '{query[:60]}...'")
+
+        ideas_bot = IdeasBot()
+        result = await ideas_bot.process_message(query, conversation_history=messages)
+
+        print(f"✅ [TRANSPARENT] Ideas specialist completed")
+
+        return {
+            "messages": [AIMessage(content=result.response)],
+            "bot_response": result.response,
+            "bot_type": "ideas_specialist",
+            "relevant_forms": result.relevant_forms or [],
+            "follow_up_questions": result.follow_up_questions or []
+        }
+
+    except Exception as e:
+        print(f"❌ Error in ideas specialist: {str(e)}")
+        fallback = "I can help with creative writing and ideas, but I'm having a technical issue. Please try again."
+        return {
+            "messages": [AIMessage(content=fallback)],
+            "bot_response": fallback,
+            "bot_type": "ideas_specialist_error"
+        }
+
+
+def route_after_general_bot(state: RoutingState) -> str:
+    """
+    Decision point: Did general bot answer, or do we need a specialist?
+    This routing is INVISIBLE to the user.
+    """
+    needs_specialist = state.get("needs_specialist", False)
+
+    if not needs_specialist:
+        # General bot handled it - done!
+        print(f"✅ General bot answered directly - conversation complete")
+        return "END"
+
+    # Need specialist - route based on topic
+    topic = state.get("specialist_topic", "general")
+
     routing_map = {
-        "handwriting": "execute_handwriting_bot",
-        "vocabulary": "execute_vocabulary_bot", 
-        "ideas": "execute_ideas_bot",
-        "general": "execute_general_bot"
+        "handwriting": "handwriting_specialist",
+        "vocabulary": "vocabulary_specialist",
+        "ideas": "ideas_specialist",
+        "general": "END"  # Fallback to general bot's answer
     }
-    
-    next_node = routing_map.get(target_bot, "execute_general_bot")
-    print(f"🎯 ROUTING TO: {next_node}")
+
+    next_node = routing_map.get(topic, "END")
+    print(f"🔀 [TRANSPARENT ROUTING] {topic} → {next_node}")
+
     return next_node
+
 
 def create_studio_routing_graph():
     """
-    Create the complete routing graph for LangGraph Studio visualization.
-    Shows the full flow: Intent → Confidence Check → Specialist Routing
+    Creates GENERAL-FIRST routing graph with transparent specialist handoffs.
+
+    Flow:
+    User Query → General Bot Hub → [Decision]
+                                      ↓
+                          Simple? → Answer directly → END
+                          Complex? → Route to Specialist → END
+
+    User NEVER knows about the routing - they just get their answer!
     """
-    print("🔧 Building Complete Educational Routing Graph for Studio...")
-    
-    # Initialize the graph
+    print("🔧 Building General-First Routing Graph (Transparent Handoffs)...")
+
+    # Initialize graph
     graph = StateGraph(RoutingState)
-    
-    # Add all nodes
+
+    # Add nodes
     print("📍 Adding nodes...")
-    graph.add_node("classify_intent", classify_intent_node)
-    graph.add_node("route_to_bot", route_to_bot_node)
-    graph.add_node("execute_handwriting_bot", execute_handwriting_bot_node)
-    graph.add_node("execute_vocabulary_bot", execute_vocabulary_bot_node)
-    graph.add_node("execute_ideas_bot", execute_ideas_bot_node)
-    graph.add_node("execute_general_bot", execute_general_bot_node)
-    
-    # Set entry point
-    print("🚀 Setting entry point...")
-    graph.add_edge(START, "classify_intent")
-    
-    # Add conditional edges - THIS IS THE KEY FLOW YOU WANTED TO SEE!
-    print("🔀 Adding conditional routing logic...")
-    
-    # Step 1: After intent classification → confidence check
+    graph.add_node("general_bot_hub", general_bot_hub_node)
+    graph.add_node("handwriting_specialist", execute_handwriting_specialist_node)
+    graph.add_node("vocabulary_specialist", execute_vocabulary_specialist_node)
+    graph.add_node("ideas_specialist", execute_ideas_specialist_node)
+
+    # Entry point: ALWAYS start with general bot
+    print("🚀 Setting entry point to General Bot Hub...")
+    graph.add_edge(START, "general_bot_hub")
+
+    # Routing logic (invisible to user)
+    print("🔀 Adding transparent routing logic...")
     graph.add_conditional_edges(
-        "classify_intent",
-        should_clarify,  # This function checks confidence < 0.5
+        "general_bot_hub",
+        route_after_general_bot,
         {
-            "route_to_bot": "route_to_bot",           # High confidence → proceed to specialist
-            "execute_general_bot": "execute_general_bot"  # Low confidence → general bot
+            "handwriting_specialist": "handwriting_specialist",
+            "vocabulary_specialist": "vocabulary_specialist",
+            "ideas_specialist": "ideas_specialist",
+            "END": END
         }
     )
-    
-    # Step 2: After routing decision → go to appropriate specialist
-    graph.add_conditional_edges(
-        "route_to_bot", 
-        route_to_specialist,  # This function routes to domain specialists
-        {
-            "execute_handwriting_bot": "execute_handwriting_bot",
-            "execute_vocabulary_bot": "execute_vocabulary_bot",
-            "execute_ideas_bot": "execute_ideas_bot",
-            "execute_general_bot": "execute_general_bot"
-        }
-    )
-    
-    # All paths end the conversation
-    graph.add_edge("execute_handwriting_bot", END)
-    graph.add_edge("execute_vocabulary_bot", END)
-    graph.add_edge("execute_ideas_bot", END)
-    graph.add_edge("execute_general_bot", END)
-    
-    # Compile the graph
+
+    # All specialists return to user
+    graph.add_edge("handwriting_specialist", END)
+    graph.add_edge("vocabulary_specialist", END)
+    graph.add_edge("ideas_specialist", END)
+
+    # Compile graph WITHOUT checkpointer (for Studio compatibility)
+    print("⚙️ Compiling graph...")
     compiled_graph = graph.compile()
-    
-    print("✅ Complete Educational Routing Graph compiled successfully!")
-    print("📊 Graph Flow:")
-    print("   START → classify_intent → [CONFIDENCE CHECK]")
-    print("                               ↓ (high confidence)")
-    print("                         route_to_bot → [SPECIALIST ROUTING]")
-    print("                               ↓ (low confidence)")
-    print("                         execute_general_bot → END")
-    print("   Specialists: handwriting_bot, vocabulary_bot, ideas_bot → END")
-    
+
+    print("✅ General-First Routing Graph compiled successfully!")
+    print("📊 Flow:")
+    print("   User → General Bot Hub → [Intelligent Decision]")
+    print("                              ↓")
+    print("                    Simple? Answer directly")
+    print("                    Complex? → Specialist (TRANSPARENT)")
+    print("                              ↓")
+    print("                          User gets answer")
+    print("")
+    print("🎯 Key Feature: Handoffs are INVISIBLE to users!")
+    print("💾 Memory: Managed by chat service layer")
+
     return compiled_graph
 
-# Create the studio-friendly graph
-# Export as 'studio_router' to match langgraph.json
+
+def create_studio_routing_graph_with_memory():
+    """
+    Creates the same routing graph but WITH MemorySaver for conversation persistence.
+    This version is used by the chat service API for production.
+    """
+    print("🔧 Building General-First Routing Graph WITH MEMORY...")
+
+    # Initialize graph
+    graph = StateGraph(RoutingState)
+
+    # Add nodes (same as above)
+    print("📍 Adding nodes...")
+    graph.add_node("general_bot_hub", general_bot_hub_node)
+    graph.add_node("handwriting_specialist", execute_handwriting_specialist_node)
+    graph.add_node("vocabulary_specialist", execute_vocabulary_specialist_node)
+    graph.add_node("ideas_specialist", execute_ideas_specialist_node)
+
+    # Entry point
+    print("🚀 Setting entry point to General Bot Hub...")
+    graph.add_edge(START, "general_bot_hub")
+
+    # Routing logic
+    print("🔀 Adding transparent routing logic...")
+    graph.add_conditional_edges(
+        "general_bot_hub",
+        route_after_general_bot,
+        {
+            "handwriting_specialist": "handwriting_specialist",
+            "vocabulary_specialist": "vocabulary_specialist",
+            "ideas_specialist": "ideas_specialist",
+            "END": END
+        }
+    )
+
+    # All specialists return to user
+    graph.add_edge("handwriting_specialist", END)
+    graph.add_edge("vocabulary_specialist", END)
+    graph.add_edge("ideas_specialist", END)
+
+    # Compile WITH checkpointer for conversation memory
+    print("⚙️ Compiling graph with MemorySaver...")
+    checkpointer = MemorySaver()
+    compiled_graph = graph.compile(checkpointer=checkpointer)
+
+    print("✅ General-First Routing Graph WITH MEMORY compiled successfully!")
+    print("💾 Memory: MemorySaver enabled - full conversation history persisted")
+    print("🔄 Cross-bot context: ENABLED - context shared across specialist switches")
+
+    return compiled_graph
+
+
+# Create TWO graph instances:
+# 1. For LangGraph Studio (no checkpointer)
 studio_router = create_studio_routing_graph()
 
-# Keep backward compatibility alias
+# 2. For API with conversation memory (with checkpointer)
+studio_router_with_memory = create_studio_routing_graph_with_memory()
+
+# Keep backward compatibility
 studio_routing_graph = studio_router

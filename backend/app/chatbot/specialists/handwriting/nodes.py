@@ -87,16 +87,66 @@ class HandwritingNodes:
             print(f"🔍 DEBUG - Query: '{query}'")
             print(f"🔍 DEBUG - Extracted from current query - target_letters: {extracted_letters}, grade: {extracted_grade}")
 
-            # Merge with previous state if this is a follow-up query
-            # If current query doesn't specify letters/grade, preserve from previous state
+            # 🔥 NEW: Extract context from conversation history if current query doesn't specify
+            # Look back through previous messages to find letters and grade level mentioned
+            all_messages = state.get("messages", [])
+            history_letters = []
+            history_grade = None
+
+            if len(all_messages) > 1 and (not extracted_letters or extracted_grade == "not_specified"):
+                print(f"🔍 DEBUG - Checking {len(all_messages)-1} previous messages for context")
+
+                # Check previous messages (excluding current one)
+                # Search in REVERSE order (most recent first) and ONLY check HUMAN messages
+                for msg in reversed(all_messages[:-1]):
+                    if hasattr(msg, 'content'):
+                        # ONLY extract from human messages (user queries), not AI responses
+                        is_human_message = hasattr(msg, 'type') and msg.type == 'human'
+
+                        if not is_human_message:
+                            continue  # Skip AI messages
+
+                        content = msg.content.lower() if isinstance(msg.content, str) else str(msg.content).lower()
+
+                        # Extract letters from previous HUMAN messages
+                        if not history_letters:
+                            # Look for letter patterns
+                            letter_match = re.search(r'\bletter\s+([a-z])\b', content, re.IGNORECASE)
+                            if letter_match:
+                                history_letters.append(letter_match.group(1).upper())
+                                print(f"🔍 DEBUG - Found letter in human message: {letter_match.group(1).upper()}")
+                            # Also check for standalone single letters in quotes or after "for"
+                            for_match = re.search(r'\bfor\s+([a-z])\b', content, re.IGNORECASE)
+                            if for_match:
+                                history_letters.append(for_match.group(1).upper())
+                                print(f"🔍 DEBUG - Found letter after 'for' in human message: {for_match.group(1).upper()}")
+
+                        # Extract grade from previous HUMAN messages
+                        if not history_grade:
+                            if 'kindergarten' in content or 'kinder' in content:
+                                history_grade = "kindergarten"
+                            elif 'pre-k' in content or 'prek' in content or 'pre k' in content:
+                                history_grade = "prek"
+                            elif 'first grade' in content or '1st grade' in content:
+                                history_grade = "first_grade"
+
+                if history_letters:
+                    print(f"🔍 DEBUG - Found letters in conversation history: {history_letters}")
+                if history_grade:
+                    print(f"🔍 DEBUG - Found grade in conversation history: {history_grade}")
+
+            # Merge with previous state and conversation history
+            # Priority: previous state > current extraction > conversation history
+            # This ensures we PRESERVE context across the conversation unless user explicitly changes it
             previous_letters = state.get("target_letters", [])
             previous_grade = state.get("grade_level")
             previous_query_type = state.get("query_type")
 
-            # Use new values if found, otherwise keep previous values
-            final_letters = extracted_letters if extracted_letters else previous_letters
-            final_grade = extracted_grade if extracted_grade != "not_specified" else (previous_grade or "not_specified")
-            final_query_type = extracted_query_type if extracted_query_type != "general" else (previous_query_type or "general")
+            # PRESERVE previous state values unless user explicitly provides new ones
+            # Only use history extraction if there's NO previous state
+            final_letters = previous_letters or extracted_letters or history_letters
+            final_grade = previous_grade or (extracted_grade if extracted_grade != "not_specified" else history_grade) or "not_specified"
+            final_query_type = previous_query_type or (extracted_query_type if extracted_query_type != "general" else "general") or "general"
 
             print(f"🔍 DEBUG - Final merged values - target_letters: {final_letters}, grade: {final_grade}, query_type: {final_query_type}")
 
@@ -285,9 +335,9 @@ class HandwritingNodes:
             # Check if we have no target letters at all (regardless of teaching keywords)
             has_no_target_letters = not target_letters
 
+            # Check if we need more context for a lesson plan request
             needs_context = (
                 is_lesson_request and
-                conversation_depth <= 1 and  # First interaction
                 (grade_level == "not_specified" or not target_letters)  # Missing grade level or letters
             )
 
@@ -301,8 +351,8 @@ class HandwritingNodes:
                     "retry_count": 0
                 }
 
-            # If we need more context, ask clarifying questions instead
-            if needs_context and target_letters:
+            # If we need more context (missing grade level), ask clarifying questions
+            if needs_context and target_letters and grade_level == "not_specified":
                 letter_str = ", ".join(target_letters) if len(target_letters) > 1 else target_letters[0]
                 clarification_message = prompts.CONTEXT_NEEDED_CLARIFICATION.format(letter_str=letter_str)
                 ai_response = AIMessage(content=clarification_message)
@@ -493,20 +543,35 @@ class HandwritingNodes:
             RELEVANT EDUCATIONAL FORMS CONTENT:
             {form_context}
 
-            **IMPORTANT**: Use the conversation history above to understand the full context of the teacher's request. If they're following up on a previous question, continue that discussion naturally and generate the requested lesson plan.
+            **IMPORTANT**: Use the conversation history above to understand the full context of the teacher's request. If they're following up on a previous question, continue that discussion naturally.
 
             **DETERMINE YOUR RESPONSE TYPE:**
 
-            IF the teacher asks for:
+            IF the teacher asks for **MODIFICATIONS or ALTERNATIVES** to a specific section:
+            - "Suggest a different activity for [section name]"
+            - "Can you give me another activity for [section]"
+            - "Alternative for [section name]"
+            - "Different approach for [section]"
+            - "Other options for [section]"
+
+            → THEN provide **ALTERNATIVE ACTIVITIES ONLY FOR THAT SECTION**:
+            1. Reference the conversation history to identify which lesson plan section they're referring to
+            2. Provide 2-3 alternative activities specifically for that section ONLY
+            3. Keep the same letter, grade level, and learning objectives
+            4. Use Form D activities and Form E evidence-based practices
+            5. DO NOT regenerate the entire lesson plan - ONLY suggest alternatives for the requested section
+            6. Format as: "Here are alternative activities for [Section Name]:" followed by the alternatives
+
+            IF the teacher asks for a **COMPLETE NEW LESSON PLAN**:
             - "Create a lesson plan"
             - "Generate a lesson"
             - "Help me teach [specific letter/sound]"
             - "I need a handwriting lesson for..."
-            - "give me a lesson plan" (follow-up)
+            - "give me a lesson plan" (follow-up, if NO previous lesson exists)
 
             → THEN generate a **COMPLETE SCRIPTED LESSON PLAN** using the structure in your system prompt FOR THE SPECIFIC LETTER(S) MENTIONED ABOVE.
 
-            IF the teacher asks for:
+            IF the teacher asks for **GENERAL GUIDANCE**:
             - "How do I..." questions
             - "What are some strategies for..." questions
             - "Can you explain..." questions

@@ -15,6 +15,12 @@ class AppEnv(str, Enum):
 # Load environment files before Settings class initialization
 def _load_env_files():
     """Load appropriate .env files based on APP_ENV."""
+    # Skip if environment variables are already loaded (e.g., in LangGraph Studio)
+    # This prevents blocking I/O during async graph execution
+    if os.getenv("LANGCHAIN_TRACING_V2") is not None:
+        # Environment already loaded by LangGraph/container
+        return
+
     # First load base .env if it exists
     if os.path.exists(".env"):
         load_dotenv(".env")

@@ -156,15 +156,15 @@ async def end_with_error_node(state: HandwritingState) -> dict:
 def create_handwriting_graph():
     """
     Create and compile the handwriting bot LangGraph.
-    
+
     Returns:
         Compiled LangGraph for handwriting instruction
     """
     print("🔧 Building Handwriting Bot Graph...")
-    
+
     # Initialize the graph with our state schema
     graph = StateGraph(HandwritingState)
-    
+
     # Add all nodes to the graph
     print("📍 Adding nodes...")
     graph.add_node("analyze_query", handwriting_nodes.analyze_query_node)
@@ -174,14 +174,14 @@ def create_handwriting_graph():
     graph.add_node("follow_up", handwriting_nodes.follow_up_node)
     graph.add_node("handle_error", handle_error_node)
     graph.add_node("end_with_error", end_with_error_node)
-    
+
     # Set the entry point
     print("🚀 Setting entry point...")
     graph.add_edge(START, "analyze_query")
-    
+
     # Add conditional edges with routing logic
     print("🔀 Adding conditional edges...")
-    
+
     # After query analysis, route based on success/error
     graph.add_conditional_edges(
         "analyze_query",
@@ -191,7 +191,7 @@ def create_handwriting_graph():
             "handle_error": "handle_error"
         }
     )
-    
+
     # After retrieving forms, check for errors or proceed
     graph.add_conditional_edges(
         "retrieve_forms",
@@ -202,7 +202,7 @@ def create_handwriting_graph():
             "end_with_error": "end_with_error"
         }
     )
-    
+
     # After generating response, check if we need clarification or proceed to quality check
     def should_skip_quality_check(state: HandwritingState) -> str:
         """Skip quality check if we're asking for clarification."""
@@ -220,7 +220,7 @@ def create_handwriting_graph():
             "END": END
         }
     )
-    
+
     # After quality check, decide if we need to improve or continue
     graph.add_conditional_edges(
         "quality_check",
@@ -230,10 +230,10 @@ def create_handwriting_graph():
             "follow_up": "follow_up"  # Continue to follow-up
         }
     )
-    
+
     # After follow-up, end the conversation
     graph.add_edge("follow_up", END)
-    
+
     # Error handling paths
     graph.add_conditional_edges(
         "handle_error",
@@ -243,21 +243,21 @@ def create_handwriting_graph():
             "end_with_error": "end_with_error"  # Give up
         }
     )
-    
+
     # Terminal error node
     graph.add_edge("end_with_error", END)
-    
-    # Compile the graph WITHOUT checkpointer for LangGraph Studio
-    # LangGraph Studio/API handles persistence automatically
+
+    # Compile graph - LangGraph API handles persistence automatically via thread_id
     print("⚙️ Compiling graph...")
     compiled_graph = graph.compile()
-    
+
     print("✅ Handwriting Bot Graph compiled successfully!")
     print("📊 Graph structure:")
     print("   START -> analyze_query -> retrieve_forms -> generate_response -> quality_check -> follow_up -> END")
     print("   Error handling: handle_error -> end_with_error -> END")
     print("   Retry logic: Up to 3 retries for errors, up to 2 retries for low-quality responses")
-    
+    print("   💾 Memory: LangGraph API handles conversation persistence via thread_id")
+
     return compiled_graph
 
 # Create the graph instance

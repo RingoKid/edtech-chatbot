@@ -679,14 +679,31 @@ Classification:"""
             print(f"❌ LLM classification error: {str(e)}, defaulting to 'simple'")
             return "simple"
 
-    def classify_topic(self, message: str) -> Optional[str]:
+    def classify_topic(self, message: str, conversation_history: Optional[List[Any]] = None) -> Optional[str]:
         """
         Determines which specialist bot domain this query belongs to.
+        Uses both current message and conversation history for context.
 
         Returns:
             "handwriting" | "vocabulary" | "ideas" | None
         """
         query_lower = message.lower()
+
+        # Check conversation history for context
+        history_text = ""
+        if conversation_history and len(conversation_history) > 1:
+            # Get last few messages for context
+            recent = conversation_history[-6:]  # Last 3 exchanges
+            history_parts = []
+            for msg in recent:
+                if hasattr(msg, 'content'):
+                    content = msg.content
+                    if isinstance(content, str):
+                        history_parts.append(content.lower())
+            history_text = " ".join(history_parts)
+
+        # Combine current query + history for classification
+        combined_text = f"{query_lower} {history_text}"
 
         # Handwriting indicators
         handwriting_keywords = [
@@ -696,7 +713,7 @@ Classification:"""
             "proper grip", "letter formation"
         ]
 
-        if any(keyword in query_lower for keyword in handwriting_keywords):
+        if any(keyword in combined_text for keyword in handwriting_keywords):
             return "handwriting"
 
         # Vocabulary/sentence indicators
@@ -706,7 +723,7 @@ Classification:"""
             "sentence structure", "sentence frame"
         ]
 
-        if any(keyword in query_lower for keyword in vocabulary_keywords):
+        if any(keyword in combined_text for keyword in vocabulary_keywords):
             return "vocabulary"
 
         # Ideas/creative writing indicators
@@ -716,7 +733,7 @@ Classification:"""
             "opinion writing", "graphic organizer", "story map"
         ]
 
-        if any(keyword in query_lower for keyword in ideas_keywords):
+        if any(keyword in combined_text for keyword in ideas_keywords):
             return "ideas"
 
         return None

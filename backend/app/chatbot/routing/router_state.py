@@ -26,6 +26,8 @@ class RoutingState(TypedDict):
     # Routing information
     target_bot: Optional[str]  # "handwriting", "vocabulary", "ideas", "general"
     routing_decision: Optional[str]  # Explanation of routing logic
+    needs_specialist: bool  # Whether to route to a specialist bot
+    specialist_topic: Optional[str]  # Which specialist topic (handwriting, vocabulary, ideas)
     
     # Bot response
     bot_response: Optional[str]
