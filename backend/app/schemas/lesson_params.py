@@ -12,8 +12,21 @@ class BaseLessonParams(BaseModel):
 
 class HandwritingParams(BaseLessonParams):
     """Parameters specific to handwriting lessons."""
-    # Add handwriting-specific fields here later
-    pass
+    query_type: Literal[
+        "letter_formation",
+        "fine_motor",
+        "spelling",
+        "assessment",
+        "general",
+        "__CLARIFY__"
+    ] = Field(
+        ...,
+        description="Which specific aspect of handwriting do you want to focus on for this lesson?"
+    )
+    target_letters: str = Field(
+        ...,
+        description="Which specific letter(s) do you want to focus on for this lesson? (e.g., 'a', 'b, c', or 'None')"
+    )
 
 
 class VocabularyParams(BaseLessonParams):

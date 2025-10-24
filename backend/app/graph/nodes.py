@@ -168,9 +168,27 @@ def collect_parameters_node(state: GraphState) -> dict:
         # Bind to LLM
         extractor_llm = llm.with_structured_output(SingleFieldModel, strict=True)
         
+        # Create extraction prompt with clear instructions
+        # Check if this is a Literal type for stricter matching
+        origin = get_origin(field_definition.annotation)
+        if origin is Literal:
+            choices = get_args(field_definition.annotation)
+            user_choices = [c for c in choices if c != "__CLARIFY__"]
+            extraction_system_message = SystemMessage(
+                content=f"You are a parameter extraction assistant. Extract the user's answer and map it to one of these exact values: {', '.join(user_choices)}. "
+                f"If the user's answer doesn't clearly match one of these options, return '__CLARIFY__'. "
+                f"Be strict - only accept clear matches or synonyms. If uncertain, return '__CLARIFY__'."
+            )
+        else:
+            extraction_system_message = SystemMessage(
+                content="You are a parameter extraction assistant. Your job is to extract the user's answer from their message. "
+                "For string fields, extract the exact value the user provided - do not generate new content or elaborate. "
+                "Simply extract what the user said as their answer."
+            )
+        
         try:
-            # Invoke LLM to extract the value
-            extracted_result = extractor_llm.invoke(user_response)
+            # Invoke LLM to extract the value with system message
+            extracted_result = extractor_llm.invoke([extraction_system_message, messages[-1]])
             extracted_value = extracted_result.value
             
             print(f"DEBUG: LLM extracted {param_to_extract}={extracted_value}")

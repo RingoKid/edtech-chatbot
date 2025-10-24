@@ -40,12 +40,14 @@ def client():
 
 def test_collect_single_parameter_success(client):
     """
-    Test successful collection of the target_grade parameter.
+    Test successful collection of all handwriting parameters.
     
     Flow:
     1. User: "Hello" -> AI: Greeting
     2. User: "Handwriting" -> AI: Grade question with options
-    3. User: "Kindergarten" -> AI: Stub generation message with collected params
+    3. User: "Kindergarten" -> AI: Query type question with options
+    4. User: "letter_formation" -> AI: Target letters question
+    5. User: "a, b, c" -> AI: Stub generation message with collected params
     """
     # Start conversation
     request = {"message": "Hello"}
@@ -75,11 +77,43 @@ def test_collect_single_parameter_success(client):
     }
     grade_response = client.post("/api/v1/chat/message", json=grade_request)
     assert grade_response.status_code == 200
-    final_reply = grade_response.json()["reply"]
+    query_type_question = grade_response.json()["reply"]
+    
+    # Verify AI asks the query_type question with options
+    assert "aspect of handwriting" in query_type_question.lower()
+    assert "letter_formation" in query_type_question
+    assert "fine_motor" in query_type_question
+    assert "spelling" in query_type_question
+    assert "assessment" in query_type_question
+    assert "general" in query_type_question
+    assert "__CLARIFY__" not in query_type_question
+    
+    # Respond with valid query type
+    query_type_request = {
+        "message": "letter_formation",
+        "thread_id": thread_id
+    }
+    query_type_response = client.post("/api/v1/chat/message", json=query_type_request)
+    assert query_type_response.status_code == 200
+    target_letters_question = query_type_response.json()["reply"]
+    
+    # Verify AI asks the target_letters question
+    assert "letter" in target_letters_question.lower()
+    
+    # Respond with target letters
+    target_letters_request = {
+        "message": "a, b, c",
+        "thread_id": thread_id
+    }
+    target_letters_response = client.post("/api/v1/chat/message", json=target_letters_request)
+    assert target_letters_response.status_code == 200
+    final_reply = target_letters_response.json()["reply"]
     
     # Verify we get the stub generation message with collected params
     assert "Lesson generation coming soon" in final_reply
     assert "Kindergarten" in final_reply
+    assert "letter_formation" in final_reply
+    assert "a, b, c" in final_reply
 
 
 def test_collect_single_parameter_invalid_choice(client):
@@ -177,7 +211,9 @@ def test_collect_invalid_then_valid(client):
     1. User: "Hello" -> AI: Greeting
     2. User: "Handwriting" -> AI: Grade question
     3. User: "Third Grade" -> AI: Error + re-ask
-    4. User: "Pre-K" -> AI: Stub generation with collected params
+    4. User: "Pre-K" -> AI: Query type question
+    5. User: "fine_motor" -> AI: Target letters question
+    6. User: "None" -> AI: Stub generation with collected params
     """
     # Start conversation
     request = {"message": "Hello"}
@@ -212,11 +248,37 @@ def test_collect_invalid_then_valid(client):
     }
     valid_response = client.post("/api/v1/chat/message", json=valid_request)
     assert valid_response.status_code == 200
-    final_reply = valid_response.json()["reply"]
+    query_type_question = valid_response.json()["reply"]
+    
+    # Verify query type question
+    assert "aspect of handwriting" in query_type_question.lower()
+    
+    # Respond with valid query type
+    query_type_request = {
+        "message": "fine_motor",
+        "thread_id": thread_id
+    }
+    query_type_response = client.post("/api/v1/chat/message", json=query_type_request)
+    assert query_type_response.status_code == 200
+    target_letters_question = query_type_response.json()["reply"]
+    
+    # Verify target letters question
+    assert "letter" in target_letters_question.lower()
+    
+    # Respond with target letters
+    target_letters_request = {
+        "message": "None",
+        "thread_id": thread_id
+    }
+    target_letters_response = client.post("/api/v1/chat/message", json=target_letters_request)
+    assert target_letters_response.status_code == 200
+    final_reply = target_letters_response.json()["reply"]
     
     # Verify success
     assert "Lesson generation coming soon" in final_reply
     assert "Pre-K" in final_reply
+    assert "fine_motor" in final_reply
+    assert "None" in final_reply
 
 
 @pytest.mark.asyncio
@@ -255,7 +317,7 @@ async def test_parameter_collection_state():
         
         # Verify state after setup
         assert result.get("parameter_schema_name") == "HandwritingParams"
-        assert result.get("required_parameters") == ["target_grade"]
+        assert result.get("required_parameters") == ["target_grade", "query_type", "target_letters"]
         assert result.get("collected_parameters") == {}
         
         # Provide valid grade
@@ -267,18 +329,54 @@ async def test_parameter_collection_state():
         # Resume - should extract and validate
         await graph.ainvoke(None, config=config)
         
-        # Get state after collection
+        # Get state after first parameter
+        state = await graph.aget_state(config)
+        result = state.values
+        
+        # Verify state after first parameter
+        assert result.get("required_parameters") == ["query_type", "target_letters"]
+        assert result.get("collected_parameters") == {"target_grade": "Kindergarten"}
+        
+        # Provide valid query type
+        await graph.aupdate_state(
+            config,
+            {"messages": [HumanMessage(content="letter_formation")]}
+        )
+        
+        # Resume
+        await graph.ainvoke(None, config=config)
+        
+        # Get state after second parameter
+        state = await graph.aget_state(config)
+        result = state.values
+        
+        # Verify state after second parameter
+        assert result.get("required_parameters") == ["target_letters"]
+        assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter_formation"}
+        
+        # Provide target letters
+        await graph.aupdate_state(
+            config,
+            {"messages": [HumanMessage(content="a, b")]}
+        )
+        
+        # Resume
+        await graph.ainvoke(None, config=config)
+        
+        # Get state after all parameters collected
         state = await graph.aget_state(config)
         result = state.values
         
         # Verify state after collection
         assert result.get("required_parameters") == []
-        assert result.get("collected_parameters") == {"target_grade": "Kindergarten"}
+        assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter_formation", "target_letters": "a, b"}
         
         # Verify final message is stub generation
         last_message = result["messages"][-1]
         assert "Lesson generation coming soon" in last_message.content
         assert "Kindergarten" in last_message.content
+        assert "letter_formation" in last_message.content
+        assert "a, b" in last_message.content
     finally:
         # Close the SQLite connection to prevent hanging
         await graph.checkpointer.conn.close()
