@@ -81,8 +81,8 @@ def test_collect_single_parameter_success(client):
     
     # Verify AI asks the query_type question with options
     assert "aspect of handwriting" in query_type_question.lower()
-    assert "letter_formation" in query_type_question
-    assert "fine_motor" in query_type_question
+    assert "letter formation" in query_type_question
+    assert "fine motor" in query_type_question
     assert "spelling" in query_type_question
     assert "assessment" in query_type_question
     assert "general" in query_type_question
@@ -90,7 +90,7 @@ def test_collect_single_parameter_success(client):
     
     # Respond with valid query type
     query_type_request = {
-        "message": "letter_formation",
+        "message": "letter formation",
         "thread_id": thread_id
     }
     query_type_response = client.post("/api/v1/chat/message", json=query_type_request)
@@ -112,7 +112,7 @@ def test_collect_single_parameter_success(client):
     # Verify we get the stub generation message with collected params
     assert "Lesson generation coming soon" in final_reply
     assert "Kindergarten" in final_reply
-    assert "letter_formation" in final_reply
+    assert "letter formation" in final_reply
     assert "a, b, c" in final_reply
 
 
@@ -255,7 +255,7 @@ def test_collect_invalid_then_valid(client):
     
     # Respond with valid query type
     query_type_request = {
-        "message": "fine_motor",
+        "message": "fine motor",
         "thread_id": thread_id
     }
     query_type_response = client.post("/api/v1/chat/message", json=query_type_request)
@@ -277,7 +277,7 @@ def test_collect_invalid_then_valid(client):
     # Verify success
     assert "Lesson generation coming soon" in final_reply
     assert "Pre-K" in final_reply
-    assert "fine_motor" in final_reply
+    assert "fine motor" in final_reply
     assert "None" in final_reply
 
 
@@ -340,7 +340,7 @@ async def test_parameter_collection_state():
         # Provide valid query type
         await graph.aupdate_state(
             config,
-            {"messages": [HumanMessage(content="letter_formation")]}
+            {"messages": [HumanMessage(content="letter formation")]}
         )
         
         # Resume
@@ -352,7 +352,7 @@ async def test_parameter_collection_state():
         
         # Verify state after second parameter
         assert result.get("required_parameters") == ["target_letters"]
-        assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter_formation"}
+        assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter formation"}
         
         # Provide target letters
         await graph.aupdate_state(
@@ -369,13 +369,13 @@ async def test_parameter_collection_state():
         
         # Verify state after collection
         assert result.get("required_parameters") == []
-        assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter_formation", "target_letters": "a, b"}
+        assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter formation", "target_letters": "a, b"}
         
         # Verify final message is stub generation
         last_message = result["messages"][-1]
         assert "Lesson generation coming soon" in last_message.content
         assert "Kindergarten" in last_message.content
-        assert "letter_formation" in last_message.content
+        assert "letter formation" in last_message.content
         assert "a, b" in last_message.content
     finally:
         # Close the SQLite connection to prevent hanging

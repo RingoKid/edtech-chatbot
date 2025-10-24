@@ -87,8 +87,8 @@ def test_collect_handwriting_query_type_invalid(client):
     assert "Sorry" in error_reply
     assert "didn't quite understand" in error_reply or "try again" in error_reply
     assert "aspect of handwriting" in error_reply.lower()
-    assert "letter_formation" in error_reply
-    assert "fine_motor" in error_reply
+    assert "letter formation" in error_reply
+    assert "fine motor" in error_reply
 
 
 def test_collect_handwriting_query_type_clarify(client):

@@ -13,8 +13,8 @@ class BaseLessonParams(BaseModel):
 class HandwritingParams(BaseLessonParams):
     """Parameters specific to handwriting lessons."""
     query_type: Literal[
-        "letter_formation",
-        "fine_motor",
+        "letter formation",
+        "fine motor",
         "spelling",
         "assessment",
         "general",
