@@ -37,8 +37,8 @@ class BaseLessonParams(BaseModel):
 class HandwritingParams(BaseLessonParams):
     """Parameters specific to handwriting lessons."""
     query_type: Literal[
-        "letter_formation",
-        "fine_motor",
+        "letter formation",
+        "fine motor",
         "spelling",
         "assessment",
         "general",
@@ -51,7 +51,6 @@ class HandwritingParams(BaseLessonParams):
         ...,
         description="Which specific letter(s) do you want to focus on for this lesson? (e.g., 'a', 'b, c', or 'None')"
     )
-    # Add other handwriting-specific fields here later
 
 # ... (VocabularyParams and IdeaGenerationParams remain unchanged for now) ...
 
@@ -72,10 +71,13 @@ class IdeaGenerationParams(BaseLessonParams):
 
 #### 3\. File: `app/graph/nodes.py`
 
-**Action:** No changes required.
+**Action:** Enhanced parameter extraction logic.
 
-  * The `setup_handwriting` node will automatically detect the new fields when inspecting `HandwritingParams.model_fields.keys()`.
-  * The `collect_parameters_node` is designed to dynamically handle any fields listed in `required_parameters`, generate questions from descriptions, handle `Literal` types, and perform extraction using dynamic single-field models.
+  * The `setup_handwriting` node automatically detects the new fields when inspecting `HandwritingParams.model_fields.keys()`.
+  * The `collect_parameters_node` was enhanced with:
+    * Context-aware system messages for extraction
+    * Stricter validation for Literal types to prevent incorrect mappings
+    * Improved string extraction to prevent LLM from generating content instead of extracting user input
 
 #### 4\. File: `app/graph/graph.py`
 
@@ -87,10 +89,10 @@ class IdeaGenerationParams(BaseLessonParams):
 
 #### 6\. Unit Tests
 
-**File:** `tests/test_parameter_collection.py`
+**Files:** `tests/test_parameter_collection.py` and `tests/test_spec_004_expand_handwriting_parameters.py`
 
-  * **Modify Existing Tests:**
-      * Update tests (like `test_collect_single_parameter_success`) to reflect the new sequence for Handwriting:
+  * **Modified Existing Tests in `test_parameter_collection.py`:**
+      * Updated tests (like `test_collect_single_parameter_success`) to reflect the new sequence for Handwriting:
         1.  User selects "Handwriting".
         2.  AI asks for `target_grade`.
         3.  User provides valid grade.
@@ -100,11 +102,11 @@ class IdeaGenerationParams(BaseLessonParams):
         7.  User provides target letters.
         8.  Verify final state: `required_parameters` is empty, `collected_parameters` contains all three values (`target_grade`, `query_type`, `target_letters`).
         9.  Verify final AI message is the stub generation message.
-  * **Add New Tests:**
+  * **Added New Tests in `test_spec_004_expand_handwriting_parameters.py`:**
       * **`test_collect_handwriting_query_type_invalid`**:
         1.  Start Handwriting, provide valid `target_grade`.
         2.  AI asks for `query_type`.
-        3.  User provides an invalid choice (e.g., "cursive").
+        3.  User provides an invalid choice (e.g., "reading comprehension" - unrelated to handwriting).
         4.  Verify AI responds with the error message ("Sorry, I didn't quite understand...") AND re-asks the `query_type` question with options.
         5.  Verify state: `required_parameters == ["query_type", "target_letters"]`, `collected_parameters` only contains `target_grade`.
       * **`test_collect_handwriting_query_type_clarify`**:
@@ -114,13 +116,15 @@ class IdeaGenerationParams(BaseLessonParams):
         4.  Verify AI responds with the error message ("Sorry, I didn't quite understand...") AND re-asks the `query_type` question with options (because the extractor LLM should return `__CLARIFY__`).
         5.  Verify state is the same as in `test_collect_handwriting_query_type_invalid`.
       * **`test_collect_handwriting_target_letters_success`**: Ensure simple string extraction works after a valid `query_type` is provided.
-      * **`test_collect_handwriting_full_flow_invalid_then_valid`**: Combine scenarios, e.g., invalid `query_type` -\> re-ask -\> valid `query_type` -\> ask `target_letters` -\> valid `target_letters` -\> success.
+      * **`test_collect_handwriting_full_flow_invalid_then_valid`**: Combine scenarios, e.g., invalid `query_type` ("mathematics") -\> re-ask -\> valid `query_type` -\> ask `target_letters` -\> valid `target_letters` -\> success.
 
 **Run tests:**
 
 ```bash
-docker compose exec backend pytest tests/test_parameter_collection.py -v
+docker compose exec backend pytest tests/test_parameter_collection.py tests/test_spec_004_expand_handwriting_parameters.py -v
 ```
+
+**Test Results:** ✅ All 10 tests passing (6 in `test_parameter_collection.py`, 4 in `test_spec_004_expand_handwriting_parameters.py`)
 
 *(Refer to `FEATURE SPEC: 000` for full Docker execution workflow)*
 
@@ -129,7 +133,7 @@ docker compose exec backend pytest tests/test_parameter_collection.py -v
   * **Dataset:** "Feature 4: Parameter Collection - Handwriting" (or update "Feature 3")
   * **Examples:** Create multi-turn examples demonstrating the full collection flow for Handwriting, including cases with valid, invalid, and unclear inputs for `query_type`.
       * *Example 1 (Success):* User: "Handwriting" -\> AI: (Grade Q) -\> User: "Kindergarten" -\> AI: (Query Type Q) -\> User: "letter formation" -\> AI: (Target Letters Q) -\> User: "a, b, c" -\> AI: (Stub Generate Msg)
-      * *Example 2 (Clarify Query Type):* User: "Handwriting" -\> AI: (Grade Q) -\> User: "Pre-K" -\> AI: (Query Type Q) -\> User: "making shapes" -\> AI: (Error + Query Type Q again) -\> User: "fine\_motor" -\> AI: (Target Letters Q) -\> User: "None" -\> AI: (Stub Generate Msg)
+      * *Example 2 (Clarify Query Type):* User: "Handwriting" -\> AI: (Grade Q) -\> User: "Pre-K" -\> AI: (Query Type Q) -\> User: "making shapes" -\> AI: (Error + Query Type Q again) -\> User: "fine motor" -\> AI: (Target Letters Q) -\> User: "None" -\> AI: (Stub Generate Msg)
   * **Evaluators:**
     1.  **"Parameter Collection Sequence" (Custom Code/JSON):** Verify that the questions for `target_grade`, `query_type`, and `target_letters` are asked in the correct order. Check `state.current_question` after each AI turn.
     2.  **"Query Type Options Presented" (Regex/String Match):** Check that the AI message asking for `query_type` includes the `Literal` options (excluding `__CLARIFY__`).
