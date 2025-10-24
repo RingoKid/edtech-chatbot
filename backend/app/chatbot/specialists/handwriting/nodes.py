@@ -197,24 +197,48 @@ class HandwritingNodes:
                 for activity in activities[:3]:  # Limit to first 3 activities per level
                     specific_context += f"- {activity['name']}: {activity['description'][:100]}...\n"
             
-            # Add standards context if available
+            # Build standards context if available
+            standards_context = ""
             if standards_data:
-                specific_context += f"\n--- {grade_level.upper()} STANDARDS ---\n"
+                standards_text_parts = []
+
+                # Add handwriting standards
                 if 'handwriting_standards' in standards_data:
-                    for standard in standards_data['handwriting_standards'][:3]:  # Limit to first 3
-                        specific_context += f"- {standard}\n"
-            
+                    standards_text_parts.append("**Handwriting Standards:**")
+                    for standard in standards_data['handwriting_standards'][:3]:
+                        standards_text_parts.append(f"- {standard}")
+
+                # Add phonics standards
+                if 'phonics_standards' in standards_data:
+                    standards_text_parts.append("\n**Phonics Standards:**")
+                    for standard in standards_data['phonics_standards'][:3]:
+                        standards_text_parts.append(f"- {standard}")
+
+                # Add phonological awareness standards
+                if 'phonological_awareness_standards' in standards_data:
+                    standards_text_parts.append("\n**Phonological Awareness Standards:**")
+                    for standard in standards_data['phonological_awareness_standards'][:3]:
+                        standards_text_parts.append(f"- {standard}")
+
+                if standards_text_parts:
+                    standards_text = "\n".join(standards_text_parts)
+                    standards_context = prompts.STANDARDS_CONTEXT.format(standards_text=standards_text)
+                    specific_context += f"\n--- {grade_level.upper()} STANDARDS ---\n{standards_text}\n"
+
             # Combine all context
             full_context = form_context + specific_context
-            
+
             print(f"✅ Retrieved {len(relevant_forms)} forms + specific content for query type: {query_type}")
             print(f"✅ Target letters: {target_letters}")
-            
+            if standards_data:
+                print(f"✅ Retrieved standards for {grade_level}")
+
             return {
                 "relevant_forms": relevant_forms,
                 "form_context": full_context,
                 "specific_form_content": specific_form_content,
                 "ability_activities": ability_activities,
+                "standards_context": standards_context,
                 "retry_count": 0
             }
             
@@ -289,8 +313,19 @@ class HandwritingNodes:
                     "retry_count": 0
                 }
 
-            # Build comprehensive system prompt
-            system_prompt = f"""
+            # Get standards context from state
+            standards_context = state.get("standards_context", "")
+
+            # Build comprehensive system prompt using the prompt from prompts module
+            system_prompt = prompts.LESSON_GENERATION_SYSTEM_PROMPT
+
+            # If we have standards context, append it to the system prompt
+            if standards_context:
+                system_prompt += f"\n\n{standards_context}"
+
+            # For backwards compatibility, keep the old inline version as a fallback
+            if not system_prompt or system_prompt == "":
+                system_prompt = f"""
             You are an expert handwriting and spelling instructor for early childhood education (Pre-K through 1st grade).
 
             **YOUR EXPERTISE: Handwriting & Spelling Instruction**

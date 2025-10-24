@@ -468,21 +468,29 @@ class IdeasBot:
             )
 
 class GeneralBot:
-    """General education bot for multi-domain or unclear queries."""
-    
+    """
+    General education bot - Primary conversational hub that handles simple queries
+    and routes complex requests to specialist bots when needed.
+    """
+
     def __init__(self):
         """Initialize the general bot."""
         if not settings.openai_api_key:
             raise ValueError("OpenAI API key not configured for general bot")
-        
+
         self.llm = ChatOpenAI(
             model="gpt-4o",
             temperature=0.7,
             api_key=settings.openai_api_key.get_secret_value()
         )
-        
+
         self.system_prompt = """
         You are a friendly, supportive early childhood education expert assistant.
+
+        **YOUR ROLE**: You are the PRIMARY CONVERSATIONAL HUB for teachers.
+        - Handle greetings, simple questions, and general guidance
+        - When teachers need DEEP, STRUCTURED lesson plans, you prepare them for handoff to specialist bots
+        - You are the warm, conversational interface that helps teachers discover what they need
 
         Your expertise covers:
         - Handwriting and fine motor skills development
@@ -515,7 +523,204 @@ class GeneralBot:
         
         self.target_forms = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q"]
         print("✅ GeneralBot initialized with GPT-4o")
-    
+
+    async def detect_query_complexity(self, message: str, conversation_history: Optional[List[Any]] = None) -> str:
+        """
+        HYBRID APPROACH: Uses rule-based detection for obvious cases,
+        LLM for ambiguous cases. Optimizes for speed, cost, and accuracy.
+
+        Returns:
+            "simple" - General bot can answer with quick guidance
+            "complex" - Needs specialist for structured lesson plan generation
+        """
+        import re
+
+        query_lower = message.lower()
+
+        # ============================================================
+        # FAST PATH 1: Obvious COMPLEX patterns (no LLM needed)
+        # ============================================================
+        obvious_complex = [
+            "create lesson",
+            "create a lesson",
+            "generate lesson",
+            "lesson plan",
+            "scripted lesson",
+            "step by step lesson",
+            "full lesson",
+            "complete lesson",
+            "detailed lesson",
+            "i need a lesson",
+            "give me a lesson",
+            "write a lesson",
+            "build a lesson"
+        ]
+
+        if any(pattern in query_lower for pattern in obvious_complex):
+            print(f"🎯 Rule-based: COMPLEX (lesson plan request detected)")
+            return "complex"
+
+        # ============================================================
+        # FAST PATH 2: Obvious SIMPLE patterns (no LLM needed)
+        # ============================================================
+        obvious_simple = [
+            "hi", "hello", "hey", "hey there",
+            "good morning", "good afternoon", "good evening",
+            "what is", "what are", "what's",
+            "define", "briefly", "quickly",
+            "in a few words", "simple answer"
+        ]
+
+        # Short greetings or definitional questions
+        word_count = len(message.split())
+        if any(pattern in query_lower for pattern in obvious_simple) and word_count < 12:
+            print(f"🎯 Rule-based: SIMPLE (greeting or short question)")
+            return "simple"
+
+        # Single word queries
+        if word_count <= 2:
+            print(f"🎯 Rule-based: SIMPLE (very short query)")
+            return "simple"
+
+        # ============================================================
+        # FAST PATH 3: Specific letter + teaching request = COMPLEX
+        # ============================================================
+        has_specific_letter = bool(re.search(r'\bletter\s+[A-Za-z]\b', query_lower))
+        teaching_indicators = [
+            "help me teach",
+            "how do i teach",
+            "how to teach",
+            "teach letter",
+            "teaching letter",
+            "activities for letter",
+            "step by step for",
+            "stroke sequence for",
+            "formation cues for"
+        ]
+
+        if has_specific_letter and any(ind in query_lower for ind in teaching_indicators):
+            print(f"🎯 Rule-based: COMPLEX (specific letter + teaching request)")
+            return "complex"
+
+        # ============================================================
+        # FAST PATH 4: Extended conversation = COMPLEX
+        # ============================================================
+        if conversation_history and len(conversation_history) >= 7:
+            # 7+ messages = 3-4 exchanges, likely needs specialist
+            print(f"🎯 Rule-based: COMPLEX (extended conversation depth)")
+            return "complex"
+
+        # ============================================================
+        # AMBIGUOUS CASE: Use LLM for nuanced decision
+        # ============================================================
+        print(f"🤔 Ambiguous query, using LLM for intelligent classification...")
+
+        # Build conversation context for LLM
+        context_summary = ""
+        if conversation_history and len(conversation_history) > 1:
+            recent_msgs = conversation_history[-4:]  # Last 2 exchanges
+            context_parts = []
+            for msg in recent_msgs:
+                if hasattr(msg, 'content'):
+                    content = msg.content
+                    if isinstance(content, str):
+                        role = "Teacher" if (hasattr(msg, 'type') and msg.type == 'human') else "Assistant"
+                        context_parts.append(f"{role}: {content[:120]}")
+
+            if context_parts:
+                context_summary = f"\n**Recent Conversation:**\n" + "\n".join(context_parts)
+
+        # LLM classification prompt
+        classification_prompt = f"""You are a routing classifier for an educational chatbot system.
+
+Your job: Classify this teacher query as "simple" or "complex".
+
+**Current Query**: "{message}"
+{context_summary}
+
+**Classification Guidelines**:
+
+**SIMPLE** queries (general bot handles):
+- Greetings: "hi", "hello", "can you help?"
+- Quick questions: "what is handwriting?", "why teach phonics?"
+- General tips: "tips for teaching", "strategies for..."
+- Clarifications: "what do you mean?", "can you explain?"
+- Short follow-ups: "okay", "yes", "that helps"
+
+**COMPLEX** queries (needs specialist for structured lesson):
+- Lesson plan requests: "create a lesson", "I need a lesson plan"
+- Detailed teaching guides: "how do I teach letter M step by step?"
+- Structured activities: "give me activities for teaching..."
+- Full instructional sequences: "walk me through teaching..."
+- Multi-part requests: requests combining multiple elements
+
+**Context Clues**:
+- If conversation history shows they're exploring a topic → might need specialist
+- If query asks for "quick" or "brief" → likely simple
+- If query mentions specific letters/topics with "teach" or "lesson" → likely complex
+
+Respond with ONLY ONE WORD: "simple" or "complex"
+
+Classification:"""
+
+        try:
+            response = await self.llm.ainvoke([HumanMessage(content=classification_prompt)])
+            classification = response.content.strip().lower()
+
+            # Validate LLM response
+            if classification not in ["simple", "complex"]:
+                print(f"⚠️ Invalid LLM response: '{classification}', defaulting to 'simple'")
+                return "simple"
+
+            print(f"🤖 LLM classified as: {classification.upper()}")
+            return classification
+
+        except Exception as e:
+            print(f"❌ LLM classification error: {str(e)}, defaulting to 'simple'")
+            return "simple"
+
+    def classify_topic(self, message: str) -> Optional[str]:
+        """
+        Determines which specialist bot domain this query belongs to.
+
+        Returns:
+            "handwriting" | "vocabulary" | "ideas" | None
+        """
+        query_lower = message.lower()
+
+        # Handwriting indicators
+        handwriting_keywords = [
+            "letter", "handwriting", "write", "writing the letter",
+            "pencil", "grip", "formation", "stroke", "uppercase", "lowercase",
+            "/m/", "/z/", "/a/",  # phoneme notation
+            "proper grip", "letter formation"
+        ]
+
+        if any(keyword in query_lower for keyword in handwriting_keywords):
+            return "handwriting"
+
+        # Vocabulary/sentence indicators
+        vocabulary_keywords = [
+            "vocabulary", "sentence", "word", "reading", "phonics",
+            "sight word", "be-verb", "action verb", "compound sentence",
+            "sentence structure", "sentence frame"
+        ]
+
+        if any(keyword in query_lower for keyword in vocabulary_keywords):
+            return "vocabulary"
+
+        # Ideas/creative writing indicators
+        ideas_keywords = [
+            "story", "creative", "ideas", "brainstorm", "narrative",
+            "writing ideas", "topic", "genre", "informational writing",
+            "opinion writing", "graphic organizer", "story map"
+        ]
+
+        if any(keyword in query_lower for keyword in ideas_keywords):
+            return "ideas"
+
+        return None
+
     async def process_message(self, message: str, conversation_history: Optional[List[Any]] = None) -> BotResponse:
         """
         Process general education queries that span multiple domains with conversation context.

@@ -79,12 +79,20 @@ You generate COMPLETE, SCRIPTED LESSON PLANS following this exact 5-section stru
 **LESSON PLAN STRUCTURE:**
 
 **A. Standards**
-- Reference appropriate Pre-K/Kindergarten standards
-- Example: "ELAGSEKRF3a: Demonstrate basic knowledge of letter-sound correspondences"
+- **ALWAYS include relevant grade-level standards** from the standards data provided below
+- For Kindergarten, reference:
+  * K.F.H.1.a: "Form all uppercase and lowercase letters"
+  * K.F.P.1.a: "Identify and produce basic one-to-one phoneme-grapheme correspondences for the most frequently used sound for each consonant"
+  * K.F.PA.6.a: "Isolate and pronounce initial, final, and then medial sounds in spoken words with three phonemes"
+- For Pre-K, reference:
+  * PK.F.CP.4.b: "Name and identify each uppercase and lowercase letter in random order"
+  * PK.F.PA.6.a: "Isolate and pronounce initial, final, and then medial sounds in spoken words with three phonemes"
+- Format as: "**Standard**: [Code] - [Description]"
 
 **B. Objectives**
-- Create specific, measurable objectives for the TARGET LETTER
+- Create specific, measurable objectives for the TARGET LETTER using **scaffolded action verbs**
 - Focus on: pronunciation of the target sound, letter formation with proper stroke sequence
+- Use grade-appropriate action verbs (e.g., "identify", "produce", "form", "isolate", "blend", "segment")
 
 **C. Materials**
 - List all materials needed (sound cards, worksheets, pencils, visual charts)
@@ -182,6 +190,15 @@ SPECIFIC_GESTURE_INFO = """
 **SPECIFIC GESTURE FOR /{letter}/ SOUND:**
 - Sound word: {sound_word}
 - Gesture: {gesture}
+"""
+
+STANDARDS_CONTEXT = """
+**GRADE-LEVEL STANDARDS TO REFERENCE:**
+
+{standards_text}
+
+**IMPORTANT**: Include 2-3 of these standards in the "A. Standards" section of your lesson plan. Format each as:
+**Standard**: [Code] - [Description]
 """
 
 RESPONSE_GENERATION_PROMPT = """
