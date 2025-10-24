@@ -8,8 +8,9 @@ from typing import Dict, List, Any, Optional
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from app.config import settings
-from app.graph.ideas_state import IdeasState
-from app.service.form_retrieval_service import form_retrieval_service
+from app.chatbot.specialists.ideas.state import IdeasState
+from app.chatbot.specialists.ideas import prompts
+from app.services.form_retrieval import form_retrieval_service
 
 class IdeasNodes:
     """Container for all ideas bot graph nodes."""
@@ -49,31 +50,10 @@ class IdeasNodes:
                 query = str(latest_message)
 
             # Use LLM to analyze the query
-            analysis_prompt = f"""
-            You are an expert in creative writing and idea generation education. Analyze this teacher's query and extract key information.
-
-            Teacher's Query: "{query}"
-
-            Analyze and respond with a JSON object containing:
-            {{
-                "query_type": "idea_generation|organization|genre_elements|brainstorming|general",
-                "target_genre": "narrative|informational|opinion|personal_narrative|compare_contrast|not_specified",
-                "target_topic": "specific writing topic or theme mentioned",
-                "grade_level": "prek|kindergarten|1st_grade|mixed|not_specified",
-                "key_concepts": ["list", "of", "main", "concepts"],
-                "urgency_level": "low|medium|high"
-            }}
-
-            Query Type Definitions:
-            - idea_generation: Questions about generating ideas, brainstorming, creative prompts
-            - organization: Questions about organizing ideas, graphic organizers, structure planning
-            - genre_elements: Questions about narrative elements, informational text features, opinion structure
-            - brainstorming: Questions about brainstorming techniques, idea development strategies
-            - general: Broad questions about creative writing or idea generation
-            """
+            analysis_prompt = prompts.QUERY_ANALYSIS_PROMPT.format(query=query)
 
             response = await self.llm.ainvoke([
-                SystemMessage(content="You are an educational query analyzer. Respond only with valid JSON."),
+                SystemMessage(content=prompts.QUERY_ANALYSIS_SYSTEM_PROMPT),
                 HumanMessage(content=analysis_prompt)
             ])
 
@@ -188,27 +168,7 @@ class IdeasNodes:
             # If we need more context, ask clarifying questions instead
             if needs_context and (target_genre != "not_specified" or target_topic):
                 topic_str = target_topic if target_topic else "idea generation and organization"
-                clarification_message = f"""Great! I can definitely help you teach {topic_str}.
-
-To create the most helpful lesson plan for you, could you let me know:
-
-1️⃣ **What grade level is this lesson for?**
-   • Pre-K
-   • Kindergarten
-   • 1st Grade
-
-2️⃣ **What genre of writing are you focusing on?**
-   • Narrative (stories with characters, setting, plot)
-   • Informational (facts, explanations, descriptions)
-   • Opinion (preferences, arguments, reasons)
-   • Personal Narrative (personal experiences)
-
-3️⃣ **Do you have a specific topic or theme in mind?**
-   • Unit topic (e.g., animals, seasons, community helpers)
-   • Student choice
-   • Mentor text connection
-
-Once I know these details, I'll create a complete, scripted lesson plan with brainstorming activities and graphic organizers tailored to your students! 💡"""
+                clarification_message = prompts.CONTEXT_NEEDED_CLARIFICATION.format(topic_str=topic_str)
 
                 ai_response = AIMessage(content=clarification_message)
                 return {
@@ -479,40 +439,14 @@ Once I know these details, I'll create a complete, scripted lesson plan with bra
             query_type = state.get("query_type", "general")
 
             # Use LLM to evaluate response quality
-            quality_check_prompt = f"""
-            Evaluate this creative writing instruction response for a teacher's question.
-
-            Original Question: "{original_query}"
-            Query Type: {query_type}
-
-            Generated Response: "{latest_response}"
-
-            Rate the response quality and respond with JSON:
-            {{
-                "overall_quality": "excellent|good|fair|poor",
-                "has_specific_activities": true/false,
-                "addresses_original_question": true/false,
-                "includes_materials": true/false,
-                "provides_differentiation": true/false,
-                "actionable_for_teachers": true/false,
-                "inspires_creativity": true/false,
-                "genre_connection": true/false,
-                "improvement_suggestions": ["list", "of", "specific", "improvements"],
-                "quality_score": 1-10
-            }}
-
-            A quality response should:
-            - Directly answer the teacher's question
-            - Include specific, actionable activities
-            - List required materials and graphic organizers
-            - Provide differentiation strategies
-            - Connect to specific writing genres
-            - Inspire creativity and original thinking
-            - Be immediately implementable in a classroom
-            """
+            quality_check_prompt = prompts.QUALITY_CHECK_PROMPT.format(
+                original_query=original_query,
+                query_type=query_type,
+                latest_response=latest_response
+            )
 
             quality_response = await self.llm.ainvoke([
-                SystemMessage(content="You are an educational content quality evaluator. Respond only with valid JSON."),
+                SystemMessage(content=prompts.QUALITY_CHECK_SYSTEM_PROMPT),
                 HumanMessage(content=quality_check_prompt)
             ])
 
@@ -554,32 +488,10 @@ Once I know these details, I'll create a complete, scripted lesson plan with bra
             target_topic = state.get("target_topic", "")
 
             # Generate contextual follow-up questions
-            follow_up_suggestions = []
-
-            if query_type == "idea_generation":
-                follow_up_suggestions = [
-                    "Would you like creative writing prompts for this genre?",
-                    "Are you interested in mentor text suggestions?",
-                    "Would brainstorming game activities be helpful?"
-                ]
-            elif query_type == "organization":
-                follow_up_suggestions = [
-                    "Would you like graphic organizer templates?",
-                    "Are you interested in teaching sequence and structure?",
-                    "Would differentiation strategies for organization be helpful?"
-                ]
-            elif query_type == "genre_elements":
-                follow_up_suggestions = [
-                    "Would you like more genre-specific teaching strategies?",
-                    "Are you interested in genre comparison activities?",
-                    "Would mentor text recommendations be helpful?"
-                ]
-            else:
-                follow_up_suggestions = [
-                    "Would you like more specific activities for any particular genre?",
-                    "Are there specific brainstorming techniques you'd like to explore?",
-                    "Would assessment strategies for creative writing be helpful?"
-                ]
+            follow_up_suggestions = prompts.FOLLOW_UP_QUESTIONS.get(
+                query_type,
+                prompts.FOLLOW_UP_QUESTIONS["general"]
+            )
 
             print(f"✅ Generated {len(follow_up_suggestions)} follow-up suggestions")
 

@@ -5,7 +5,8 @@ This version removes complex dependencies to ensure it loads in LangGraph Studio
 from typing import Dict, Any
 from langgraph.graph import StateGraph, END, START
 from langchain_core.messages import HumanMessage, AIMessage
-from app.graph.routing_state import RoutingState
+from app.chatbot.routing.router_state import RoutingState
+
 
 # Mock intent classification for studio visualization
 async def classify_intent_node(state: RoutingState) -> Dict[str, Any]:
@@ -123,14 +124,13 @@ async def route_to_bot_node(state: RoutingState) -> Dict[str, Any]:
 
 async def execute_handwriting_bot_node(state: RoutingState) -> Dict[str, Any]:
     """Handwriting Specialist Bot - Uses actual handwriting graph implementation."""
+    from app.chatbot.specialists.handwriting.graph import run_handwriting_bot
     try:
-        from app.graph.handwriting_graph import run_handwriting_bot
-
         query = state.get("original_query", "")
         teacher_id = state.get("teacher_id", "studio_teacher")
         session_id = state.get("session_id", "studio_session")
 
-        print(f"🖊️ Executing real handwriting bot in Studio for query: {query}")
+        print(f"🖊️ Executing real handwriting bot for query: {query}")
 
         # Run the actual handwriting bot graph
         handwriting_result = await run_handwriting_bot(
@@ -171,7 +171,9 @@ async def execute_handwriting_bot_node(state: RoutingState) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        print(f"❌ Error in studio handwriting bot: {str(e)}")
+        print(f"❌ Error in handwriting bot: {str(e)}")
+        import traceback
+        traceback.print_exc()
         fallback_response = f"I apologize, but I'm having trouble with the handwriting bot. Error: {str(e)}"
         return {
             "messages": [AIMessage(content=fallback_response)],
@@ -252,7 +254,7 @@ For your question: "{query}"
 async def execute_general_bot_node(state: RoutingState) -> Dict[str, Any]:
     """General Education Bot - Uses the actual GeneralBot implementation."""
     try:
-        from app.service.specialized_bots import GeneralBot
+        from app.chatbot.specialists.general.bot import GeneralBot
 
         query = state.get("original_query", "")
         messages = state.get("messages", [])
@@ -385,4 +387,8 @@ def create_studio_routing_graph():
     return compiled_graph
 
 # Create the studio-friendly graph
-studio_routing_graph = create_studio_routing_graph()
+# Export as 'studio_router' to match langgraph.json
+studio_router = create_studio_routing_graph()
+
+# Keep backward compatibility alias
+studio_routing_graph = studio_router

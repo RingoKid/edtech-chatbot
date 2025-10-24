@@ -8,17 +8,17 @@ from langraph.graph import StateGraph, END, START
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.messages import HumanMessage, AIMessage
 
-from app.graph.routing_state import RoutingState
-from app.service.intent_classification_service import intent_service
-from app.graph.handwriting_graph import run_handwriting_bot
-from app.graph.vocabulary_graph import run_vocabulary_bot
-from app.graph.ideas_graph import run_ideas_bot
-from app.service.form_retrieval_service import form_retrieval_service
+from app.chatbot.routing.router_state import RoutingState
+from app.services.intent_classifier import intent_service
+from app.chatbot.specialists.handwriting.graph import run_handwriting_bot
+from app.chatbot.specialists.vocabulary.graph import run_vocabulary_bot
+from app.chatbot.specialists.ideas.graph import run_ideas_bot
+from app.services.form_retrieval import form_retrieval_service
 from app.schemas.intent import IntentType
 from app.config import settings
 
 # Import general bot for unclear queries
-from app.service.specialized_bots import GeneralBot
+from app.chatbot.specialists.general.bot import GeneralBot
 
 class RoutingNodes:
     """Container for all routing graph nodes."""

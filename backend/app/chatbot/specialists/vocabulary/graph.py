@@ -4,8 +4,8 @@ Creates the complete graph structure with nodes, edges, and routing logic.
 """
 import os
 from langgraph.graph import StateGraph, END, START
-from app.graph.vocabulary_state import VocabularyState
-from app.graph.vocabulary_nodes import vocabulary_nodes
+from app.chatbot.specialists.vocabulary.state import VocabularyState
+from app.chatbot.specialists.vocabulary.nodes import vocabulary_nodes
 from app.config import settings
 from langchain_core.messages import AIMessage
 

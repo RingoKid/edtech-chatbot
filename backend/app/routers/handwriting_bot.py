@@ -6,9 +6,9 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional
 from langchain_core.messages import HumanMessage, AIMessage
-from app.graph.handwriting_graph import run_handwriting_bot, stream_handwriting_bot
-from app.service.form_retrieval_service import form_retrieval_service
-from app.service.conversation_memory import conversation_memory
+from app.chatbot.specialists.handwriting.graph import run_handwriting_bot, stream_handwriting_bot
+from app.services.form_retrieval import form_retrieval_service
+from app.services.memory.conversation_memory import conversation_memory
 
 router = APIRouter(prefix="/handwriting-bot", tags=["Handwriting Bot"])
 

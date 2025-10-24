@@ -2,9 +2,7 @@
   "$schema": "https://langgra.ph/schema.json",
   "dependencies": ["."],
   "graphs": {
-    "lesson_planner": "app.graph.graph:graph",
-    "handwriting_bot": "app.graph.handwriting_graph:handwriting_graph",
-    "complete_routing": "app.graph.studio_routing_graph:studio_routing_graph"
+    "complete_routing": "app.chatbot.studio.studio_router:studio_router"
   },
   "env": ".env.local"
 }

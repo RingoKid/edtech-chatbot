@@ -8,8 +8,9 @@ from typing import Dict, List, Any, Optional
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from app.config import settings
-from app.graph.vocabulary_state import VocabularyState
-from app.service.form_retrieval_service import form_retrieval_service
+from app.chatbot.specialists.vocabulary.state import VocabularyState
+from app.chatbot.specialists.vocabulary import prompts
+from app.services.form_retrieval import form_retrieval_service
 
 class VocabularyNodes:
     """Container for all vocabulary bot graph nodes."""
@@ -49,31 +50,10 @@ class VocabularyNodes:
                 query = str(latest_message)
 
             # Use LLM to analyze the query
-            analysis_prompt = f"""
-            You are an expert in vocabulary and sentence structure education. Analyze this teacher's query and extract key information.
-
-            Teacher's Query: "{query}"
-
-            Analyze and respond with a JSON object containing:
-            {{
-                "query_type": "sentence_structure|vocabulary_building|grammar|genre_writing|general",
-                "target_vocabulary": ["list", "of", "specific", "vocabulary", "words"],
-                "target_genre": "narrative|informational|opinion|personal_narrative|not_specified",
-                "grade_level": "prek|kindergarten|1st_grade|mixed|not_specified",
-                "key_concepts": ["list", "of", "main", "concepts"],
-                "urgency_level": "low|medium|high"
-            }}
-
-            Query Type Definitions:
-            - sentence_structure: Questions about sentence patterns, subject-verb agreement, sentence frames
-            - vocabulary_building: Questions about teaching new words, word meanings, vocabulary strategies
-            - grammar: Questions about parts of speech, verb types, sentence components
-            - genre_writing: Questions about vocabulary for specific genres (narrative, informational, opinion)
-            - general: Broad questions about vocabulary/reading instruction
-            """
+            analysis_prompt = prompts.QUERY_ANALYSIS_PROMPT.format(query=query)
 
             response = await self.llm.ainvoke([
-                SystemMessage(content="You are an educational query analyzer. Respond only with valid JSON."),
+                SystemMessage(content=prompts.QUERY_ANALYSIS_SYSTEM_PROMPT),
                 HumanMessage(content=analysis_prompt)
             ])
 
@@ -188,28 +168,7 @@ class VocabularyNodes:
             # If we need more context, ask clarifying questions instead
             if needs_context and (target_vocabulary or target_genre != "not_specified"):
                 vocab_str = ", ".join(target_vocabulary) if target_vocabulary else "vocabulary and sentence structure"
-                clarification_message = f"""Great! I can definitely help you teach {vocab_str}.
-
-To create the most helpful lesson plan for you, could you let me know:
-
-1️⃣ **What grade level is this lesson for?**
-   • Pre-K
-   • Kindergarten
-   • 1st Grade
-
-2️⃣ **What genre or writing type are you focusing on?**
-   • Narrative writing (stories)
-   • Informational writing (facts/explanations)
-   • Opinion writing (preferences/arguments)
-   • Personal narrative
-
-3️⃣ **Are there specific objectives you'd like to address?**
-   • Building complete sentences
-   • Using action verbs or be-verbs
-   • Expanding vocabulary
-   • Sentence patterns for a specific genre
-
-Once I know these details, I'll create a complete, scripted lesson plan tailored to your students! 📚"""
+                clarification_message = prompts.CONTEXT_NEEDED_CLARIFICATION.format(vocab_str=vocab_str)
 
                 ai_response = AIMessage(content=clarification_message)
                 return {
@@ -471,38 +430,14 @@ Once I know these details, I'll create a complete, scripted lesson plan tailored
             query_type = state.get("query_type", "general")
 
             # Use LLM to evaluate response quality
-            quality_check_prompt = f"""
-            Evaluate this vocabulary instruction response for a teacher's question.
-
-            Original Question: "{original_query}"
-            Query Type: {query_type}
-
-            Generated Response: "{latest_response}"
-
-            Rate the response quality and respond with JSON:
-            {{
-                "overall_quality": "excellent|good|fair|poor",
-                "has_specific_activities": true/false,
-                "addresses_original_question": true/false,
-                "includes_materials": true/false,
-                "provides_differentiation": true/false,
-                "actionable_for_teachers": true/false,
-                "genre_connection": true/false,
-                "improvement_suggestions": ["list", "of", "specific", "improvements"],
-                "quality_score": 1-10
-            }}
-
-            A quality response should:
-            - Directly answer the teacher's question
-            - Include specific, actionable activities
-            - List required materials
-            - Provide differentiation strategies
-            - Connect to genre-specific writing when relevant
-            - Be immediately implementable in a classroom
-            """
+            quality_check_prompt = prompts.QUALITY_CHECK_PROMPT.format(
+                original_query=original_query,
+                query_type=query_type,
+                latest_response=latest_response
+            )
 
             quality_response = await self.llm.ainvoke([
-                SystemMessage(content="You are an educational content quality evaluator. Respond only with valid JSON."),
+                SystemMessage(content=prompts.QUALITY_CHECK_SYSTEM_PROMPT),
                 HumanMessage(content=quality_check_prompt)
             ])
 
@@ -544,32 +479,10 @@ Once I know these details, I'll create a complete, scripted lesson plan tailored
             target_genre = state.get("target_genre", "not_specified")
 
             # Generate contextual follow-up questions
-            follow_up_suggestions = []
-
-            if query_type == "sentence_structure":
-                follow_up_suggestions = [
-                    "Would you like sentence frames for different genres?",
-                    "Are you interested in subject-verb agreement activities?",
-                    "Would assessment strategies for sentence writing be helpful?"
-                ]
-            elif query_type == "vocabulary_building":
-                follow_up_suggestions = [
-                    "Would you like vocabulary games for practice?",
-                    "Are you interested in multi-sensory vocabulary strategies?",
-                    "Would word study activities be helpful for your students?"
-                ]
-            elif query_type == "genre_writing":
-                follow_up_suggestions = [
-                    "Would you like genre-specific vocabulary lists?",
-                    "Are you interested in sentence patterns for this genre?",
-                    "Would graphic organizers for this genre be helpful?"
-                ]
-            else:
-                follow_up_suggestions = [
-                    "Would you like more specific activities for any particular area?",
-                    "Are there specific vocabulary words or sentence patterns you'd like to focus on?",
-                    "Would assessment strategies be helpful for tracking vocabulary growth?"
-                ]
+            follow_up_suggestions = prompts.FOLLOW_UP_QUESTIONS.get(
+                query_type,
+                prompts.FOLLOW_UP_QUESTIONS["general"]
+            )
 
             print(f"✅ Generated {len(follow_up_suggestions)} follow-up suggestions")
 

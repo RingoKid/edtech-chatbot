@@ -8,8 +8,9 @@ from typing import Dict, List, Any, Optional
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from app.config import settings
-from app.graph.handwriting_state import HandwritingState
-from app.service.form_retrieval_service import form_retrieval_service
+from app.chatbot.specialists.handwriting.state import HandwritingState
+from app.services.form_retrieval import form_retrieval_service
+from app.chatbot.specialists.handwriting import prompts
 
 class HandwritingNodes:
     """Container for all handwriting bot graph nodes."""
@@ -62,32 +63,10 @@ class HandwritingNodes:
                 query = str(latest_message)
             
             # Use LLM to analyze the query
-            analysis_prompt = f"""
-            You are an expert in handwriting and fine motor skills education. Analyze this teacher's query and extract key information.
-            
-            Teacher's Query: "{query}"
-            
-            Analyze and respond with a JSON object containing:
-            {{
-                "query_type": "letter_formation|fine_motor|spelling|assessment|posture_grip|general",
-                "target_letters": ["list", "of", "specific", "letters", "mentioned"],
-                "grade_level": "prek|kindergarten|1st_grade|mixed|not_specified",
-                "key_concepts": ["list", "of", "main", "concepts"],
-                "urgency_level": "low|medium|high",
-                "specific_challenges": ["list", "of", "challenges", "mentioned"]
-            }}
-            
-            Query Type Definitions:
-            - letter_formation: Questions about how to form specific letters, stroke order, directionality
-            - fine_motor: Questions about hand strength, finger dexterity, grip development
-            - spelling: Questions about letter-sound connections, phoneme-grapheme relationships
-            - assessment: Questions about evaluating progress, rubrics, testing handwriting skills
-            - posture_grip: Questions about sitting position, pencil grip, paper positioning
-            - general: Broad questions about handwriting instruction that don't fit other categories
-            """
-            
+            analysis_prompt = prompts.QUERY_ANALYSIS_PROMPT.format(query=query)
+
             response = await self.llm.ainvoke([
-                SystemMessage(content="You are an educational query analyzer. Respond only with valid JSON."),
+                SystemMessage(content=prompts.QUERY_ANALYSIS_SYSTEM_PROMPT),
                 HumanMessage(content=analysis_prompt)
             ])
             
@@ -290,18 +269,7 @@ class HandwritingNodes:
 
             # If query is incomplete (no letter specified), ask for which letter
             if is_incomplete_query or has_no_target_letters:
-                clarification_message = f"""I'd be happy to help you teach handwriting!
-
-I didn't catch which specific letter you'd like to focus on. Could you please tell me which letter you want to teach?
-
-For example:
-• "letter A" or "teach letter A"
-• "letter M" or "help with letter M" 
-• "letter Z" or "Z formation"
-
-Just mention the letter name and I'll create a complete, scripted lesson plan for you! ✏️"""
-
-                ai_response = AIMessage(content=clarification_message)
+                ai_response = AIMessage(content=prompts.LETTER_MISSING_CLARIFICATION)
                 return {
                     "messages": [ai_response],
                     "response_generated": True,
@@ -312,24 +280,7 @@ Just mention the letter name and I'll create a complete, scripted lesson plan fo
             # If we need more context, ask clarifying questions instead
             if needs_context and target_letters:
                 letter_str = ", ".join(target_letters) if len(target_letters) > 1 else target_letters[0]
-                clarification_message = f"""Great! I can definitely help you teach the letter {letter_str}.
-
-To create the most helpful lesson plan for you, could you let me know:
-
-1️⃣ **What grade level is this lesson for?**
-   • Pre-K
-   • Kindergarten
-   • 1st Grade
-
-2️⃣ **Besides writing the letter {letter_str}, are there any specific objectives you'd like to focus on?**
-   • Proper stroke sequence and letter formation
-   • Linking the /{letter_str}/ sound to the letter
-   • Spelling simple words with {letter_str}
-   • Fine motor skills and pencil grip
-   • Other specific goals?
-
-Once I know these details, I'll create a complete, scripted lesson plan tailored to your students! ✏️"""
-
+                clarification_message = prompts.CONTEXT_NEEDED_CLARIFICATION.format(letter_str=letter_str)
                 ai_response = AIMessage(content=clarification_message)
                 return {
                     "messages": [ai_response],
@@ -656,33 +607,8 @@ Once I know these details, I'll create a complete, scripted lesson plan tailored
             target_letters = state.get("target_letters", [])
             grade_level = state.get("grade_level", "not_specified")
             
-            # Generate contextual follow-up questions
-            follow_up_suggestions = []
-            
-            if query_type == "letter_formation":
-                follow_up_suggestions = [
-                    "Would you like specific verbal cues for teaching letter strokes?",
-                    "Are you interested in multi-sensory activities for letter practice?",
-                    "Would assessment rubrics for letter formation be helpful?"
-                ]
-            elif query_type == "fine_motor":
-                follow_up_suggestions = [
-                    "Would you like activities to strengthen finger muscles?",
-                    "Are you interested in pencil grip development strategies?",
-                    "Would pre-writing activities be helpful for your students?"
-                ]
-            elif query_type == "spelling":
-                follow_up_suggestions = [
-                    "Would you like phoneme-grapheme connection activities?",
-                    "Are you interested in spelling pattern instruction?",
-                    "Would multisensory spelling strategies be helpful?"
-                ]
-            else:
-                follow_up_suggestions = [
-                    "Would you like more specific activities for any particular area?",
-                    "Are there specific letters or skills you'd like to focus on?",
-                    "Would assessment strategies be helpful for tracking progress?"
-                ]
+            # Generate contextual follow-up questions from prompts module
+            follow_up_suggestions = prompts.FOLLOW_UP_QUESTIONS.get(query_type, prompts.FOLLOW_UP_QUESTIONS["general"])
             
             print(f"✅ Generated {len(follow_up_suggestions)} follow-up suggestions")
             

@@ -6,7 +6,7 @@ from typing import List, Optional, Any
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from app.config import settings
-from app.service.form_retrieval_service import form_retrieval_service
+from app.services.form_retrieval import form_retrieval_service
 from app.schemas.intent import BotResponse
 
 class VocabularyBot:
