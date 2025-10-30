@@ -1,0 +1,132 @@
+{
+  "form_k": {
+    "title": "Suggested Activities For Vocabulary & Sentence Structure",
+    "review_connect_activities": {
+      "adaptation_prompt": "Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high)",
+      "low_level": [
+        {
+          "name": "Spotlight Sentence",
+          "description": "Teacher reads or displays a sentence and asks, 'Who is this sentence about?' or 'What is happening?' Students identify the subject or verb aloud. 'Who did it?' and 'What did they do?'"
+        },
+        {
+          "name": "Stretch It Out",
+          "description": "The teacher shows a simple sentence. Children are given choices of the sentence structure they are reviewing and must add those sentence structures to the base sentence. For example, if focusing on delayed adjective phrases, children would choose either 'scared and lonely' or 'excited and happy' to add to the end of the base sentence: The cat shivered on the corner. This activity also integrates children's vocabulary building."
+        }
+      ],
+      "middle_level": [
+        {
+          "name": "Fix-It Fast",
+          "description": "Show or say a sentence with a missing part or jumbled order. Students help you quickly fix it together using previously learned sentence structures under review."
+        },
+        {
+          "name": "The Missing Structure?",
+          "description": "Say or show a mix of sentences missing structures children previously learned (e.g., subjects, verbs, adjectives, prepositional phrases, etc). Students give a thumbs up if it's there, and thumbs down if it is not. Optional: Have children add in the structure if it's missing."
+        },
+        {
+          "name": "Build and Say",
+          "description": "Give students word cards or visuals (subject, verb, object) and have them build a sentence and say it out loud. Keep it simple and quick."
+        },
+        {
+          "name": "Silly Sentence Swap",
+          "description": "Read a sentence and swap one word to make it silly. Students tell you what part was changed (subject, verb, etc.)."
+        },
+        {
+          "name": "Act It Out Quick",
+          "description": "Read a sentence and have students act it out quickly, then review who did what to reinforce sentence parts."
+        }
+      ],
+      "high_level": [
+        {
+          "name": "Stretch and Repeat",
+          "description": "Say a short sentence, and ask students to stretch it by adding one of the sentence structure parts they learned (e.g., an adjective or compound verb). Repeat a few times."
+        },
+        {
+          "name": "Sentence Snap",
+          "description": "Flash a sentence for a few seconds. Remove it, then ask students what the sentence was about or to identify a key sentence structure part, like the verb or delayed adjective."
+        },
+        {
+          "name": "Paint Your Sentence",
+          "description": "Children choose one of their vocabulary words, identify its part of speech, and correctly create and write a simple sentence using that word. The teacher then tells children they have a one minute challenge to add one more structure to their sentence (e.g., compound verb, prepositional phrase, adverb clause). (Kindergarten level or First Grade)"
+        }
+      ]
+    },
+    "guided_practice_activities": {
+      "adaptation_prompt": "Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high)",
+      "low_level": [
+        {
+          "name": "Same or Different",
+          "description": "Teacher displays different types of sentences using previously learned sentence structures along with the targeted sentence structure. Children must listen to the sentence and identify whether the sentence includes the targeted structure (Same) or if it doesn't include the targeted structure (Different)."
+        },
+        {
+          "name": "Sentence Hunt",
+          "description": "Children are shown or read several sentences and must find the ones that match a specific sentence structure (e.g., subject + action verb)."
+        }
+      ],
+      "middle_level": [
+        {
+          "name": "Build-A-Sentence",
+          "description": "Children are guided to create their own sentence by imitating a model (e.g., The whale is a ___). The teacher provides scaffolds such as visuals, word banks, or sentence frames to help children generate original content using a targeted sentence structure."
+        },
+        {
+          "name": "Sentence Scrambler",
+          "description": "Children receive individual words or sentence parts (on cards or digital pieces) and must arrange them to form a complete sentence that matches a target structure."
+        },
+        {
+          "name": "Stretchy Sentence",
+          "description": "Children start with a short base sentence (e.g., The dolphin dives) and are prompted to 'stretch' it by adding details using a specific structure (e.g., adding an adjective, prepositional phrase, or conjunction). The teacher may ask guiding questions like 'Where does the dolphin dive?' to support elaboration."
+        }
+      ],
+      "high_level": [
+        {
+          "name": "Magic Sentence Wand",
+          "description": "Children are given two short, related sentences (e.g., Manatees eat seagrass. Manatees eat algae.) and use a 'magic wand' (or verbal prompt) to combine them into one sentence using a target structure (e.g., Manatees eat seagrass and algae.)."
+        },
+        {
+          "name": "Echo Sentence",
+          "description": "The teacher reads or presents a model sentence, and children generate their own sentence that follows the same pattern but changes the content (e.g., The manatee is a mammal. → The sealion is a predator.). Children may say or write their version."
+        },
+        {
+          "name": "Paint Your Sentence",
+          "description": "Children choose one of their vocabulary words, identify its part of speech, and correctly create and write a simple sentence using that word. The teacher then tells children they have a one minute challenge to add one more structure to their sentence (e.g., compound verb, prepositional phrase, adverb clause). (Kindergarten level or First Grade)"
+        },
+        {
+          "name": "Two Sentence Build-It Challenge",
+          "description": "Children build a sentence with a targeted sentence structure. Then they must create another sentence that builds on the first sentence and also incorporates a previously learned sentence structure."
+        }
+      ]
+    },
+    "application_practice_activities": {
+      "adaptation_prompt": "Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high)",
+      "low_level": [
+        {
+          "name": "Add-a-Word",
+          "description": "Children create a sentence using a target structure but then are challenged to add a modifying word (connected to vocabulary) in the correct part of the sentence. For example, include the vocabulary word fierce into the The shark is a predator."
+        },
+        {
+          "name": "Stretchy Sentence",
+          "description": "Children start with a short base sentence (e.g., The dolphin dives) and are prompted to 'stretch' it by adding details using a specific structure (e.g., adding an adjective, prepositional phrase, or conjunction). The teacher may ask guiding questions like 'Where does the dolphin dive?' to support elaboration."
+        }
+      ],
+      "middle_level": [
+        {
+          "name": "Magic Sentence Wand",
+          "description": "Children are given two short, related sentences (e.g., Manatees eat seagrass. Manatees eat algae.) and use a 'magic wand' (or verbal prompt) to combine them into one sentence using a target structure (e.g., Manatees eat seagrass and algae.)."
+        }
+      ],
+      "high_level": [
+        {
+          "name": "Echo Sentence",
+          "description": "The teacher reads or presents a model sentence, and children generate their own sentence that follows the same pattern but changes the content (e.g., The manatee is a mammal. → The sealion is a predator.). Children may say or write their version."
+        },
+        {
+          "name": "Paint Your Sentence",
+          "description": "Children choose one of their vocabulary words, identify its part of speech, and correctly create and write a simple sentence using that word. The teacher then tells children they have a one minute challenge to add one more structure to their sentence (e.g., compound verb, prepositional phrase, adverb clause). (Kindergarten level or First Grade)"
+        },
+        {
+          "name": "Two Sentence Build-It Challenge",
+          "description": "Children build a sentence with a targeted sentence structure. Then they must create another sentence that builds on the first sentence and also incorporates a previously learned sentence structure."
+        }
+      ]
+    }
+  }
+}

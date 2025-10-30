@@ -1,0 +1,59 @@
+{
+  "form_g": {
+    "title": "Phoneme Gestures for Early Education",
+    "consonant_phonemes": {
+      "/b/": {"sound": "bat", "gesture": "Bounce a ball with both hands"},
+      "/k/": {"sound": "cat", "gesture": "Pretend to crack an egg open"},
+      "/d/": {"sound": "dog", "gesture": "Tap fingers like playing a drum"},
+      "/f/": {"sound": "fish", "gesture": "Wiggle fingers like fish swimming"},
+      "/g/": {"sound": "goat", "gesture": "Pull down a pretend goat beard"},
+      "/h/": {"sound": "hat", "gesture": "Fan your face (blowing hot air)"},
+      "/j/": {"sound": "jam", "gesture": "Pretend to spread jam on bread"},
+      "/l/": {"sound": "lip", "gesture": "Move hand in a flowing wave (like licking lips)"},
+      "/m/": {"sound": "man", "gesture": "Rub belly like 'mmm, yummy'"},
+      "/n/": {"sound": "net", "gesture": "Wiggle fingers downward like net catching fish"},
+      "/p/": {"sound": "pig", "gesture": "Clap hands softly like popping bubbles"},
+      "/r/": {"sound": "rat", "gesture": "Wiggle fingers near mouth like whiskers"},
+      "/s/": {"sound": "sun", "gesture": "Trace a spiral sun in the air"},
+      "/t/": {"sound": "tap", "gesture": "Tap index finger on the palm of other hand"},
+      "/v/": {"sound": "van", "gesture": "Drive an imaginary steering wheel"},
+      "/w/": {"sound": "wind", "gesture": "Swoop hands like blowing wind"},
+      "/y/": {"sound": "yes", "gesture": "Nod head and give thumbs up"},
+      "/z/": {"sound": "zoo", "gesture": "Wiggle index fingers like a buzzing bee"},
+      "/x/": {"sound": "box", "gesture": "Cross forearms in an 'X' shape"}
+    },
+    "short_vowel_phonemes": {
+      "/a/": {"sound": "apple", "gesture": "Pretend to take a bite of an apple"},
+      "/e/": {"sound": "elephant", "gesture": "Make an elephant trunk with arm"},
+      "/i/": {"sound": "insect", "gesture": "Wiggle fingers like crawling bugs"},
+      "/o/": {"sound": "octopus", "gesture": "Wiggle fingers like octopus tentacles"},
+      "/u/": {"sound": "umbrella", "gesture": "Pretend to open an umbrella overhead"}
+    },
+    "long_vowel_phonemes": {
+      "/ā/": {"sound": "cake", "gesture": "Draw a straight line across air (like a cake slice)"},
+      "/ē/": {"sound": "feet", "gesture": "Wiggle fingers down toward feet"},
+      "/ī/": {"sound": "kite", "gesture": "Trace a kite shape in the air"},
+      "/ō/": {"sound": "rope", "gesture": "Pretend to pull a rope"},
+      "/ū/": {"sound": "cube", "gesture": "Pretend to blow out a birthday candle (small puff sound)"}
+    },
+    "digraphs_blends": {
+      "/sh/": {"sound": "ship", "gesture": "Put finger to lips (shhh)"},
+      "/ch/": {"sound": "chop", "gesture": "Pretend to chop with side of hand"},
+      "/th/": {"sound": "thumb", "gesture": "Show thumbs up"},
+      "/wh/": {"sound": "whale", "gesture": "Move hand in a swimming motion"},
+      "/ng/": {"sound": "sing", "gesture": "Pretend to sing (open mouth, hand to ear)"},
+      "/qu/": {"sound": "queen", "gesture": "Place pretend crown on head"}
+    },
+    "r_controlled_vowels": {
+      "/ar/": {"sound": "car", "gesture": "Pretend to steer a car"},
+      "/or/": {"sound": "fork", "gesture": "Pretend to eat with fork"},
+      "/er/ir/ur/": {"sound": "her, bird, fur", "gesture": "Tap chest like you're thinking 'hmm'"}
+    },
+    "implementation_tips": [
+      "Always say the sound aloud as you do the gesture",
+      "Use gestures during spelling dictation, sound review, and handwriting warm-ups",
+      "Keep gestures consistent across all phonics lessons",
+      "Encourage students to mirror the gesture when you say the sound"
+    ]
+  }
+}

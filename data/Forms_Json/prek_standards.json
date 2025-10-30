@@ -1,0 +1,125 @@
+{
+  "grade": "Pre-K",
+  "implementation_date": "2025-07-01",
+  "domains": {
+    "foundations": {
+      "code": "PK.F",
+      "title": "Foundations (F)",
+      "description": "Students build a foundation for achieving dynamic literacy practices to aid reading comprehension.",
+      "big_ideas": {
+        "phonological_awareness": {
+          "code": "PK.F.PA",
+          "title": "Phonological Awareness",
+          "description": "Students develop the ability to identify and produce the sound structures of spoken language and how they can be divided into smaller components and manipulated.",
+          "standards": {
+            "rhyme": {
+              "code": "PK.F.PA.1",
+              "title": "Rhyme",
+              "description": "Identify and produce rhyme in spoken language and oral texts.",
+              "sub_standards": {
+                "a": "Identify and pair words that rhyme in spoken language, distinguishing them from those that do not.",
+                "b": "Orally produce words that rhyme."
+              }
+            },
+            "words_sentences": {
+              "code": "PK.F.PA.2",
+              "title": "Words & Sentences",
+              "description": "Recognize the basic relationships that exist between words and sentences.",
+              "sub_standards": {
+                "a": "Know words are put together to make sentences, and sentences communicate complete thoughts.",
+                "b": "Segment phrases and sentences into words.",
+                "c": "Know that sounds are put together to make words and that words have distinct meanings."
+              }
+            },
+            "compound_words": {
+              "code": "PK.F.PA.3",
+              "title": "Compound Words",
+              "description": "Identify and manipulate separate words in compound words.",
+              "sub_standards": {
+                "a": "Blend and segment separate words in spoken compound words.",
+                "b": "Add, delete, and substitute single words in spoken compound words."
+              }
+            },
+            "syllables": {
+              "code": "PK.F.PA.4",
+              "title": "Syllables",
+              "description": "Identify and manipulate syllables in spoken words.",
+              "sub_standards": {
+                "a": "Know that syllables are word parts with one vowel sound.",
+                "b": "Count and pronounce syllables in single and multisyllabic spoken words.",
+                "c": "Blend and segment syllables in spoken words.",
+                "d": "Delete syllables in spoken words."
+              }
+            },
+            "onsets_rimes": {
+              "code": "PK.F.PA.5",
+              "title": "Onsets & Rimes",
+              "description": "Blend and segment onsets and rimes in spoken words.",
+              "sub_standards": {
+                "a": "Blend onsets and rimes of spoken one-syllable words.",
+                "b": "Segment onsets and rimes of spoken one-syllable words."
+              }
+            },
+            "phonemic_awareness": {
+              "code": "PK.F.PA.6",
+              "title": "Phonemic Awareness",
+              "description": "Identify and manipulate the individual sounds in spoken words.",
+              "sub_standards": {
+                "a": "Isolate and pronounce initial, final, and then medial sounds in spoken words with three phonemes.",
+                "b": "Identify short and long vowel sounds in spoken one-syllable words.",
+                "c": "Blend, count, and segment up to three phonemes in spoken one-syllable words.",
+                "d": "Add, delete, and substitute phonemes in spoken one-syllable words with up to three phonemes."
+              }
+            }
+          }
+        },
+        "concepts_of_print": {
+          "code": "PK.F.CP",
+          "title": "Concepts of Print",
+          "description": "Students develop the awareness that written language carries meaning and that certain features of print ensure that texts are understood.",
+          "standards": {
+            "conceptualizing_text": {
+              "code": "PK.F.CP.1",
+              "title": "Conceptualizing Text",
+              "description": "Understand that texts communicate messages.",
+              "sub_standards": {
+                "a": "Recognize that texts and images represent objects and ideas, have meaning, and convey messages.",
+                "b": "Recognize and interpret print messages in the environment, such as labels and signs.",
+                "c": "Distinguish between letters, words, digits, and graphics."
+              }
+            },
+            "book_orientation": {
+              "code": "PK.F.CP.2",
+              "title": "Book Orientation & Directionality of Print Texts",
+              "description": "Understand the conventional layout of books and how to maneuver them.",
+              "sub_standards": {
+                "a": "Hold books upright and begin reading at the front.",
+                "b": "Follow text from top to bottom, left to right, and turn pages from right to left.",
+                "c": "Identify the front and back covers of books and their basic elements: titles, author names, illustrator names, and graphics."
+              }
+            },
+            "mechanics_of_print": {
+              "code": "PK.F.CP.3",
+              "title": "Mechanics of Print Texts",
+              "description": "Build a knowledge base of print conventions.",
+              "sub_standards": {
+                "a": "Recognize that written words are made up of individual letters.",
+                "b": "Recognize that words are separated by spaces.",
+                "c": "Understand that sentences begin with capital letters and end with punctuation to indicate the end of a sentence."
+              }
+            },
+            "alphabet_knowledge": {
+              "code": "PK.F.CP.4",
+              "title": "Alphabet Knowledge",
+              "description": "Demonstrate knowledge of the alphabet.",
+              "sub_standards": {
+                "a": "Recite the letters of the alphabet in order.",
+                "b": "Name and identify each uppercase and lowercase letter in random order."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "form_j": {
+    "title": "Vocabulary & Sentence Structure Structured Lesson Plan Template",
+    "dynamic_sections": {
+      "standards": "refer to Form X, Form Y, and IXL.pdf",
+      "objectives": "chatbot has to derive based on lesson content",
+      "materials": "chatbot has to derive based on activities and lesson requirements"
+    },
+    "lesson_structure": {
+      "A_review_connect": {
+        "explanation": "The purpose of this part of the lesson is to quickly review vocabulary from a unit of study and specific sentence structures children have used to express those concepts and vocabulary. Do not introduce new vocabulary or concepts. The goal is to have children apply vocabulary that they have been directly taught using sentence structures",
+        "teacher_script": [
+          "[TEACHER NOTE: Ask teacher: 'What vocabulary words from your current unit have you previously taught?' and 'What sentence structures have students practiced?']",
+          "Remember boys and girls we were talking about [UNIT_TOPIC]. And we said that [KEY_CONCEPT_1] is a what? (Children should respond [EXPECTED_RESPONSE_1]).",
+          "Right, [CONCEPT_EXPLANATION]. [Additional context about the unit topic and key vocabulary]",
+          "Remember [VOCABULARY_WORD_1] [definition/explanation]. [VOCABULARY_WORD_2] [definition/explanation]. {Teacher draws children's attention to visual for [VOCABULARY_WORDS]}",
+          "[Continue with vocabulary review and connections]",
+          "Before we said every sentence needs a subject, that is the person, animal, thing, or place that we are talking about. The subject is the star of the show. Every sentence needs a subject and an action verb.",
+          "Let's play our [REVIEW_ACTIVITY] +Level: Low. I am going to tell you a sentence about [UNIT_TOPIC_EXAMPLE] and you are going to tell me the subject –the who or what [SUBJECT_TYPE] that I am talking about?",
+          "Watch me because I am going to show you how to do this. So, here's the first picture, and my sentence is [EXAMPLE_SENTENCE]. So, I am thinking What is the subject? The subject is who or what the sentence is about? In my sentence [EXAMPLE_SENTENCE], it is telling me about [SUBJECT], that is what my sentence is about. And, [SUBJECT] are the ones doing the action. They [ACTION]. So, the subject is [SUBJECT].",
+          "My turn. My sentence is [PRACTICE_SENTENCE]. {Teacher displays sentence along with the visual of the [SUBJECT] in the subject spot of the sentence}.",
+          "What is the subject? Who/What is this sentence all about? Get Ready. Go. (Children should respond, [EXPECTED_SUBJECT].)",
+          "*Let me know if you would like activity examples and/or modifications of activities based on child ability level (low, middle, high)."
+        ],
+        "example_output": "Spotlight Sentence: Children identify subjects in sentences about unit topic. Vocabulary review using visuals and definitions. Subject-verb identification with previously learned sentence structures.",
+        "reference": "Form D for alternative review activities"
+      },
+      "B_model_explain_engage": {
+        "explanation": "The purpose of this section is to introduce and reinforce a targeted sentence structure through modeling and providing clear examples, while connecting to genre purpose and incorporating children's vocabulary associated with what they are reading and writing about in their unit of study",
+        "teacher_script": [
+          "Great! So we know that a sentence needs a subject and a verb. Verbs are usually actions. But, remember we are writing [GENRE_TYPE]. Sometimes we need to tell information about our subject. Like, [TARGET_SENTENCE_EXAMPLE]. {Teacher displays the sentence}",
+          "Did the [SUBJECT] do anything? (Children should respond no).",
+          "No. we are just telling something about the [SUBJECT]'s being –or something that is about who they are as a [SUBJECT_TYPE]. So these are special verbs. They are not action verbs.",
+          "They are [TARGET_STRUCTURE]: [EXAMPLE_SENTENCE]. {Teacher circles/underlines the [TARGET_VERB]}.",
+          "I could also say [PLURAL_EXAMPLE]. {Teacher circles the word [PLURAL_VERB]}.",
+          "Why did I use [PLURAL_VERB]? (Children should respond that there is more than one.)",
+          "Right. We use the verb [PLURAL_VERB] when talking about more than one person, place, thing, or animal.",
+          "{Teacher displays the [TARGET_STRUCTURE_ELEMENTS]}. So, these [STRUCTURE_DESCRIPTION] are used to [PURPOSE_EXPLANATION].",
+          "Let me show you some more examples. {Teacher displays example sentences, calling children's attention to the purpose of the sentence and the [TARGET_STRUCTURE] used for that purpose}.",
+          "[Multiple example sentences with explanations]",
+          "I am going to show some [TARGET_STRUCTURE] sentences. You tell me if the [STRUCTURE_ELEMENT] I used is [OPTION_1] or [OPTION_2].",
+          "My turn. Listen. [PRACTICE_SENTENCE]. Get Ready. Go. (Children answer [CORRECT_ANSWER])",
+          "[Continue with practice examples and explanations]"
+        ],
+        "example_output": "Model target sentence structure with clear examples. Compare to previously learned structures. Use unit vocabulary in demonstration sentences. Explain purpose for genre writing.",
+        "reference": "Form E for evidence-based vocabulary and sentence practices"
+      },
+      "C_guided_practice": {
+        "explanation": "The purpose of this section of the lesson is to guide children in applying the targeted sentence structure to express an idea that relates to topic and genre, incorporating their vocabulary words",
+        "teacher_script": [
+          "Now you are going to do [GUIDED_ACTIVITY] +Level: Low. You are going to tell me information about [UNIT_TOPIC_ELEMENT]. You are thinking about [CONTENT_FOCUS]. You want to explain that [SENTENCE_PURPOSE].",
+          "I am going to give everybody a special [TARGET_STRUCTURE_ELEMENT]; the [STRUCTURE_CARD]. Everyone also has the [VOCABULARY_CARDS], along with your [GRAMMAR_ELEMENT_CARDS].",
+          "Look up here at our sight words. {Teacher draws children's attention to the sight word chart}",
+          "We know [SIGHT_WORD_EXPLANATION]. We also know that they can be capital or uppercase if we start a sentence, and lowercase if they do not start a sentence.",
+          "You are going to pick a subject. The subject of your sentence will be about one of these [SUBJECT_OPTIONS]. {Teacher displays pictures/options of different [SUBJECT_TYPE] children have learned about}.",
+          "You are going to create a sentence that shares information about [SENTENCE_CONTENT]. Watch me.",
+          "[Teacher demonstration with step-by-step modeling]",
+          "I picked the [EXAMPLE_SUBJECT]. I know that [BACKGROUND_KNOWLEDGE]. So I think [REASONING].",
+          "Let's look at our cards to build this sentence.",
+          "[Step-by-step sentence building process]",
+          "What do I need at the end of my sentence? (Children should answer 'period')",
+          "Right. So, I take my sticky note, and dot, for the period. Now everyone knows that is the end of my sentence. [COMPLETE_SENTENCE], period.",
+          "Now it's your turn. Everyone choose your topic, the [SUBJECT_TYPE] that is the subject of your sentence.",
+          "[Guided practice with individual support and examples]"
+        ],
+        "example_output": "Build-a-Sentence using cards and visual supports. Students create target structure sentences about unit topic. Teacher provides step-by-step guidance and individual support.",
+        "reference": "Form D for alternative guided practice activities"
+      },
+      "D_application": {
+        "explanation": "The purpose of this section of the lesson is to provide children further practice using the new sentence structure to express their ideas and incorporate vocabulary from a unit of study",
+        "teacher_script": [
+          "Alright everyone the last thing you are going to do is pick another [SUBJECT_TYPE] and create a [TARGET_STRUCTURE] sentence to tell me [SENTENCE_PURPOSE]. This time I want you to add one of our vocabulary words. We are doing the [APPLICATION_ACTIVITY] +Level Low.",
+          "After you create the sentence, choose a vocabulary word to describe the [DESCRIPTION_TARGET].",
+          "Look up here {Teacher directs children's attention to [VOCABULARY_DISPLAY]}",
+          "We have [VOCABULARY_WORD_1] and [VOCABULARY_WORD_2]. So you are thinking to yourself, How would I describe my [TARGET_ELEMENT]. Would it be [VOCABULARY_WORD_1] or [VOCABULARY_WORD_2].",
+          "To show me which word you chose, you are going to write either the letter [LETTER_1] for [SOUND_1] [VOCABULARY_WORD_1], or you will write the letter [LETTER_2] for [SOUND_2] [VOCABULARY_WORD_2]. You are writing that on your post it and adding that to your sentence. I am going to put five minutes on the clock. When I say stop, everyone puts their hands up. Get Ready. Go. {Teacher gives children five minutes to create their sentence, adding in an adjective vocabulary word. Teacher monitors to support students who may need extra support}.",
+          "Okay stop. Hands up. Hands down.",
+          "[Student name], tell us your sentence. (Child should respond: [EXAMPLE_STUDENT_SENTENCE]).",
+          "Why would a [SUBJECT_TYPE] be [VOCABULARY_WORD]? (Child should respond [REASONING]). Exactly, [EXPLANATION]. [VOCABULARY_DEFINITION]. [Additional explanation connecting to unit content]. {Teacher continues to take examples, writing them or displaying them for children to see, drawing attention to vocabulary and the [TARGET_STRUCTURE]}."
+        ],
+        "example_output": "Add-A-Word challenge incorporating unit vocabulary into target sentence structure. Timed independent practice with teacher monitoring and support. Student sharing with explanations.",
+        "reference": "Form D for alternative application activities"
+      },
+      "E_wrap_up": {
+        "explanation": "The purpose of this section is to remind children about the target structure, how it's different from previously learned structures and why they are important to the type of genre you are reading and writing in class",
+        "teacher_script": [
+          "Everyone, we are working on writing [GENRE_TYPE], we want to [GENRE_PURPOSE]. [TARGET_STRUCTURE] sentences tell us [STRUCTURE_PURPOSE]. [CONTRASTING_STRUCTURE] sentences tell us [CONTRASTING_PURPOSE]. We need both kinds of sentences so that we can [COMBINED_PURPOSE].",
+          "I am going to give you a sentence, you tell me if it is [STRUCTURE_TYPE_1] –for a [STRUCTURE_TYPE_1] sentence or [STRUCTURE_TYPE_2] for a [STRUCTURE_TYPE_2] sentence. My turn. [EXAMPLE_SENTENCE_1]. Get Ready. Go. (Children should chorally respond [CORRECT_ANSWER_1]).",
+          "Very good. What special [STRUCTURE_ELEMENT] did I use? (Children should respond [STRUCTURE_ANSWER])",
+          "Excellent [STRUCTURE_ANSWER]. That is my [STRUCTURE_TYPE].",
+          "My turn. [EXAMPLE_SENTENCE_2] Get Ready. Go. (Children should answer [CORRECT_ANSWER_2]). Perfect! [EXPLANATION] is [ACTION_EXPLANATION]. It's an action. You all did awesome."
+        ],
+        "example_output": "Compare target structure to previously learned structures. Explain importance for genre writing. Assessment through sentence identification. Reinforcement of learning objectives.",
+        "reference": "Form E for evidence-based practices"
+      }
+    },
+    "references": {
+      "form_d": "for alternative activities in vocabulary and sentence structure lessons",
+      "form_e": "for evidence-based practices in vocabulary, sentence structure, and idea generation",
+      "form_i": "for lesson structure framework",
+      "form_x": "for standards (to be specified)",
+      "form_y": "for standards (to be specified)",
+      "ixl_pdf": "for standards reference"
+    },
+    "placeholder_variables": {
+      "UNIT_TOPIC": "Current unit of study topic (teacher input)",
+      "TARGET_STRUCTURE": "Sentence structure being taught (e.g., be-verbs)",
+      "VOCABULARY_WORD_1": "First unit vocabulary word",
+      "VOCABULARY_WORD_2": "Second unit vocabulary word",
+      "GENRE_TYPE": "Type of writing genre (e.g., informational text)",
+      "SUBJECT_TYPE": "Type of subjects being discussed (e.g., sea creatures)",
+      "EXAMPLE_SENTENCE": "Sample sentence for demonstration",
+      "GUIDED_ACTIVITY": "Name of guided practice activity",
+      "APPLICATION_ACTIVITY": "Name of application activity",
+      "KEY_CONCEPT_1": "Primary concept from unit",
+      "EXPECTED_RESPONSE_1": "Expected student response to concept question"
+    }
+  }
+}

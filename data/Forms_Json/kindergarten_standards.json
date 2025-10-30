@@ -1,0 +1,296 @@
+{
+  "grade": "Kindergarten",
+  "implementation_date": "2025-07-01",
+  "description": "In kindergarten, English Language Arts instruction introduces students to the foundational skills necessary for literacy development, including concepts of print, phonological awareness, and the ability to decode and encode words in context and in isolation.",
+  "domains": {
+    "foundations": {
+      "code": "K.F",
+      "title": "Foundations (F)",
+      "description": "Students build a foundation for achieving dynamic literacy practices to aid reading comprehension.",
+      "big_ideas": {
+        "phonological_awareness": {
+          "code": "K.F.PA",
+          "title": "Phonological Awareness",
+          "description": "Students develop the ability to identify and produce the sound structures of spoken language and how they can be divided into smaller components and manipulated.",
+          "standards": {
+            "rhyme": {
+              "code": "K.F.PA.1",
+              "title": "Rhyme",
+              "description": "Identify and produce rhyme in spoken language and oral texts.",
+              "sub_standards": {
+                "a": "Identify and pair words that rhyme in spoken language, distinguishing them from those that do not.",
+                "b": "Orally produce words that rhyme."
+              }
+            },
+            "words_sentences": {
+              "code": "K.F.PA.2",
+              "title": "Words & Sentences",
+              "description": "Recognize the basic relationships that exist between words and sentences.",
+              "sub_standards": {
+                "a": "Know words are put together to make sentences, and sentences communicate complete thoughts.",
+                "b": "Segment phrases and sentences into words.",
+                "c": "Know that sounds are put together to make words and that words have distinct meanings."
+              }
+            },
+            "compound_words": {
+              "code": "K.F.PA.3",
+              "title": "Compound Words",
+              "description": "Identify and manipulate separate words in compound words.",
+              "sub_standards": {
+                "a": "Blend and segment separate words in spoken compound words.",
+                "b": "Add, delete, and substitute single words in spoken compound words."
+              }
+            },
+            "syllables": {
+              "code": "K.F.PA.4",
+              "title": "Syllables",
+              "description": "Identify and manipulate syllables in spoken words.",
+              "sub_standards": {
+                "a": "Know that syllables are word parts with one vowel sound.",
+                "b": "Count and pronounce syllables in single and multisyllabic spoken words.",
+                "c": "Blend and segment syllables in spoken words.",
+                "d": "Delete syllables in spoken words."
+              }
+            },
+            "onsets_rimes": {
+              "code": "K.F.PA.5",
+              "title": "Onsets & Rimes",
+              "description": "Blend and segment onsets and rimes in spoken words.",
+              "sub_standards": {
+                "a": "Blend onsets and rimes of spoken one-syllable words.",
+                "b": "Segment onsets and rimes of spoken one-syllable words."
+              }
+            },
+            "phonemic_awareness": {
+              "code": "K.F.PA.6",
+              "title": "Phonemic Awareness",
+              "description": "Identify and manipulate the individual sounds in spoken words.",
+              "sub_standards": {
+                "a": "Isolate and pronounce initial, final, and then medial sounds in spoken words with three phonemes.",
+                "b": "Identify short and long vowel sounds in spoken one-syllable words.",
+                "c": "Blend, count, and segment up to three phonemes in spoken one-syllable words.",
+                "d": "Add, delete, and substitute phonemes in spoken one-syllable words with up to three phonemes."
+              }
+            }
+          }
+        },
+        "concepts_of_print": {
+          "code": "K.F.CP",
+          "title": "Concepts of Print",
+          "description": "Students develop the awareness that written language carries meaning and that certain features of print ensure that texts are understood.",
+          "standards": {
+            "conceptualizing_text": {
+              "code": "K.F.CP.1",
+              "title": "Conceptualizing Text",
+              "description": "Understand that texts communicate messages.",
+              "sub_standards": {
+                "a": "Recognize that texts and images represent objects and ideas, have meaning, and convey messages.",
+                "b": "Recognize and interpret print messages in the environment, such as labels and signs.",
+                "c": "Distinguish between letters, words, digits, and graphics."
+              }
+            },
+            "book_orientation": {
+              "code": "K.F.CP.2",
+              "title": "Book Orientation & Directionality of Print Texts",
+              "description": "Understand the conventional layout of books and how to maneuver them.",
+              "sub_standards": {
+                "a": "Hold books upright and begin reading at the front.",
+                "b": "Follow text from top to bottom, left to right, and turn pages from right to left.",
+                "c": "Identify the front and back covers of books and their basic elements: titles, author names, illustrator names, and graphics."
+              }
+            },
+            "mechanics_of_print": {
+              "code": "K.F.CP.3",
+              "title": "Mechanics of Print Texts",
+              "description": "Build a knowledge base of print conventions.",
+              "sub_standards": {
+                "a": "Recognize that written words are made up of individual letters.",
+                "b": "Recognize that words are separated by spaces.",
+                "c": "Understand that sentences begin with capital letters and end with punctuation to indicate the end of a sentence."
+              }
+            },
+            "alphabet_knowledge": {
+              "code": "K.F.CP.4",
+              "title": "Alphabet Knowledge",
+              "description": "Demonstrate knowledge of the alphabet.",
+              "sub_standards": {
+                "a": "Recite the letters of the alphabet in order.",
+                "b": "Name and identify each uppercase and lowercase letter in random order."
+              }
+            }
+          }
+        },
+        "phonics": {
+          "code": "K.F.P",
+          "title": "Phonics",
+          "description": "Students learn the relationships between the sounds of spoken language and the letters of written language as they decode and encode words in context and in isolation.",
+          "standards": {
+            "phoneme_grapheme": {
+              "code": "K.F.P.1",
+              "title": "Phoneme-Grapheme Correspondences",
+              "description": "Identify and produce phoneme-grapheme correspondences.",
+              "sub_standards": {
+                "a": "Identify and produce basic one-to-one phoneme-grapheme correspondences for the most frequently used sound for each consonant.",
+                "b": "Identify and produce both long and short vowel sounds for A, E, I, O, U."
+              }
+            },
+            "decoding": {
+              "code": "K.F.P.2",
+              "title": "Decoding with Phonics",
+              "description": "Use grade-level phonics skills to decode words in context and in isolation.",
+              "sub_standards": {
+                "a": "Blend letter sounds to decode simple one-syllable words, including regularly spelled high-frequency words (VC, CV, CVC).",
+                "b": "Identify and decode parts of irregularly spelled high-frequency words.",
+                "c": "This progression begins in 1st grade.",
+                "d": "This progression begins in 1st grade.",
+                "e": "Identify and distinguish between words that are spelled similarly by identifying the sounds of the letters that differ."
+              }
+            },
+            "encoding": {
+              "code": "K.F.P.3",
+              "title": "Encoding with Phonics",
+              "description": "Use grade-level phonics skills to encode words in context and in isolation.",
+              "sub_standards": {
+                "a": "Use knowledge of letter/sound correspondences to connect letters (graphemes) to sounds (phonemes) to encode simple one-syllable words, including high-frequency words (VC, CV, CVC).",
+                "b": "Identify and encode irregularly spelled high-frequency words.",
+                "c": "This progression begins in 1st grade.",
+                "d": "This progression begins in 1st grade."
+              }
+            }
+          }
+        },
+        "fluency": {
+          "code": "K.F.F",
+          "title": "Fluency",
+          "description": "Students read text aloud or silently with speed, accuracy, and expression.",
+          "standards": {
+            "reading_fluency": {
+              "code": "K.F.F.1",
+              "title": "Oral & Silent Reading Fluency",
+              "description": "Demonstrate oral and silent reading fluency while reading texts for understanding, self-correcting as necessary to ensure accuracy and aid comprehension.",
+              "sub_standards": {
+                "a": "Develop sight word vocabulary using decoding skills by reading regularly and irregularly spelled high-frequency words in isolation and context with increasing automaticity, including first and last names of students and others.",
+                "b": "Read familiar texts chorally with appropriate volume and rate.",
+                "c": "Read grade-level texts with purpose and understanding.",
+                "d": "This progression begins in 1st grade."
+              }
+            }
+          }
+        },
+        "handwriting": {
+          "code": "K.F.H",
+          "title": "Handwriting",
+          "description": "Students develop print handwriting skills.",
+          "standards": {
+            "motor_skills": {
+              "code": "K.F.H.1",
+              "title": "Motor Skills & Letter/Word Formation",
+              "description": "Use fine motor skills to form legible letters and words in print.",
+              "sub_standards": {
+                "a": "Form all uppercase and lowercase letters.",
+                "b": "Form words, including first and last names.",
+                "c": "Use appropriate spacing between letters, words, and sentences."
+              }
+            },
+            "transcription": {
+              "code": "K.F.H.2",
+              "title": "Transcription & Handwriting Fluency",
+              "description": "Use working memory skills to transcribe oral language to written text and maintain meaning while writing letters, words, and sentences quickly and accurately.",
+              "sub_standards": {
+                "a": "Practice basic transcription skills.",
+                "b": "Begin building handwriting fluency by forming accurate letters, including those in first and last names."
+              }
+            }
+          }
+        }
+      }
+    },
+    "practices": {
+      "code": "K.P",
+      "title": "Practices (P)",
+      "description": "Students engage routinely in four literacy practices that ground, shape, and inform the expectations of the Foundations, Language, and Texts domains.",
+      "big_ideas": {
+        "engagement_intention": {
+          "code": "K.P.EICC",
+          "title": "Engagement & Intention for Comprehension & Composition",
+          "description": "Students develop personal and academic identities as readers and writers, approaching texts for a variety of tasks and purposes and engaging in reading and writing processes in order to deepen comprehension and strengthen composition.",
+          "standards": {
+            "reader_writer_identity": {
+              "code": "K.P.EICC.1",
+              "title": "Reader & Writer Identity",
+              "description": "Build an identity as a reader and writer, developing a repertoire of resources and tools to continuously expand participation as an active consumer and producer of texts.",
+              "sub_standards": {
+                "a": "Generate, understand, monitor, and discuss personal and academic reading and writing goals, revising as appropriate. (I/C)",
+                "b": "Discuss or write about personal and academic reading and writing preferences, referring to specific techniques, topics, modes, and genres that resonate most. (I/C)",
+                "c": "Select, read, and write texts of personal interest and academic relevance to grade-level texts and topics. (I/C)",
+                "d": "Build a repertoire of comprehension and composition skills, strategies, and techniques, drawing from them as needed to aid the interpretation and construction of texts. (I/C)",
+                "e": "Participate in a community of readers and writers by developing group norms, discussing texts, sharing individual writing, listening as others share their writing, and offering and responding to feedback. (I/C)",
+                "f": "Develop independence and autonomy as a reader and writer. (I/C)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "language": {
+      "code": "K.L",
+      "title": "Language (L)",
+      "description": "Students learn and apply the structures and conventions of standard English. Students observe and analyze how grammar works in reading and writing. Students build vocabularies and determine word meanings as they relate to reading and writing.",
+      "big_ideas": {
+        "grammar_conventions": {
+          "code": "K.L.GC",
+          "title": "Grammar Conventions",
+          "description": "Students observe, analyze, and use the structures and conventions of Standard English grammar, usage, and mechanics as they interpret and construct texts.",
+          "standards": {
+            "grammar_usage_mechanics": {
+              "code": "K.L.GC.1",
+              "title": "Grammar, Usage, & Mechanics",
+              "description": "Learn and apply conventions of Standard English grammar, usage, and mechanics to aid the comprehension of texts and to communicate clearly in written and spoken language.",
+              "sub_standards": {
+                "1": "Usage: Use nouns and verbs to share complete thoughts when speaking. (Introduce, Master)",
+                "2": "Usage: Form and use singular and plural nouns when speaking. (Introduce, Master)",
+                "3": "Usage: Use interrogatives to ask questions when speaking. (Introduce, Master)",
+                "4": "Mechanics: Capitalize the first word of a sentence and the pronoun I. (Introduce, Master)",
+                "5": "Grammar: Form regular plural nouns by adding -s or -es. (Introduce)",
+                "6": "Grammar: Form and use verbs by adding -ing, -ed, or -s. (Introduce)",
+                "7": "Grammar: Use action verbs. (Introduce)",
+                "8": "Grammar: Use adjectives and adverbs. (Introduce)",
+                "9": "Grammar: Use common and proper nouns. (Introduce)",
+                "10": "Grammar: Form and use the simple verb tenses. (Introduce)",
+                "11": "Usage: Use determiners (articles, possessive determiners, demonstrative adjectives). (Introduce)",
+                "12": "Mechanics: Capitalize proper nouns. (Introduce)",
+                "13": "Mechanics: Use periods, exclamation marks, and question marks at the end of sentences. (Introduce)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "texts": {
+      "code": "K.T",
+      "title": "Texts (T)",
+      "description": "Students grow in their learning as they purposefully engage with texts.",
+      "big_ideas": {
+        "techniques": {
+          "code": "K.T.T",
+          "title": "Techniques",
+          "description": "Students identify and use narrative, expository, opinion, and poetic techniques as they interpret and construct a variety of texts.",
+          "standards": {
+            "narrative_techniques": {
+              "code": "K.T.T.1",
+              "title": "Narrative Techniques",
+              "description": "Identify and use narrative techniques to shape understanding.",
+              "sub_standards": {
+                "a": "Identify techniques used to craft stories, including characters, setting, and major events.",
+                "b": "This progression begins in 1st grade.",
+                "c": "With adult support, demonstrate an understanding of the central message, lesson, or moral of the story based on the words and actions of the main characters.",
+                "d": "With adult support, compare and contrast characters and their experiences in stories across diverse cultures.",
+                "e": "Use a combination of drawing, labeling, writing, and dictating to create a text with narrative techniques (e.g., characters, setting, events) told in the order in which they occurred."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

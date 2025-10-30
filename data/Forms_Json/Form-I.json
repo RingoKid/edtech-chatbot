@@ -1,0 +1,81 @@
+{
+  "form_i": {
+    "title": "Vocabulary & Sentence Structure Lesson Framework",
+    "structure_overview": "This is FORM I",
+    "major_sections": [
+      "Standards",
+      "Objectives",
+      "Materials",
+      "Detailed Scripted Vocabulary & Sentence Structure Lesson"
+    ],
+    "subsections_of_vocabulary_sentence_structure_lesson": {
+      "A_review_connect": {
+        "name": "Review & Connect",
+        "purpose": "The purpose of this section of the lesson is to quickly review vocabulary from a unit of study and specific sentence structures children have used to express those concepts and vocabulary. Do not introduce new vocabulary or concepts. The goal is to have children apply vocabulary that they have been directly taught using sentence structures.",
+        "label": "A"
+      },
+      "B_model_explain_engage": {
+        "name": "Model, Explain & Engage",
+        "purpose": "The purpose of this section is to introduce and reinforce a targeted sentence structure through modeling and providing clear examples, while connecting to genre purpose and incorporating children's vocabulary associated with what they are reading and writing about in their unit of study.",
+        "label": "B"
+      },
+      "C_guided_practice": {
+        "name": "Guided Practice",
+        "purpose": "The purpose of this section of the lesson is to guide children in applying the targeted sentence structure to express an idea that relates to topic and genre, incorporating their vocabulary words.",
+        "label": "C"
+      },
+      "D_application": {
+        "name": "Application",
+        "purpose": "The purpose of this section of the lesson is to provide children further practice using the new sentence structure to express their ideas and incorporate vocabulary from a unit of study.",
+        "label": "D"
+      },
+      "E_wrap_up": {
+        "name": "Wrap-Up",
+        "purpose": "The purpose of this section is to remind children about the target structure, how it's different from previously learned structures and why they are important to the type of genre you are reading and writing in class.",
+        "label": "E"
+      }
+    },
+    "components_of_scripted_lesson": {
+      "note": "COMPONENTS of all subsections of Section 4 'Vocabulary & Sentence Structure Scripted Lesson':",
+      "explanation": {
+        "definition": "AI explains the sections of the lesson",
+        "formatting": "Set apart in brackets [ ]"
+      },
+      "teacher_script": {
+        "definition": "Detailed example of what the teacher actually says as a rehearsal of the lesson",
+        "formatting": "Set apart with #"
+      },
+      "level_indicators": {
+        "definition": "Activities will be categorized as High, Middle, Low. For every activity indicate the child level ability",
+        "formatting": "Set apart with +Level: in italics",
+        "levels": {
+          "low": "an activity for children with low ability level",
+          "middle": "an activity for children with middle ability level",
+          "high": "an activity for children with high ability level"
+        }
+      },
+      "child_response": {
+        "definition": "Expected child response within the script",
+        "formatting": "will be set off in parentheses ( )"
+      },
+      "teacher_does": {
+        "definition": "What the teacher is doing within the script",
+        "formatting": "will be set off in curly brackets { }, also called braces"
+      },
+      "adaptation": {
+        "definition": "AI prompts teacher request for activity examples, modifications according to child ability level, and/or modeling",
+        "formatting": "Set apart with *",
+        "adaptation_prompt": "*Adaptation: Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high),"
+      },
+      "modification": {
+        "definition": "AI provides an organized list of activity examples and/or a modified teacher script # in response to teacher request",
+        "formatting": "Set apart with ^",
+        "response_to": "teacher request",
+        "options": [
+          "Provide activity example",
+          "Provide modification: Low, Middle, High"
+        ]
+      }
+    }
+  }
+}

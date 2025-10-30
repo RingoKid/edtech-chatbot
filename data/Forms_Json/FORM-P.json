@@ -1,0 +1,160 @@
+{
+  "form_p": {
+    "title": "Suggested Activities For Idea Generation & Organization",
+    "review_connect_activities": {
+      "note": "All of these activities would be appropriate for all levels. The content of discussions and complexity of the skill will increase as children advance in their writing skills.",
+      "activities": [
+        {
+          "name": "Concept Picture Walk",
+          "description": "Children revisit key images from a shared text, anchor chart, or concept map. The teacher guides students to recall facts using questions like 'What do you see?' or 'What do you remember?' Children generate ideas by connecting pictures to unit concepts. This supports idea generation by activating background knowledge through visuals and guided discussion."
+        },
+        {
+          "name": "Video Clip + Think-Pair-Share",
+          "description": "Children view a short video clip related to the unit topic and connected to texts being read (e.g., penguins in the cold). The teacher pauses to ask targeted questions that prompt children to think and talk with a partner. This helps them recall facts, build vocabulary, and connect new information to class learning."
+        },
+        {
+          "name": "Genre Song or Chant",
+          "description": "Children sing a repetitive, upbeat chant set to the familiar melody of 'If You're Happy and You Know It.' For example, for informational writing, the chant could be:",
+          "example_chant": [
+            "If it's real and it's true, it's a fact (clap, clap)",
+            "If it teaches something new, it's a fact (clap, clap)",
+            "If you're writing to explain,",
+            "And your facts are super plain,",
+            "Then you're working in the information lane! (clap, clap)"
+          ],
+          "visual_support": "The teacher pairs the chant with visuals (e.g., a picture of a nonfiction book, animals, or diagrams) and gestures (e.g., pointing to the brain for 'think,' clapping for rhythm, miming writing or reading). This multisensory approach helps children internalize the purpose and structure of the genre through rhythm, movement, and repetition."
+        },
+        {
+          "name": "Home-to-School Sharing Circle",
+          "description": "Children connect personal or family experiences to the topic of study (e.g., sharing what they wear in winter). The teacher helps children link these experiences to the genre and unit content (e.g., 'Just like you wear coats, penguins have feathers to stay warm.'). This builds relevance and supports idea development."
+        },
+        {
+          "name": "Genre Poster Sort",
+          "description": "Children help sort sentence strips or images into categories (e.g., informational or narrative) based on what they learned about the features of each genre. This supports genre recognition and reinforces the kind of writing children will produce."
+        }
+      ]
+    },
+    "model_explain_engage_activities": {
+      "instructions": [
+        "First explain or define in easy to understand terms the skill or concept",
+        "If appropriate, provide examples and non-examples of the concept",
+        "Explain and Engage means that the teacher provides explicit definitions and detailed examples to demonstrate a targeted skill",
+        "Examples are important and should be precise in demonstrating a concept or skill in order to dispel misconceptions. (e.g., what is and is not a topic sentence/ what is or is not a relevant detail) Use Engleman Theory of Learning and Form Z when providing examples and non-examples"
+      ],
+      "engelmann_theory_application": {
+        "concept": "Cohesive devices link ideas and sentences so that writing flows and ideas connect logically",
+        "positive_examples": [
+          {
+            "example": "Penguins have thick feathers, so they stay warm in cold places.",
+            "explanation": "Shows causal connection with so"
+          },
+          {
+            "example": "Penguins swim fast, but they waddle on land.",
+            "explanation": "Contrast is clearly marked with but"
+          },
+          {
+            "example": "First, the penguin dives into the water. Then, it catches a fish.",
+            "explanation": "Sequence is linked with first and then"
+          },
+          {
+            "example": "Penguins have flippers. Also, they have webbed feet.",
+            "explanation": "Additional information is added using also"
+          }
+        ],
+        "negative_examples": [
+          {
+            "example": "Penguins have thick feathers. They stay warm in cold places.",
+            "explanation": "No linking word; ideas are related but not explicitly connected"
+          },
+          {
+            "example": "Penguins swim fast. They waddle on land.",
+            "explanation": "Contrast is not made clear without a device like but or however"
+          },
+          {
+            "example": "The penguin catches a fish. The penguin dives into the water.",
+            "explanation": "The sequence is reversed and lacks words like first, then, or after to show order"
+          },
+          {
+            "example": "Penguins have flippers. They live in the snow.",
+            "explanation": "No clear connection between ideas; lacking a cohesive device that links function to habitat (e.g., because or so)"
+          }
+        ]
+      },
+      "modeling_requirement": "Model means for the teacher to demonstrate exactly what cognitive processes students must go through to complete a task or activity that builds a skill. The modeling should directly relate to what children are doing in their guided practice. Provide for teachers step by step modeling that is broken down by component steps steps."
+    },
+    "guided_practice_activities": {
+      "description": "Guided practice has children engage in a cognitive process and use a particular skill or skills to complete a task in sequential chunks or steps that is monitored by the teacher. The teacher can provide feedback and the child can practice with teacher support. The teacher gradually intensifies what the child is doing by releasing control so that the child is doing more on their own until they can apply independently. A modification of any of these activities could be breaking down steps in smaller components for children who need more support or increasing the complexity of the task so that children are engaging with multiple components of the task at once for children who are advanced.",
+      "activities": [
+        {
+          "name": "Sentence Stem Topic Sentence",
+          "level": "low",
+          "description": "Children are given a sentence starter (e.g., 'Penguins can survive the cold because...') and guided to complete it using information from shared readings or discussions. The teacher provides visual aids, oral rehearsal, and modeled responses to help children form complete topic sentences."
+        },
+        {
+          "name": "Two Topic Sentences – Match the Details Level 1",
+          "level": "low",
+          "description": "Children are shown two different topic sentences with clearly distinct subjects (e.g., 'Penguins' bodies help them survive in their habitat' and 'Tigers live in hot places like the jungle') along with three or four supporting details. With teacher guidance, children match the details to the correct topic sentence using images, shared reading content, or sorting cards."
+        },
+        {
+          "name": "Two Topic Sentences – Match the Details Level 2",
+          "level": "middle",
+          "description": "Children are shown two topic sentences about the same subject but with different purposes (e.g., 'Penguins' bodies help them survive in the cold' and 'Penguins live in groups to stay safe') and are given three or four related supporting details. With teacher support, they determine which detail best fits each topic sentence by reasoning through the specific focus of each sentence."
+        },
+        {
+          "name": "Two Topic Sentences – Match the Details Level 3",
+          "level": "high",
+          "description": "Children are shown two closely related topic sentences (e.g., 'Penguins use teamwork to survive' and 'Penguins are built for life in the ocean') and are given four or more supporting details that require thoughtful sorting. With teacher prompting, children justify their matches using because-statements and generate an additional sentence that fits one of the topic sentences."
+        },
+        {
+          "name": "Note-Taking of Relevant Textual Details",
+          "level": "low-middle",
+          "description": "Children revisit a shared text and write simple words to and draw representing pictures to take notes on key genre-specific details: Facts for informational text, Supporting details for opinion and response to reading texts, Problem and cause/effect of the problem for problem-solution texts, Steps or events for sequencing texts, Story events for narrative texts. The teacher provides visual support and models how to convert what they hear or see into simple notes."
+        },
+        {
+          "name": "Relevant vs. Irrelevant Match Level 1",
+          "level": "low",
+          "description": "Children are given a clear topic sentence (e.g., 'Penguins live in cold places') and four to six details. Some are clearly off-topic (e.g., 'Tigers live in the jungle'), and others are directly related (e.g., 'Penguins slide on their bellies over ice'). With teacher guidance and visual supports, children sort the details into relevant and irrelevant categories to reinforce paragraph unity using distinct and unrelated content."
+        },
+        {
+          "name": "Circle the Cohesion – Words That Connect Level 1",
+          "level": "low",
+          "description": "Children are presented with a short, teacher-written sentence pair or very simple paragraph using basic cohesive words (e.g., and, but, then). The teacher reads the text aloud with clear expression and models how these words help ideas stick together. Using a shared chart or sentence strip, the teacher prompts children to circle or highlight each cohesive word together as a group."
+        },
+        {
+          "name": "Fact vs. Fantasy Level 1",
+          "level": "low",
+          "description": "Children are shown two choices at a time—either through images, sentence cards, or oral storytelling. One option reflects a factual detail about a real-world animal, place, or process, and the other represents an imaginative or fantasy element. The teacher reads both aloud, then prompts: 'Which one could really happen in the world? Which one is just for fun or make-believe?' Children point, circle, or sort the correct choice with guidance."
+        },
+        {
+          "name": "Fact vs. Opinion Level 1",
+          "level": "low",
+          "description": "The teacher presents children with two simple sentences at a time—one factual and one opinion-based—paired with visuals and read aloud in a shared format. The teacher models the difference using sentence stems such as 'A fact is something that is true and can be proven' and 'An opinion is how someone feels or what they like.' Children are prompted to choose which sentence is the fact and which is the opinion."
+        }
+      ]
+    },
+    "application_practice_activities": {
+      "principles": [
+        "Application practice activities should be the same activity used in guided practice but the children do the task independently or apply the skill process to their own writing",
+        "For application, children either work with a partner/small group or they complete the task independently",
+        "Application activities can also be revised. For example, after doing the Build the Flow Level 3 task during guided practice, Students are given back their original writing pieces and asked to specifically revise for cohesive devices"
+      ],
+      "revision_principles": [
+        "Since revising is a new activity –teachers need to model the steps children are doing as the apply the skill/concept",
+        "Revising should always be focused on one specific skill as the regenerate an idea with genre in mind (organization) in early childhood",
+        "Revising is not Editing. When revising children should NOT be editing as well",
+        "Teachers can support struggling writers through revision processes in small groups. Teachers can provide prompts and scaffolds (word banks, sentence stems, visuals). Teachers can work with struggling students in small groups to help them apply but the application is more guided. More guidance means that the teacher has the child do one step, and checks it, then moves on to another step. To modify any activity, break the task down further into its component parts, according to theories of working and long-term memory. USE FORM Z for guidance"
+      ],
+      "example_progression": {
+        "guided_practice_example": {
+          "activity": "Build the Flow – Rearranging for Cohesion Level 3: Fill the Gaps – Writing Cohesive Links",
+          "description": "Children are given a paragraph with key cohesive elements missing. Some sentences are in the correct order, but the logical flow between them is unclear. Students are tasked with adding their own connecting phrases or transitional words (e.g., First, Then, Because of this, Although) in the blank spaces to improve cohesion.",
+          "example_text": "The penguin is cold. ___________, it dives into the water to catch fish. ___________, it uses its wings to swim fast. It eats the fish quickly. ___________, it pops back up onto the ice.",
+          "student_response": "The penguin is cold. Still, it dives into the water to catch fish. Then, it uses its wings to swim fast. It eats the fish quickly. After that, it pops back up onto the ice."
+        },
+        "application_example": {
+          "description": "For application, children either work with a partner/small group or they complete the task independently. The teacher would give children a new paragraph with blanks and the child would do it himself. However, Application activities can also be revised. For example, after doing the Build the Flow Level 3 task during guided practice, Students are given back their original writing pieces and asked to specifically revise for cohesive devices."
+        }
+      }
+    }
+  }
+}
