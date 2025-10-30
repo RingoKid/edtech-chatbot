@@ -1,12 +1,23 @@
-import os
-import boto3
-from langgraph.prebuilt import create_react_agent
-from langgraph_dynamodb_checkpoint import DynamoDBSaver
-from app.graph.context import Context
-from app.config import settings
+from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+import aiosqlite
+from app.graph.state import GraphState
+from app.graph.nodes import (
+    greeting_node,
+    main_router,
+    clarification_node,
+    setup_handwriting,
+    setup_vocabulary,
+    setup_idea_generation,
+    collect_parameters_node,
+    wait_for_user_input,
+    stub_generate_lesson_node,
+    route_from_main_router,
+    route_parameter_collection
+)
 
 
-def create_graph():
+async def create_graph():
     """
     Factory function to create the graph with proper dependency injection.
     This ensures the graph is created with all dependencies properly initialized.
@@ -14,39 +25,62 @@ def create_graph():
     Returns:
         CompiledStateGraph: The compiled LangGraph agent
     """
-    # Get the model from context
-    context = Context()
-    model = context.model
+    # Use AsyncSqliteSaver for persistent checkpointing across runs
+    # This stores conversation state in a SQLite database file
+    conn = await aiosqlite.connect("checkpointer.sqlite")
+    checkpointer = AsyncSqliteSaver(conn)
+    await checkpointer.setup()
 
-    system_prompt = "You are a helpful AI teaching assistant for educators."
+    # Create the state graph
+    graph = StateGraph(GraphState)
 
-    # Configure boto3 to use the local DynamoDB endpoint
-    # The DynamoDBSaver creates its own boto3 resource internally,
-    # so we need to configure the default boto3 session before instantiation
-    boto3.setup_default_session(
-        region_name=settings.aws_region,
-        aws_access_key_id=settings.aws_access_key_id,
-        aws_secret_access_key=settings.aws_secret_access_key
+    # Add nodes
+    graph.add_node("greeting_node", greeting_node)
+    graph.add_node("main_router", main_router)
+    graph.add_node("clarification", clarification_node)
+    graph.add_node("setup_handwriting", setup_handwriting)
+    graph.add_node("setup_vocabulary", setup_vocabulary)
+    graph.add_node("setup_idea_generation", setup_idea_generation)
+    graph.add_node("collect_parameters", collect_parameters_node)
+    graph.add_node("wait_for_input", wait_for_user_input)
+    graph.add_node("generate_lesson", stub_generate_lesson_node)
+
+    # Add edges
+    graph.set_entry_point("greeting_node")
+    graph.add_edge("greeting_node", "main_router")
+    graph.add_conditional_edges(
+        "main_router",
+        route_from_main_router,
+        {
+            "handwriting": "setup_handwriting",
+            "vocabulary": "setup_vocabulary",
+            "idea_generation": "setup_idea_generation",
+            "clarification": "clarification"  # Route to clarification node
+        }
     )
-
-    # Set the endpoint URL via environment variable (boto3 will pick this up)
-    if settings.dynamodb_endpoint_url:
-        os.environ['AWS_ENDPOINT_URL_DYNAMODB'] = settings.dynamodb_endpoint_url
-
-    # Initialize the DynamoDB checkpointer
-    # The saver will automatically create the table if it does not exist
-    checkpointer = DynamoDBSaver(
-        table_name=os.environ.get("DYNAMODB_TABLE", "LangGraphReactAgentCheckpoints")
+    graph.add_edge("clarification", "main_router")  # Loop back to main_router after clarification
+    
+    # Add edges for parameter collection flow
+    graph.add_edge("setup_handwriting", "collect_parameters")
+    graph.add_edge("setup_vocabulary", "collect_parameters")
+    graph.add_edge("setup_idea_generation", "collect_parameters")
+    graph.add_conditional_edges(
+        "collect_parameters",
+        route_parameter_collection,
+        {
+            "wait_for_input": "wait_for_input",
+            "generate_lesson": "generate_lesson"
+        }
     )
+    graph.add_edge("wait_for_input", "collect_parameters")  # Loop back after user input
+    graph.add_edge("generate_lesson", END)
 
-    # Pass the checkpointer to the prebuilt agent factory function
-    return create_react_agent(
-        model=model,
-        tools=[],
-        checkpointer=checkpointer,
-        prompt=system_prompt
-    )
+    # Compile the graph with checkpointer and interrupt_after
+    # Interrupt after greeting_node, clarification, and wait_for_input
+    # wait_for_input is where we pause to wait for user's parameter responses
+    return graph.compile(checkpointer=checkpointer, interrupt_after=["greeting_node", "clarification", "wait_for_input"])
 
 
 # Create the graph instance at module level for langgraph.json
-graph = create_graph()
+# Note: This needs to be called with await in an async context
+graph = create_graph

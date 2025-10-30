@@ -322,3 +322,5 @@ public
 # Vite
 dist-ssr
 *.tsbuildinfo
+
+.DS_Store
