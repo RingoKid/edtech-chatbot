@@ -5,7 +5,6 @@ Routes teacher queries to specialized bots based on intent classification.
 import time
 from typing import Dict, Any, Optional
 from langraph.graph import StateGraph, END, START
-from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.messages import HumanMessage, AIMessage
 
 from app.chatbot.routing.router_state import RoutingState
@@ -16,6 +15,7 @@ from app.chatbot.specialists.ideas.graph import run_ideas_bot
 from app.services.form_retrieval import form_retrieval_service
 from app.schemas.intent import IntentType
 from app.config import settings
+from app.chatbot.checkpointer import get_shared_checkpointer
 
 # Import general bot for unclear queries
 from app.chatbot.specialists.general.bot import GeneralBot
@@ -572,53 +572,23 @@ def create_routing_graph():
     graph.add_edge("execute_ideas_bot", END)
     graph.add_edge("execute_general_bot", END)
     
-    # Compile the graph
-    print("⚙️ Compiling graph...")
-    compiled_graph = graph.compile()
-    
+    # Compile the graph with shared checkpointer
+    print("⚙️ Compiling graph with shared checkpointer...")
+    shared_checkpointer = get_shared_checkpointer()
+    compiled_graph = graph.compile(checkpointer=shared_checkpointer)
+
     print("✅ Master Routing Graph compiled successfully!")
     print("📊 Graph structure:")
     print("   START -> classify_intent -> [clarification check] -> route_to_bot -> [specialist] -> END")
     print("   Specialists: handwriting, vocabulary, ideas, general")
     print("   Automatic fallback to general bot for low confidence or errors")
-    
+    print("   💾 Memory: Using shared checkpointer for conversation persistence across all bots")
+
     return compiled_graph
 
-# Create TWO graph instances:
-# 1. For LangGraph Studio (no checkpointer)
+# Create single graph instance with shared checkpointer
+# This is used by both LangGraph Studio AND the API
 routing_graph = create_routing_graph()
-
-# 2. For API with conversation memory (with checkpointer)
-print("🗄️ Creating API graph with SqliteSaver checkpointer...")
-api_checkpointer = SqliteSaver.from_conn_string(":memory:")  # In-memory SQLite for persistence
-routing_graph_with_memory = create_routing_graph()
-# Re-compile with checkpointer for API use
-graph_builder = StateGraph(RoutingState)
-# Copy all nodes and edges (reuse the same structure)
-for node_name in ["classify_intent", "route_to_bot", "execute_handwriting_bot", "execute_vocabulary_bot", "execute_ideas_bot", "execute_general_bot"]:
-    if node_name == "classify_intent":
-        graph_builder.add_node(node_name, classify_intent_node)
-    elif node_name == "route_to_bot":
-        graph_builder.add_node(node_name, route_to_bot_node)
-    elif node_name == "execute_handwriting_bot":
-        graph_builder.add_node(node_name, execute_handwriting_bot_node)
-    elif node_name == "execute_vocabulary_bot":
-        graph_builder.add_node(node_name, execute_vocabulary_bot_node)
-    elif node_name == "execute_ideas_bot":
-        graph_builder.add_node(node_name, execute_ideas_bot_node)
-    elif node_name == "execute_general_bot":
-        graph_builder.add_node(node_name, execute_general_bot_node)
-
-graph_builder.add_edge(START, "classify_intent")
-graph_builder.add_conditional_edges("classify_intent", should_clarify, {"route_to_bot": "route_to_bot", "execute_general_bot": "execute_general_bot"})
-graph_builder.add_conditional_edges("route_to_bot", route_to_specialist, {"execute_handwriting_bot": "execute_handwriting_bot", "execute_vocabulary_bot": "execute_vocabulary_bot", "execute_ideas_bot": "execute_ideas_bot", "execute_general_bot": "execute_general_bot"})
-graph_builder.add_edge("execute_handwriting_bot", END)
-graph_builder.add_edge("execute_vocabulary_bot", END)
-graph_builder.add_edge("execute_ideas_bot", END)
-graph_builder.add_edge("execute_general_bot", END)
-
-routing_graph_with_memory = graph_builder.compile(checkpointer=api_checkpointer)
-print("✅ API graph with memory compiled successfully!")
 
 # Function to run the complete routing system
 async def run_educational_chatbot(teacher_query: str, teacher_id: str = "teacher_001", session_id: str = "session_001"):
@@ -645,7 +615,7 @@ async def run_educational_chatbot(teacher_query: str, teacher_id: str = "teacher
         # Get existing conversation state from checkpointer if available
         existing_state = None
         try:
-            existing_state = await routing_graph_with_memory.aget_state(config)
+            existing_state = await routing_graph.aget_state(config)
         except Exception as e:
             print(f"⚠️ No existing state found (this is normal for first message): {e}")
 
@@ -682,8 +652,8 @@ async def run_educational_chatbot(teacher_query: str, teacher_id: str = "teacher
             "previous_intents": []
         }
 
-        # Use the graph WITH checkpointer for conversation memory
-        final_state = await routing_graph_with_memory.ainvoke(initial_state, config)
+        # Use the graph WITH shared checkpointer for conversation memory
+        final_state = await routing_graph.ainvoke(initial_state, config)
         return final_state
         
     except Exception as e:

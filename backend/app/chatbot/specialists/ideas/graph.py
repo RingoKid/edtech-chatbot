@@ -8,6 +8,7 @@ from app.chatbot.specialists.ideas.state import IdeasState
 from app.chatbot.specialists.ideas.nodes import ideas_nodes
 from app.config import settings
 from langchain_core.messages import AIMessage
+from app.chatbot.checkpointer import get_shared_checkpointer
 
 # Initialize LangSmith tracing if configured
 if settings.langsmith_api_key and settings.langsmith_tracing:
@@ -245,19 +246,21 @@ def create_ideas_graph():
     # Terminal error node
     graph.add_edge("end_with_error", END)
 
-    # Compile the graph
-    print("⚙️ Compiling graph...")
-    compiled_graph = graph.compile()
+    # Compile the graph with shared checkpointer
+    print("⚙️ Compiling graph with shared checkpointer...")
+    shared_checkpointer = get_shared_checkpointer()
+    compiled_graph = graph.compile(checkpointer=shared_checkpointer)
 
     print("✅ Ideas Bot Graph compiled successfully!")
     print("📊 Graph structure:")
-    print("   START -> analyze_query -> retrieve_forms -> generate_response -> quality_check -> follow_up -> END")
+    print("   START -> analyze_query -> retrieve_forms -> generate_response -> END (quality check disabled)")
     print("   Error handling: handle_error -> end_with_error -> END")
-    print("   Retry logic: Up to 3 retries for errors, up to 2 retries for low-quality responses")
+    print("   Retry logic: Up to 3 retries for errors")
+    print("   💾 Memory: Using shared checkpointer for conversation persistence across all bots")
 
     return compiled_graph
 
-# Create the graph instance
+# Create the graph instance with shared checkpointer
 ideas_graph = create_ideas_graph()
 
 # Function to run the graph with a teacher's query
