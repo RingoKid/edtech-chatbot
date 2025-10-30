@@ -131,6 +131,23 @@ class GraphState(TypedDict):
 
 **Rationale:** Centralized form loading with caching improves performance. The singleton pattern ensures forms are loaded once per application lifecycle.
 
+#### Forms Directory and Configuration
+
+- Default forms directory: `backend/data/Forms_Json`
+- Override via environment variable `FORMS_DIR` (absolute or project-relative path)
+- Recommendation: avoid special characters like `&` in filenames (prefer underscores). Example: use `Example_Handwriting_Spelling.json` instead of `Example_Handwriting&Spelling.json`.
+
+Example resolution strategy (conceptual):
+
+```python
+from pathlib import Path
+import os
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_FORMS_DIR = PROJECT_ROOT / "backend" / "data" / "Forms_Json"
+FORMS_DIR = Path(os.getenv("FORMS_DIR", str(DEFAULT_FORMS_DIR))).resolve()
+```
+
 ---
 
 ### 3. File: `app/services/prompt_builder.py` (NEW)
@@ -161,6 +178,36 @@ class GraphState(TypedDict):
 **Implementation:** See full code in appendix.
 
 **Rationale:** The `PromptBuilder` encapsulates all logic for assembling prompts. It dynamically selects forms and sections based on task/query type.
+
+#### Prompt Compaction and Metadata
+
+- Include only sections relevant to the current task/query type
+- Cap included form fragments to a safe prompt budget (approx 8–12k chars total)
+- For activity banks, include top-K items per section (e.g., K=3–5)
+- Track the following metadata for traceability:
+  - `forms_used`: list of form names included
+  - `sections_included`: list of section identifiers included
+  - `letters_included`: for handwriting, which letters were targeted
+  - `token_estimate`: rough character/token count of the final prompt
+  - `truncations`: which sources/sections were truncated and by how much
+
+---
+
+### 3.5. Model Routing (Context)
+
+Provide a centralized model selection mechanism so nodes can request the best model for a task without hard-coding providers.
+
+Contract
+- `Context.get_model(task_name: str, query_type: Optional[str] = None, demand: str = "balanced") -> Model`
+- Internally use a `ModelRouter` that maps `(task_name, query_type, demand)` to a provider+model configuration
+
+Usage in node
+- `model = context.get_model(task_name, collected_params.get("query_type"))`
+- Prefer `model.with_structured_output(schema, strict=False)` when available
+- Fallback: JSON-mode generation + robust parsing; on failure surface a helpful error to the user
+
+Testing
+- Allow injecting a `FakeModel` via `Context` to keep unit tests offline and deterministic
 
 ---
 
@@ -227,6 +274,12 @@ LESSON_SCHEMA_REGISTRY = {
 ```
 
 **Rationale:** Structured output schemas ensure the LLM generates properly formatted lessons with automatic validation.
+
+#### Versions and Typing Notes
+
+- Python version: ≥ 3.9
+- Pydantic: v2 (uses `model_dump`)
+- Prefer Enums/Literals for task and query types to reduce typos and improve validation; keep lesson body sections as `str` with guidance in prompts to render bullet-like formatting
 
 ---
 
@@ -366,6 +419,18 @@ def format_lesson_for_display(lesson: dict, task_name: str) -> str:
 
 **Rationale:** Separating prompt building from generation allows for better testing and debugging. The structured output ensures consistent lesson format.
 
+#### Imports and Behavior Notes
+
+- Imports (adjust to your project equivalents):
+  - `from app.core.context import Context`
+  - `from langchain_core.messages import AIMessage`
+  - `from langgraph.graph import END`
+- Validate presence of `task_name` and required parameters before building the prompt; if missing, return a friendly message and route back to parameter collection
+- Replace `print` with structured logging (or Python `logging`); keep internal logs separate from user-visible messages
+- Ensure returned messages are appended per the `add_messages` contract, not overwriting conversation history
+- Obtain model via `Context.get_model(task_name, collected_params.get("query_type"), demand="balanced")`
+- Use a safe structured-output invocation with fallback (see below)
+
 ---
 
 ### 6. File: `app/graph/graph.py`
@@ -423,6 +488,22 @@ async def create_graph():
 ```
 
 **Rationale:** Simpler flow with one less node. The `generate_lesson_node` handles both prompt building and lesson generation internally.
+
+---
+
+### Model Routing (Context)
+
+Provide a central `Context` for model access with an internal `ModelRouter`:
+
+- API: `Context.get_model(task_name: str, query_type: Optional[str] = None, demand: str = "balanced") -> Model`
+- Routing: (task, query) → provider/model config; configurable via env or a small mapping
+- Node usage: `model = context.get_model(task_name, collected_params.get("query_type"))`
+
+Structured Output Fallback
+
+- Primary: `model.with_structured_output(schema, strict=False)`
+- Fallback: JSON-mode + robust parse; on failure, return a helpful user message and log the internal error
+- Testing: allow injection of a `FakeModel` via Context to avoid network access
 
 ---
 
@@ -490,6 +571,14 @@ docker compose exec backend pytest tests/ --cov=app.services --cov=app.utils --c
 ```
 
 *(Refer to `FEATURE SPEC: 000` for full Docker execution workflow)*
+
+#### Test Fixtures and Mocks
+
+- Set `FORMS_DIR` in tests to point to a temporary directory with small JSON fixtures
+- Ensure `FormLoader.clear_cache()` is called between tests that mutate forms
+- Provide a `FakeModel` and/or mock `Context.get_model` so tests do not hit the network
+- Add tests that verify metadata presence (`forms_used`, `sections_included`, `token_estimate`, `truncations`) and compaction behavior
+- Add a test to assert message appending preserves prior conversation content
 
 ---
 
@@ -609,40 +698,47 @@ Utility for loading and caching JSON form templates.
 import json
 from pathlib import Path
 from typing import Dict, Any, Optional
-from functools import lru_cache
+import os
 
 
 class FormLoader:
     """Singleton class for loading and caching JSON form templates."""
     _instance: Optional['FormLoader'] = None
     _forms_cache: Dict[str, Dict[str, Any]] = {}
-    _forms_dir: Path = Path(__file__).parent.parent.parent.parent / "data" / "Forms_Json"
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(FormLoader, cls).__new__(cls)
         return cls._instance
-    
+
+    @property
+    def forms_dir(self) -> Path:
+        """Resolve forms directory from env or default to backend/data/Forms_Json."""
+        project_root = Path(__file__).resolve().parents[3]
+        default_dir = project_root / "backend" / "data" / "Forms_Json"
+        env_dir = os.getenv("FORMS_DIR")
+        return Path(env_dir).resolve() if env_dir else default_dir.resolve()
+
     def load_form(self, form_name: str) -> Dict[str, Any]:
         """Load a specific form by name with caching."""
         if form_name in self._forms_cache:
             return self._forms_cache[form_name]
-        
-        form_path = self._forms_dir / f"{form_name}.json"
-        
+
+        form_path = self.forms_dir / f"{form_name}.json"
+
         if not form_path.exists():
             raise FileNotFoundError(f"Form file not found: {form_path}")
-        
+
         with open(form_path, 'r', encoding='utf-8') as f:
             form_data = json.load(f)
-        
+
         self._forms_cache[form_name] = form_data
         return form_data
-    
+
     def load_multiple_forms(self, form_names: list[str]) -> Dict[str, Dict[str, Any]]:
         """Load multiple forms at once."""
         return {name: self.load_form(name) for name in form_names}
-    
+
     def get_forms_for_task(self, task_type: str, query_type: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
         """Get all relevant forms for a specific task and query type."""
         if task_type == "Handwriting":
@@ -653,32 +749,32 @@ class FormLoader:
             return self._get_idea_generation_forms(query_type)
         else:
             raise ValueError(f"Unknown task type: {task_type}")
-    
+
     def _get_handwriting_forms(self, query_type: Optional[str]) -> Dict[str, Dict[str, Any]]:
         """Get forms specific to handwriting lessons."""
         base_forms = ["Form-A", "Form-B", "Form-C", "Form-F", "Form-G", "Form-H"]
-        
+
         if query_type == "letter formation":
-            forms = base_forms + ["Form-D", "Example_Handwriting&Spelling"]
+            forms = base_forms + ["Form-D", "Example_Handwriting_Spelling"]
         elif query_type == "fine motor":
             forms = base_forms + ["Form-D"]
         elif query_type == "spelling":
             forms = base_forms + ["Form-D"]
         elif query_type == "assessment":
-            forms = base_forms + ["Example_Handwriting&Spelling"]
+            forms = base_forms + ["Example_Handwriting_Spelling"]
         else:
-            forms = base_forms + ["Form-D", "Example_Handwriting&Spelling"]
-        
+            forms = base_forms + ["Form-D", "Example_Handwriting_Spelling"]
+
         return self.load_multiple_forms(forms)
-    
+
     def _get_vocabulary_forms(self, query_type: Optional[str]) -> Dict[str, Dict[str, Any]]:
         """Get forms specific to vocabulary lessons."""
         return self.load_multiple_forms(["Form-A", "Form-K", "Form-L"])
-    
+
     def _get_idea_generation_forms(self, query_type: Optional[str]) -> Dict[str, Dict[str, Any]]:
         """Get forms specific to idea generation lessons."""
         return self.load_multiple_forms(["Form-A", "FORM-P"])
-    
+
     def clear_cache(self):
         """Clear the forms cache."""
         self._forms_cache.clear()
@@ -687,6 +783,63 @@ class FormLoader:
 def get_form_loader() -> FormLoader:
     """Get the FormLoader singleton instance."""
     return FormLoader()
+
+---
+
+## Implementation Plan (Actionable)
+
+1) `app/utils/form_loader.py`
+   - Add `FORMS_DIR` env override and robust path resolution to default `backend/data/Forms_Json`
+   - Keep in-memory cache; add `clear_cache()`; improve missing file errors
+
+2) `app/core/context.py` (NEW)
+   - Implement `ModelRouter` and `Context.get_model(task_name, query_type=None, demand="balanced")`
+   - Support injecting a `FakeModel` for tests
+
+3) `app/services/model_utils.py` (NEW)
+   - `safe_structured_invoke(model, schema, prompt)`: try structured output → JSON-mode + parse → helpful error
+
+4) `app/schemas/lesson_output.py`
+   - Add enums/literals for task/query types; confirm Pydantic v2 usage
+
+5) `app/services/prompt_builder.py`
+   - Add metadata keys; apply compaction and section filtering rules
+
+6) `app/graph/nodes.py`
+   - Logging, param validation, message appending; use `Context.get_model` + safe structured invoke
+
+7) `app/graph/state.py` and `app/graph/graph.py`
+   - Ensure imports, new fields, and node wiring updates
+
+8) `tests/`
+   - Fixtures for forms dir and cache; mock `Context`/model; compaction tests; message appending test
+
+9) Config/Docs
+   - Docker env (`FORMS_DIR`), requirements pins, quick README for forms and model router
+
+---
+
+## Implementation Plan (Actionable)
+
+1) `app/utils/form_loader.py`
+   - Add `FORMS_DIR` env override and robust path resolution
+   - Keep in-memory cache; add `clear_cache()`; improve error messaging
+2) `app/core/context.py` (NEW)
+   - Implement `ModelRouter` and `Context.get_model()`; support `FakeModel` injection
+3) `app/services/model_utils.py` (NEW)
+   - `safe_structured_invoke()`: structured → JSON-mode fallback → clear error
+4) `app/schemas/lesson_output.py`
+   - Add enums/literals for task/query types; keep Pydantic v2
+5) `app/services/prompt_builder.py`
+   - Add metadata keys; apply compaction and section filtering
+6) `app/graph/nodes.py`
+   - Logging, parameter guards, message appending; use `Context.get_model` + safe invoke
+7) `app/graph/state.py` and `app/graph/graph.py`
+   - Ensure imports, new fields, and node wiring
+8) `tests/`
+   - Fixtures for forms dir and cache; mock Context/model; compaction tests
+9) Config/docs
+   - Docker env (`FORMS_DIR`), requirements pins, quick README for forms and router
 ```
 
 ---
