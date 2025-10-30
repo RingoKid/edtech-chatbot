@@ -230,6 +230,11 @@ checkpoints/
 
 # Local database files
 *.db
+*.sqlite
+*.sqlite-*
+
+# Shell scripts
+*.sh
 
 # Node.js
 frontend/node_modules/
