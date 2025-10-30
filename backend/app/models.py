@@ -100,12 +100,7 @@ class FormCategoryMapping:
     @classmethod
     def get_domain_for_category(cls, category: FormCategoryEnum) -> EducationalDomainEnum:
         """Get the educational domain for a form category."""
-        handwriting_forms = [
-            FormCategoryEnum.A, FormCategoryEnum.B, FormCategoryEnum.C, FormCategoryEnum.D,
-            FormCategoryEnum.E, FormCategoryEnum.F, FormCategoryEnum.G, FormCategoryEnum.H
-        ]
-        vocabulary_forms = [FormCategoryEnum.I, FormCategoryEnum.J, FormCategoryEnum.K, FormCategoryEnum.L]
-        ideas_forms = [FormCategoryEnum.M, FormCategoryEnum.N, FormCategoryEnum.O, FormCategoryEnum.P, FormCategoryEnum.Q]
+
 
         if category in handwriting_forms:
             return EducationalDomainEnum.HANDWRITING
