@@ -14,11 +14,12 @@ export const chat = {
   }
 };
 
-// WebSocket helper (uses Vite env var VITE_WS_BASE_URL)
+// WebSocket helper (uses environment-based configuration)
 import createWsClient from '../utils/wsClient';
+import { getWebSocketUrl } from '../config/env';
+
 export function createChatWsClient() {
-  const base = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000';
-  const wsUrl = base.replace(/\/$/, '') + '/api/v1/chat/ws/message';
+  const wsUrl = getWebSocketUrl('/api/v1/chat/ws/message');
   return createWsClient(wsUrl, { maxRetries: 10, baseDelay: 500 });
 }
 

@@ -1,5 +1,7 @@
 // Lightweight fetch-based API client
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+import { API_CONFIG } from '../config/env';
+
+const API_BASE = API_CONFIG.BASE_URL;
 
 async function request(path, options = {}) {
   const url = API_BASE + path;

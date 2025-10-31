@@ -3,7 +3,7 @@ Chat router for the FastAPI application.
 Contains HTTP and WebSocket endpoints for chat functionality.
 Production logic is delegated to `ChatService`.
 """
-
+from functools import lru_cache
 from fastapi import APIRouter, HTTPException, Depends, WebSocket
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -16,10 +16,12 @@ from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
+@lru_cache(maxsize=1)
 def get_chat_service() -> ChatService:
     """
-    Dependency function to get ChatService instance.
-    This creates a new instance for each request.
+    Returns a singleton ChatService instance for the application lifecycle.
+    Uses lru_cache to ensure only one instance is created and reused across requests.
+    Can be overridden in tests via dependency injection to avoid event loop conflicts.
     """
     return ChatService()
 

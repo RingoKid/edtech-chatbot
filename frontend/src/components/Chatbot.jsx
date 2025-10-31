@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Bot, User, Loader, RotateCcw, ChevronDown } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat, createChatWsClient } from '../api'
+import { useApiCallProtection } from '../hooks/useApiProtection'
 
 const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   const [messages, setMessages] = useState([
@@ -19,6 +20,9 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   const [threadId, setThreadId] = useState(() => {
     try { return localStorage.getItem('chat_thread_id') || null } catch (e) { return null }
   })
+  
+  // Protect API calls from rapid repeated execution
+  const protectedChatSend = useApiCallProtection(chat.send, 1000)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
@@ -196,12 +200,13 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   }
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return
+    if (!inputValue.trim() || isTyping) return // Prevent sending while already processing
 
+    const currentInput = inputValue.trim()
     const newUserMessage = {
       id: Date.now(),
       type: 'user',
-      content: inputValue,
+      content: currentInput,
       timestamp: new Date()
     }
 
@@ -224,7 +229,7 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
         setMessages(prev => [...prev, placeholder])
         setIsTyping(true)
 
-        const payload = { message: inputValue }
+        const payload = { message: currentInput }
         if (threadId) payload.thread_id = threadId
         client.send(payload)
         // Server will stream back tokens and we'll append them to the placeholder
@@ -233,16 +238,18 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
         placeholderIdRef.current = null
         setIsTyping(true)
         try {
-          const res = await chat.send(inputValue)
-          const botResponse = {
-            id: Date.now() + 1,
-            type: 'bot',
-            content: res?.reply ?? generateResponse(inputValue),
-            timestamp: new Date()
+          const res = await protectedChatSend(currentInput, threadId)
+          if (res) { // Only process if API call wasn't blocked
+            const botResponse = {
+              id: Date.now() + 1,
+              type: 'bot',
+              content: res?.reply ?? generateResponse(currentInput),
+              timestamp: new Date()
+            }
+            setMessages(prev => [...prev, botResponse])
           }
-          setMessages(prev => [...prev, botResponse])
         } catch (err2) {
-          const response = generateResponse(inputValue)
+          const response = generateResponse(currentInput)
           const botResponse = { id: Date.now() + 1, type: 'bot', content: response, timestamp: new Date() }
           setMessages(prev => [...prev, botResponse])
         } finally {
@@ -253,16 +260,18 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
       // No WS connection — fallback to HTTP
       setIsTyping(true)
       try {
-        const res = await chat.send(inputValue)
-        const botResponse = {
-          id: Date.now() + 1,
-          type: 'bot',
-          content: res?.reply ?? generateResponse(inputValue),
-          timestamp: new Date()
+        const res = await protectedChatSend(currentInput, threadId)
+        if (res) { // Only process if API call wasn't blocked
+          const botResponse = {
+            id: Date.now() + 1,
+            type: 'bot',
+            content: res?.reply ?? generateResponse(currentInput),
+            timestamp: new Date()
+          }
+          setMessages(prev => [...prev, botResponse])
         }
-        setMessages(prev => [...prev, botResponse])
       } catch (err) {
-        const response = generateResponse(inputValue)
+        const response = generateResponse(currentInput)
         const botResponse = { id: Date.now() + 1, type: 'bot', content: response, timestamp: new Date() }
         setMessages(prev => [...prev, botResponse])
       } finally {
@@ -375,6 +384,7 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex justify-start"
+            data-testid="typing-indicator"
           >
             <div className="flex items-center">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary-500 to-accent-500 flex items-center justify-center text-white mr-2">
