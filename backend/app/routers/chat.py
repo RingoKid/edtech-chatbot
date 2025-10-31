@@ -9,7 +9,7 @@ from app.services.chat_service import ChatService
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 
 
-router = APIRouter(prefix="/chat", tags=["Chat"])
+router = APIRouter(prefix="/chat2", tags=["Chat2"])
 
 
 def get_chat_service() -> ChatService:
@@ -99,7 +99,7 @@ async def websocket_info():
         JSON object with WebSocket endpoint details and usage examples
     """
     return JSONResponse(content={
-        "endpoint": "/api/v1/chat/ws/message",
+        "endpoint": "/api/v1/chat2/ws/message",
         "protocol": "WebSocket",
         "message_format": {
             "request": {
@@ -115,8 +115,8 @@ async def websocket_info():
             }
         },
         "example_urls": {
-            "local": "ws://localhost:8000/api/v1/chat/ws/message",
-            "production": "wss://your-domain.com/api/v1/chat/ws/message"
+            "local": "ws://localhost:8000/api/v1/chat2/ws/message",
+            "production": "wss://your-domain.com/api/v1/chat2/ws/message"
         },
         "usage": "Connect using WebSocket client and send/receive JSON messages"
     })

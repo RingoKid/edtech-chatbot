@@ -3,19 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Bot, User, Loader, RotateCcw, ChevronDown } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat } from '../api'
+import MarkdownRenderer from './MarkdownRenderer'
 
 const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
       type: 'bot',
-      content: "Hello! I'm your AI Teaching Assistant. I'm here to help with early childhood education questions, lesson planning, and classroom strategies. How can I assist you today?",
+      content: "Hello there! How can I assist you with your literacy questions today? I can help with handwriting, vocabulary, creative writing, and literacy strategies. Looking forward to supporting you!",
       timestamp: new Date()
     }
   ])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
+  const [isInitialMount, setIsInitialMount] = useState(true)
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
 
@@ -53,6 +55,10 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
   }
 
   useEffect(() => {
+    if (isInitialMount) {
+      setIsInitialMount(false)
+      return
+    }
     scrollToBottom()
   }, [messages, isTyping])
 
@@ -223,7 +229,14 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
                     ? 'bg-primary-500 text-white'
                     : 'bg-gray-100 text-gray-900'
                 )}>
-                  <p className="text-sm leading-relaxed">{message.content}</p>
+                  {message.type === 'user' ? (
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                  ) : (
+                    <MarkdownRenderer
+                      content={message.content}
+                      className="text-sm leading-relaxed"
+                    />
+                  )}
                   <div className={cn(
                     "text-xs mt-1 opacity-70",
                     message.type === 'user' ? 'text-white/70' : 'text-gray-500'

@@ -7,9 +7,10 @@ from enum import Enum
 
 class IntentType(str, Enum):
     HANDWRITING = "handwriting"
-    VOCABULARY = "vocabulary" 
+    VOCABULARY = "vocabulary"
     IDEAS = "ideas"
     GENERAL = "general"
+    OUT_OF_SCOPE = "out_of_scope"
 
 class IntentRequest(BaseModel):
     """Request model for intent classification."""

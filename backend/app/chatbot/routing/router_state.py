@@ -22,8 +22,9 @@ class RoutingState(TypedDict):
     intent: Optional[IntentType]
     confidence: float
     classification_reasoning: Optional[str]
-    
+
     # Routing information
+    complexity: Optional[str]  # "simple" or "complex" - determines if specialist needed
     target_bot: Optional[str]  # "handwriting", "vocabulary", "ideas", "general"
     routing_decision: Optional[str]  # Explanation of routing logic
     needs_specialist: bool  # Whether to route to a specialist bot

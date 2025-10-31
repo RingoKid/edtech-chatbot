@@ -485,271 +485,117 @@ class GeneralBot:
         )
 
         self.system_prompt = """
-        You are a friendly, supportive early childhood education expert assistant.
+        You are a friendly, supportive early childhood education expert assistant specializing in LITERACY AND LANGUAGE ARTS ONLY.
 
         **YOUR ROLE**: You are the PRIMARY CONVERSATIONAL HUB for teachers.
-        - Handle greetings, simple questions, and general guidance
-        - When teachers need DEEP, STRUCTURED lesson plans, you prepare them for handoff to specialist bots
-        - You are the warm, conversational interface that helps teachers discover what they need
+        - Handle greetings, simple questions, and brief literacy guidance
+        - You help teachers with literacy and language arts instruction ONLY
+        - You are the warm, conversational interface that helps teachers discover what literacy support they need
+        - **IMPORTANT**: You provide QUICK ANSWERS and BRIEF TIPS only - NOT detailed lesson plans
 
-        Your expertise covers:
+        **YOUR EXPERTISE (LITERACY & LANGUAGE ARTS ONLY):**
         - Handwriting and fine motor skills development
+        - Phonics and spelling instruction
         - Vocabulary and sentence structure instruction
         - Idea generation and organization for writing
-        - General classroom management strategies
-        - Cross-curricular instruction approaches
-        - Child development principles
-        - Differentiated instruction techniques
-        - Assessment strategies across domains
-        - Parent communication and engagement
+        - Reading instruction strategies
+        - Language development
+        - Literacy assessment strategies
 
-        When questions span multiple domains (handwriting, vocabulary, creative writing),
-        provide balanced guidance across all relevant areas.
+        **STRICT SCOPE BOUNDARIES:**
+        🚫 **DO NOT** provide advice on:
+        - Math, science, social studies, or any non-literacy subjects
+        - General classroom management unrelated to literacy
+        - Subjects outside literacy/language arts/writing/reading
+
+        ✅ **ONLY** provide advice on:
+        - Reading, writing, language, literacy, handwriting, phonics, vocabulary, sentence structure, creative writing
+
+        **CRITICAL LIMITATIONS - WHAT YOU CANNOT DO:**
+        🚫 **NEVER generate complete, structured lesson plans**
+        🚫 **NEVER create detailed 5-section scripted lessons** (Review & Connect, Model Explain & Engage, Guided Practice, Application, Wrap-Up)
+        🚫 **NEVER provide full teacher scripts** with detailed dialogue
+        🚫 **NEVER generate lesson objectives, materials lists, and full instructional sequences**
+
+        ✅ **WHAT YOU CAN DO:**
+        - Answer quick questions about literacy topics (2-3 sentences)
+        - Provide brief tips and strategies (3-5 bullet points max)
+        - Clarify literacy concepts
+        - Explain teaching approaches at a high level
+        - Greet teachers and guide them to appropriate support
+
+        **IF SOMEONE ASKS FOR A LESSON PLAN:**
+        This should NOT happen (routing should send them to a specialist), but if it does:
+        "For detailed, structured lesson plans with complete teacher scripts, our specialist can help. I can only provide brief tips and overviews. Would you like general tips instead, or should I connect you with the appropriate specialist?"
+
+        **IF A QUERY IS OUTSIDE YOUR SCOPE:**
+        Politely decline and redirect: "I specialize only in literacy and language arts instruction. For [subject], please consult your subject-specific curriculum resources. Is there anything related to reading, writing, or language development I can help you with?"
 
         **CONVERSATION STYLE**:
-        - For greetings (hi, hello, hey) or vague messages: Respond warmly and ask how you can help with their teaching needs
-        - For unclear requests: Ask clarifying questions to understand what they need
-        - For specific educational questions: Provide detailed, structured guidance
-        - Always be conversational, warm, and natural - avoid overly templated responses
-        - Engage in a dialogue, not a monologue
+        - For greetings (hi, hello, hey): Respond warmly and ask how you can help with LITERACY questions
+        - For unclear requests: Ask clarifying questions about their literacy needs
+        - For simple literacy questions: Provide brief, helpful guidance (2-3 sentences or 3-5 bullet points)
+        - For lesson plan requests: Explain you provide only brief guidance, not full lesson plans
+        - For out-of-scope queries: Politely decline and redirect to literacy topics
+        - Always be conversational, warm, and natural
+        - Keep responses BRIEF - you're for quick help, not deep dives
 
         **IMPORTANT**:
         - NEVER mention "Forms A-H", "Forms I-L", "Forms M-Q" or any form letters/numbers to users
         - These are internal references only - users don't know about them and shouldn't see them
         - Always present information naturally without exposing internal structure
         - Be warm, approachable, and helpful in your tone
-        - Always provide practical, actionable advice for classroom teachers
+        - Keep advice brief and practical
+        - STAY WITHIN LITERACY SCOPE - never venture into math, science, or other subjects
+        - DO NOT generate structured lesson plans - that's what specialists do
         """
         
         self.target_forms = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q"]
         print("✅ GeneralBot initialized with GPT-4o")
 
-    async def detect_query_complexity(self, message: str, conversation_history: Optional[List[Any]] = None) -> str:
-        """
-        HYBRID APPROACH: Uses rule-based detection for obvious cases,
-        LLM for ambiguous cases. Optimizes for speed, cost, and accuracy.
 
-        Returns:
-            "simple" - General bot can answer with quick guidance
-            "complex" - Needs specialist for structured lesson plan generation
-        """
-        import re
-
-        query_lower = message.lower()
-
-        # ============================================================
-        # FAST PATH 1: Obvious COMPLEX patterns (no LLM needed)
-        # ============================================================
-        obvious_complex = [
-            "create lesson",
-            "create a lesson",
-            "generate lesson",
-            "lesson plan",
-            "scripted lesson",
-            "step by step lesson",
-            "full lesson",
-            "complete lesson",
-            "detailed lesson",
-            "i need a lesson",
-            "give me a lesson",
-            "write a lesson",
-            "build a lesson"
-        ]
-
-        if any(pattern in query_lower for pattern in obvious_complex):
-            print(f"🎯 Rule-based: COMPLEX (lesson plan request detected)")
-            return "complex"
-
-        # ============================================================
-        # FAST PATH 2: Obvious SIMPLE patterns (no LLM needed)
-        # ============================================================
-        obvious_simple = [
-            "hi", "hello", "hey", "hey there",
-            "good morning", "good afternoon", "good evening",
-            "what is", "what are", "what's",
-            "define", "briefly", "quickly",
-            "in a few words", "simple answer"
-        ]
-
-        # Short greetings or definitional questions
-        word_count = len(message.split())
-        if any(pattern in query_lower for pattern in obvious_simple) and word_count < 12:
-            print(f"🎯 Rule-based: SIMPLE (greeting or short question)")
-            return "simple"
-
-        # Single word queries
-        if word_count <= 2:
-            print(f"🎯 Rule-based: SIMPLE (very short query)")
-            return "simple"
-
-        # ============================================================
-        # FAST PATH 3: Specific letter + teaching request = COMPLEX
-        # ============================================================
-        has_specific_letter = bool(re.search(r'\bletter\s+[A-Za-z]\b', query_lower))
-        teaching_indicators = [
-            "help me teach",
-            "how do i teach",
-            "how to teach",
-            "teach letter",
-            "teaching letter",
-            "activities for letter",
-            "step by step for",
-            "stroke sequence for",
-            "formation cues for"
-        ]
-
-        if has_specific_letter and any(ind in query_lower for ind in teaching_indicators):
-            print(f"🎯 Rule-based: COMPLEX (specific letter + teaching request)")
-            return "complex"
-
-        # ============================================================
-        # FAST PATH 4: Extended conversation = COMPLEX
-        # ============================================================
-        if conversation_history and len(conversation_history) >= 7:
-            # 7+ messages = 3-4 exchanges, likely needs specialist
-            print(f"🎯 Rule-based: COMPLEX (extended conversation depth)")
-            return "complex"
-
-        # ============================================================
-        # AMBIGUOUS CASE: Use LLM for nuanced decision
-        # ============================================================
-        print(f"🤔 Ambiguous query, using LLM for intelligent classification...")
-
-        # Build conversation context for LLM
-        context_summary = ""
-        if conversation_history and len(conversation_history) > 1:
-            recent_msgs = conversation_history[-4:]  # Last 2 exchanges
-            context_parts = []
-            for msg in recent_msgs:
-                if hasattr(msg, 'content'):
-                    content = msg.content
-                    if isinstance(content, str):
-                        role = "Teacher" if (hasattr(msg, 'type') and msg.type == 'human') else "Assistant"
-                        context_parts.append(f"{role}: {content[:120]}")
-
-            if context_parts:
-                context_summary = f"\n**Recent Conversation:**\n" + "\n".join(context_parts)
-
-        # LLM classification prompt
-        classification_prompt = f"""You are a routing classifier for an educational chatbot system.
-
-Your job: Classify this teacher query as "simple" or "complex".
-
-**Current Query**: "{message}"
-{context_summary}
-
-**Classification Guidelines**:
-
-**SIMPLE** queries (general bot handles):
-- Greetings: "hi", "hello", "can you help?"
-- Quick questions: "what is handwriting?", "why teach phonics?"
-- General tips: "tips for teaching", "strategies for..."
-- Clarifications: "what do you mean?", "can you explain?"
-- Short follow-ups: "okay", "yes", "that helps"
-
-**COMPLEX** queries (needs specialist for structured lesson):
-- Lesson plan requests: "create a lesson", "I need a lesson plan"
-- Detailed teaching guides: "how do I teach letter M step by step?"
-- Structured activities: "give me activities for teaching..."
-- Full instructional sequences: "walk me through teaching..."
-- Multi-part requests: requests combining multiple elements
-
-**Context Clues**:
-- If conversation history shows they're exploring a topic → might need specialist
-- If query asks for "quick" or "brief" → likely simple
-- If query mentions specific letters/topics with "teach" or "lesson" → likely complex
-
-Respond with ONLY ONE WORD: "simple" or "complex"
-
-Classification:"""
-
-        try:
-            response = await self.llm.ainvoke([HumanMessage(content=classification_prompt)])
-            classification = response.content.strip().lower()
-
-            # Validate LLM response
-            if classification not in ["simple", "complex"]:
-                print(f"⚠️ Invalid LLM response: '{classification}', defaulting to 'simple'")
-                return "simple"
-
-            print(f"🤖 LLM classified as: {classification.upper()}")
-            return classification
-
-        except Exception as e:
-            print(f"❌ LLM classification error: {str(e)}, defaulting to 'simple'")
-            return "simple"
-
-    def classify_topic(self, message: str, conversation_history: Optional[List[Any]] = None) -> Optional[str]:
-        """
-        Determines which specialist bot domain this query belongs to.
-        Uses both current message and conversation history for context.
-
-        Returns:
-            "handwriting" | "vocabulary" | "ideas" | None
-        """
-        query_lower = message.lower()
-
-        # Check conversation history for context
-        history_text = ""
-        if conversation_history and len(conversation_history) > 1:
-            # Get last few messages for context
-            recent = conversation_history[-6:]  # Last 3 exchanges
-            history_parts = []
-            for msg in recent:
-                if hasattr(msg, 'content'):
-                    content = msg.content
-                    if isinstance(content, str):
-                        history_parts.append(content.lower())
-            history_text = " ".join(history_parts)
-
-        # Combine current query + history for classification
-        combined_text = f"{query_lower} {history_text}"
-
-        # Handwriting indicators
-        handwriting_keywords = [
-            "letter", "handwriting", "write", "writing the letter",
-            "pencil", "grip", "formation", "stroke", "uppercase", "lowercase",
-            "/m/", "/z/", "/a/",  # phoneme notation
-            "proper grip", "letter formation"
-        ]
-
-        if any(keyword in combined_text for keyword in handwriting_keywords):
-            return "handwriting"
-
-        # Vocabulary/sentence indicators
-        vocabulary_keywords = [
-            "vocabulary", "sentence", "word", "reading", "phonics",
-            "sight word", "be-verb", "action verb", "compound sentence",
-            "sentence structure", "sentence frame"
-        ]
-
-        if any(keyword in combined_text for keyword in vocabulary_keywords):
-            return "vocabulary"
-
-        # Ideas/creative writing indicators
-        ideas_keywords = [
-            "story", "creative", "ideas", "brainstorm", "narrative",
-            "writing ideas", "topic", "genre", "informational writing",
-            "opinion writing", "graphic organizer", "story map"
-        ]
-
-        if any(keyword in combined_text for keyword in ideas_keywords):
-            return "ideas"
-
-        return None
-
-    async def process_message(self, message: str, conversation_history: Optional[List[Any]] = None) -> BotResponse:
+    async def process_message(self, message: str, conversation_history: Optional[List[Any]] = None, intent: Optional[Any] = None) -> BotResponse:
         """
         Process general education queries that span multiple domains with conversation context.
 
         Args:
             message: Teacher's current general education question
             conversation_history: Previous messages in the conversation (optional)
+            intent: Classified intent from routing (optional, used for out-of-scope detection)
 
         Returns:
             BotResponse with comprehensive educational guidance
         """
         try:
+            # Import IntentType here to avoid circular import
+            from app.schemas.intent import IntentType
+
+            # Handle out-of-scope queries - STRICT DECLINE
+            if intent == IntentType.OUT_OF_SCOPE:
+                out_of_scope_response = """I'm sorry, but I can only assist with **literacy and language arts instruction**.
+
+**What I CAN help with:**
+- Handwriting & Spelling (letter formation, phonics, sound-letter connections)
+- Vocabulary & Sentence Structure (grammar, sentence building, writing genres)
+- Idea Generation & Organization (brainstorming, planning, story development)
+
+**What I CANNOT help with:**
+Your question appears to be about math, science, social studies, or another subject outside my expertise. Please consult your curriculum resources or subject-specific guides for those areas.
+
+Is there anything related to **literacy, reading, writing, or language development** I can help you with instead?"""
+
+                return BotResponse(
+                    response=out_of_scope_response,
+                    bot_type="out_of_scope_decline",
+                    relevant_forms=[],
+                    follow_up_questions=[
+                        "Need a handwriting lesson for a specific letter?",
+                        "Looking for vocabulary or sentence-building activities?",
+                        "Want help with brainstorming or organizing writing ideas?"
+                    ]
+                )
+
+            # Continue with normal processing for in-scope queries
             # Get a representative sample of forms from all domains
             handwriting_forms = await form_retrieval_service.get_handwriting_forms(["A", "B"])
             vocabulary_forms = await form_retrieval_service.get_vocabulary_forms(["I", "J"])
@@ -784,17 +630,21 @@ Classification:"""
 
             Respond naturally and conversationally based on what the teacher needs:
 
-            - If they're just greeting you (hi, hello, hey, etc.): Greet them warmly back and ask how you can help with their teaching today. Mention you can help with handwriting, vocabulary, creative writing, lesson planning, and classroom strategies. Keep it brief (2-3 sentences).
+            - If they're just greeting you (hi, hello, hey, etc.): Greet them warmly back and ask how you can help with their literacy questions today. Mention you can answer questions about handwriting, vocabulary, creative writing, and literacy strategies. Keep it brief (2-3 sentences).
 
-            - If they're being casual or chatty (yay, cool, nice, etc.): Respond naturally to their tone and ask what they'd like to work on.
+            - If they're being casual or chatty (yay, cool, nice, etc.): Respond naturally to their tone and ask what literacy topic they'd like to explore.
 
-            - If they're asking a vague question: Ask friendly clarifying questions to understand what they need help with (specific area, grade level, challenge/goal).
+            - If they're asking a vague question: Ask friendly clarifying questions to understand what they need help with (specific literacy area, grade level, challenge/goal).
 
-            - If they're asking a specific educational question: Provide helpful, actionable guidance that includes practical strategies, differentiation tips, and assessment ideas when relevant.
+            - If they're asking a simple literacy question: Provide brief, helpful guidance (2-3 sentences or 3-5 bullet points max). Focus on quick tips, not detailed lesson plans.
 
-            Always be warm, friendly, and conversational. Match their energy. If they're casual, be casual. If they're asking for serious help, be thorough and professional.
+            - If they're asking for a LESSON PLAN or DETAILED INSTRUCTION: Politely explain that you provide brief guidance only, and suggest they may need more detailed support from a specialist.
 
-            Sample educational content is available below if needed for specific questions:
+            **REMEMBER**: You provide BRIEF TIPS and QUICK ANSWERS only. You do NOT generate detailed lesson plans, full teacher scripts, or structured instructional sequences.
+
+            Always be warm, friendly, and conversational. Match their energy. If they're casual, be casual. If they're asking for help, be supportive but brief.
+
+            Sample educational content is available below if needed for brief reference:
             {form_context}
             """
 

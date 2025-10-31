@@ -526,29 +526,58 @@ class FormRetrievalService:
             # Extract standards data
             standards_item = items[0]
 
-            # Extract handwriting standards specifically
+            # Extract standards from multiple big_ideas relevant to handwriting instruction
             handwriting_standards = []
+            phonics_standards = []
+            phonological_awareness_standards = []
+
             domains = standards_item.get('content', {}).get('domains', {})
 
             if 'foundations' in domains:
                 foundations = domains['foundations']
-                if 'big_ideas' in foundations and 'handwriting' in foundations['big_ideas']:
-                    hw_data = foundations['big_ideas']['handwriting']
+                big_ideas = foundations.get('big_ideas', {})
+
+                # Extract Handwriting standards (K.F.H)
+                if 'handwriting' in big_ideas:
+                    hw_data = big_ideas['handwriting']
                     if 'standards' in hw_data:
                         for standard_key, standard_val in hw_data['standards'].items():
                             if isinstance(standard_val, dict):
-                                desc = standard_val.get('description', '')
+                                code = standard_val.get('code', '')
                                 sub_standards = standard_val.get('sub_standards', {})
-                                handwriting_standards.append({
-                                    'code': standard_val.get('code', ''),
-                                    'title': standard_val.get('title', ''),
-                                    'description': desc,
-                                    'sub_standards': sub_standards
-                                })
+                                # Format: K.F.H.1.a: Description
+                                for sub_letter, sub_desc in sub_standards.items():
+                                    handwriting_standards.append(f"{code}.{sub_letter}: {sub_desc}")
+
+                # Extract Phonics standards (K.F.P)
+                if 'phonics' in big_ideas:
+                    phonics_data = big_ideas['phonics']
+                    if 'standards' in phonics_data:
+                        for standard_key, standard_val in phonics_data['standards'].items():
+                            if isinstance(standard_val, dict):
+                                code = standard_val.get('code', '')
+                                sub_standards = standard_val.get('sub_standards', {})
+                                # Format: K.F.P.1.a: Description
+                                for sub_letter, sub_desc in sub_standards.items():
+                                    phonics_standards.append(f"{code}.{sub_letter}: {sub_desc}")
+
+                # Extract Phonological Awareness standards (K.F.PA)
+                if 'phonological_awareness' in big_ideas:
+                    pa_data = big_ideas['phonological_awareness']
+                    if 'standards' in pa_data:
+                        for standard_key, standard_val in pa_data['standards'].items():
+                            if isinstance(standard_val, dict):
+                                code = standard_val.get('code', '')
+                                sub_standards = standard_val.get('sub_standards', {})
+                                # Format: K.F.PA.6.a: Description
+                                for sub_letter, sub_desc in sub_standards.items():
+                                    phonological_awareness_standards.append(f"{code}.{sub_letter}: {sub_desc}")
 
             return {
                 'grade': normalized_grade,
                 'handwriting_standards': handwriting_standards,
+                'phonics_standards': phonics_standards,
+                'phonological_awareness_standards': phonological_awareness_standards,
                 'full_data': standards_item.get('content', {})
             }
 

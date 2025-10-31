@@ -125,6 +125,7 @@ class ChatService:
             "intent": None,
             "confidence": 0.0,
             "classification_reasoning": None,
+            "complexity": None,  # "simple" or "complex" - set by router node
             "target_bot": None,
             "routing_decision": None,
             "needs_specialist": False,  # Critical field for routing
@@ -202,6 +203,7 @@ class ChatService:
                     "intent": None,
                     "confidence": 0.0,
                     "classification_reasoning": None,
+                    "complexity": None,  # "simple" or "complex" - set by router node
                     "target_bot": None,
                     "routing_decision": None,
                     "needs_specialist": False,

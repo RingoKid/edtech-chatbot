@@ -1,15 +1,18 @@
 """
 Centralized Checkpointer for Educational Chatbot.
 Single source of truth for conversation state persistence across all graphs.
+Uses SqliteSaver for persistent storage like LangGraph Studio.
 """
+import os
+from pathlib import Path
 from langgraph.checkpoint.sqlite import SqliteSaver
 from app.config import settings
-import os
 
 class CheckpointerManager:
     """
     Singleton manager for conversation state persistence.
     Ensures all graphs (routing, handwriting, vocabulary, ideas) use the same checkpointer.
+    Uses SqliteSaver with persistent file storage (same as LangGraph Studio).
     """
 
     _instance = None
@@ -27,30 +30,32 @@ class CheckpointerManager:
 
     def _initialize_checkpointer(self):
         """Create the checkpointer based on configuration."""
-        # Use persistent SQLite database for production
-        # Use in-memory for development/testing if specified
+        # Using SqliteSaver for persistent conversation storage (same as LangGraph Studio)
 
-        if hasattr(settings, 'use_memory_checkpointer') and settings.use_memory_checkpointer:
-            print("🗄️ Initializing IN-MEMORY checkpointer for development")
-            self._checkpointer = SqliteSaver.from_conn_string(":memory:")
-        else:
-            # Use persistent SQLite database
-            db_path = getattr(settings, 'checkpointer_db_path', './data/conversation_state.db')
+        # Create checkpoints directory if it doesn't exist
+        checkpoint_dir = Path(__file__).parent.parent.parent / "checkpoints"
+        checkpoint_dir.mkdir(exist_ok=True)
 
-            # Create directory if it doesn't exist
-            os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        # Database file path
+        db_path = checkpoint_dir / "conversations.db"
 
-            print(f"🗄️ Initializing PERSISTENT checkpointer at: {db_path}")
-            self._checkpointer = SqliteSaver.from_conn_string(f"file:{db_path}")
+        print("🗄️ Initializing SQLITE checkpointer for persistent conversation storage")
+        print(f"💾 Database path: {db_path}")
+        print("✅ Conversations will persist across server restarts (same as LangGraph Studio)")
 
-        print("✅ Shared checkpointer initialized successfully")
+        # Create SqliteSaver with connection string
+        # Using synchronous SqliteSaver (same pattern as LangGraph Studio)
+        self._checkpointer = SqliteSaver.from_conn_string(str(db_path))
+
+        print("✅ Shared SqliteSaver checkpointer initialized successfully")
+        print("💾 All conversation state will be persisted to SQLite database")
 
     def get_checkpointer(self) -> SqliteSaver:
         """
         Get the shared checkpointer instance.
 
         Returns:
-            SqliteSaver: The shared checkpointer for all graphs
+            MemorySaver: The shared checkpointer for all graphs
         """
         return self._checkpointer
 
@@ -80,6 +85,6 @@ def get_shared_checkpointer() -> SqliteSaver:
         graph = graph_builder.compile(checkpointer=checkpointer)
 
     Returns:
-        SqliteSaver: The shared checkpointer instance
+        SqliteSaver: The shared checkpointer instance with persistent storage
     """
     return checkpointer_manager.get_checkpointer()

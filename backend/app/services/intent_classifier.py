@@ -53,12 +53,21 @@ class IntentClassificationService:
                 "requires_collection": ["writing_topic", "genre", "objectives"]
             },
             "general": {
-                "keywords": ["classroom", "management", "assessment", "curriculum", "student", "teaching", "education", "help", "general"],
+                "keywords": ["classroom", "management", "assessment", "curriculum", "student", "teaching", "education", "help", "general", "reading", "literacy"],
                 "forms": ["A-Q"],
-                "description": "General education support and clarification requests",
+                "description": "General education support and clarification requests within literacy scope",
                 "lesson_structure": [],
                 "components": [],
                 "grade_levels": ["All"],
+                "requires_collection": []
+            },
+            "out_of_scope": {
+                "keywords": ["math", "mathematics", "numbers", "counting", "addition", "subtraction", "science", "experiment", "animals", "plants", "social studies", "history", "geography", "community"],
+                "forms": [],
+                "description": "Queries outside literacy/language arts scope (math, science, social studies, etc.)",
+                "lesson_structure": [],
+                "components": [],
+                "grade_levels": [],
                 "requires_collection": []
             }
         }
@@ -122,9 +131,9 @@ class IntentClassificationService:
         """
 
         return f"""
-        You are an expert in early childhood education lesson planning. Classify this teacher's request into ONE of these three direct instruction lesson types:
+        You are an expert in early childhood LITERACY education. Classify this teacher's request into ONE of these categories:
 
-        **LESSON TYPE DEFINITIONS:**
+        **🎯 IN-SCOPE: LITERACY & LANGUAGE ARTS (Forms A-Q)**
 
         1. **HANDWRITING** (Forms A-H) - Requests for lessons about:
            - Letter formation and stroke sequences using sequence verbal cues
@@ -151,15 +160,38 @@ class IntentClassificationService:
            - Text-to-writing connections and unit topic integration
            - Structured idea generation lessons with Review & Connect, Model Explain & Engage, Guided Practice, Application, and Wrap-Up
            Keywords: ideas, brainstorm, story, creative, writing, narrative, informational, opinion, topic, genre, organize, plan
+
+        4. **GENERAL** - General literacy/language arts questions within scope:
+           - Reading instruction strategies
+           - Literacy assessment
+           - Language development
+           - Writing instruction (when not specific to handwriting/vocabulary/ideas)
+           Keywords: reading, literacy, language, assessment, instruction
+
+        **❌ OUT OF SCOPE: NON-LITERACY SUBJECTS**
+
+        5. **OUT_OF_SCOPE** - Queries about subjects NOT covered by Language For Composing curriculum:
+           - **Math** (numbers, counting, addition, subtraction, shapes, measurement, patterns, problem-solving)
+           - **Science** (experiments, animals, plants, weather, physical science, life science)
+           - **Social Studies** (history, geography, community helpers, cultures, maps)
+           - **Other** (art, music, PE, technology, health)
+           Keywords: math, mathematics, numbers, counting, science, experiment, animals, plants, history, geography, community
+
+        **⚠️ IMPORTANT SCOPE BOUNDARIES:**
+        - ONLY classify as handwriting/vocabulary/ideas/general if the query relates to LITERACY, WRITING, LANGUAGE, or READING
+        - If the query is about MATH, SCIENCE, SOCIAL STUDIES, or other non-literacy subjects → classify as "out_of_scope" with high confidence (0.9+)
+        - The Language For Composing curriculum (Forms A-Q) covers ONLY literacy and language arts instruction
 {context_section}
         **CURRENT TEACHER'S REQUEST:** "{message}"
 
         **CLASSIFICATION GUIDELINES:**
+        - **CRITICAL SCOPE CHECK**: First determine if query is about literacy/language arts or OTHER subjects
+        - If query mentions math, science, social studies → IMMEDIATELY classify as "out_of_scope" with 0.9+ confidence
         - **CRITICAL**: For follow-up messages, ALWAYS use conversation history to maintain intent continuity
         - If conversation history shows handwriting context (letters, formation, spelling), classify follow-ups as "handwriting" with high confidence (0.8+)
         - If conversation history shows vocabulary context (sentence structure, grammar), classify follow-ups as "vocabulary" with high confidence (0.8+)
         - If conversation history shows ideas context (brainstorming, creative writing), classify follow-ups as "ideas" with high confidence (0.8+)
-        - Use confidence 0.9+ for very clear requests mentioning specific lesson components or objectives
+        - Use confidence 0.9+ for very clear requests OR out-of-scope queries
         - Use confidence 0.8+ for requests clearly aligned with one lesson type's scope OR follow-up questions with clear context
         - Use confidence 0.7+ for moderately clear requests with some ambiguity
         - Use confidence 0.5-0.7 for somewhat ambiguous requests requiring clarification
@@ -169,13 +201,14 @@ class IntentClassificationService:
         - Handwriting/Spelling: Forms A (objectives), B (structure), C (template), D (activities), E (practices), F (verbal cues), G (gestures), H (adaptations)
         - Vocabulary/Sentence: Forms I (structure), J (template), K (activities), L (modifications)
         - Ideas/Organization: Forms M (genre elements), N (structure), O (template), P (activities), Q (modifications)
+        - Out of Scope: No forms available (non-literacy subjects)
 
         Respond with ONLY this JSON format:
         {{
-            "intent": "handwriting|vocabulary|ideas|general",
+            "intent": "handwriting|vocabulary|ideas|general|out_of_scope",
             "confidence": 0.85,
-            "reasoning": "Brief explanation connecting request to specific lesson type and forms",
-            "suggested_forms": ["A", "B", "C"]
+            "reasoning": "Brief explanation connecting request to specific lesson type and forms OR explaining why it's out of scope",
+            "suggested_forms": ["A", "B", "C"] or []
         }}
         """
     
@@ -201,7 +234,7 @@ class IntentClassificationService:
                     raise ValueError("Missing required fields in classification response")
                 
                 # Validate intent value
-                valid_intents = ["handwriting", "vocabulary", "ideas", "general"]
+                valid_intents = ["handwriting", "vocabulary", "ideas", "general", "out_of_scope"]
                 if result["intent"] not in valid_intents:
                     raise ValueError(f"Invalid intent: {result['intent']}")
                 

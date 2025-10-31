@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 # Import routers
 from app.routers import health, chat, auth, users
 from app.config import settings
-from app.routers import health, chat, auth, users, handwriting_bot
+# Temporarily disable handwriting_bot router - needs refactoring after graph cleanup
+# from app.routers import handwriting_bot
 # Temporarily disable educational_bot due to LangGraph installation issue
 # from app.routers import educational_bot
 
@@ -38,7 +39,8 @@ app.include_router(health.router, prefix=API_PREFIX, tags=["Health"])
 app.include_router(chat.router, prefix=API_PREFIX, tags=["Chat"])
 app.include_router(auth.router, prefix=API_PREFIX, tags=["Authentication"])
 app.include_router(users.router, prefix=API_PREFIX, tags=["Users"])
-app.include_router(handwriting_bot.router, prefix=API_PREFIX, tags=["Handwriting Bot"])
+# Temporarily disable handwriting_bot router - needs refactoring after graph cleanup
+# app.include_router(handwriting_bot.router, prefix=API_PREFIX, tags=["Handwriting Bot"])
 # Temporarily disable educational_bot router due to LangGraph installation issue
 # app.include_router(educational_bot.router, prefix=API_PREFIX, tags=["Educational Bot"])
 
