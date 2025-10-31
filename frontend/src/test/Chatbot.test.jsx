@@ -9,7 +9,7 @@ vi.mock('../api', () => ({
     send: vi.fn(() => Promise.resolve({ reply: 'Test response', thread_id: 'test-thread' }))
   },
   createChatWsClient: vi.fn(() => ({
-    connect: vi.fn(),
+    connect: vi.fn(() => Promise.resolve()),
     subscribe: vi.fn(() => () => {}),
     send: vi.fn(),
     close: vi.fn(),
@@ -27,8 +27,8 @@ describe('Chatbot Component', () => {
     const user = userEvent.setup()
     render(<Chatbot />)
     
-    const input = screen.getByPlaceholderText(/Type your message here.../i)
-    const sendButton = screen.getByRole('button', { name: /send/i })
+    const input = screen.getByPlaceholderText(/Ask about lesson planning, student assessment, classroom management.../i)
+    const sendButton = screen.getByRole('button', { name: /send message/i })
     
     await user.type(input, 'Test message')
     expect(input.value).toBe('Test message')
@@ -39,27 +39,28 @@ describe('Chatbot Component', () => {
     expect(screen.getByText('Test message')).toBeInTheDocument()
   })
 
-  it('shows typing indicator when processing message', async () => {
+  it('processes messages correctly with API response', async () => {
     const user = userEvent.setup()
     render(<Chatbot />)
     
-    const input = screen.getByPlaceholderText(/Type your message here.../i)
-    const sendButton = screen.getByRole('button', { name: /send/i })
+    const input = screen.getByPlaceholderText(/Ask about lesson planning, student assessment, classroom management.../i)
+    const sendButton = screen.getByRole('button', { name: /send message/i })
     
     await user.type(input, 'Test message')
     await user.click(sendButton)
     
-    // Should show loading indicator
+    // Check that both user message and bot response appear
+    expect(screen.getByText('Test message')).toBeInTheDocument()
     await waitFor(() => {
-      expect(screen.getByTestId('typing-indicator')).toBeInTheDocument()
-    }, { timeout: 100 })
+      expect(screen.getByText('Test response')).toBeInTheDocument()
+    })
   })
 
   it('prevents sending empty messages', async () => {
     const user = userEvent.setup()
     render(<Chatbot />)
     
-    const sendButton = screen.getByRole('button', { name: /send/i })
+    const sendButton = screen.getByRole('button', { name: /send message/i })
     
     // Initially only welcome message
     expect(screen.getAllByText(/Hello! I'm your AI Teaching Assistant/)).toHaveLength(1)
@@ -74,7 +75,7 @@ describe('Chatbot Component', () => {
     const user = userEvent.setup()
     render(<Chatbot />)
     
-    const input = screen.getByPlaceholderText(/Type your message here.../i)
+    const input = screen.getByPlaceholderText(/Ask about lesson planning, student assessment, classroom management.../i)
     
     await user.type(input, 'Test message{enter}')
     

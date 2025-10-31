@@ -220,6 +220,8 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
 
     // Use WebSocket if connected; otherwise fallback to HTTP POST or local generator
     const client = wsRef.current
+    console.log('WebSocket client status:', { client: !!client, connected: client?.isConnected?.() })
+    
     if (client && client.isConnected && client.isConnected()) {
       try {
         // Create a single placeholder bot message that will be appended to as tokens arrive
@@ -231,6 +233,7 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
 
         const payload = { message: currentInput }
         if (threadId) payload.thread_id = threadId
+        console.log('Sending WebSocket message:', payload)
         client.send(payload)
         // Server will stream back tokens and we'll append them to the placeholder
       } catch (err) {
@@ -238,7 +241,9 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
         placeholderIdRef.current = null
         setIsTyping(true)
         try {
+          console.log('Attempting HTTP fallback with protectedChatSend')
           const res = await protectedChatSend(currentInput, threadId)
+          console.log('HTTP response:', res)
           if (res) { // Only process if API call wasn't blocked
             const botResponse = {
               id: Date.now() + 1,
@@ -247,8 +252,14 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
               timestamp: new Date()
             }
             setMessages(prev => [...prev, botResponse])
+          } else {
+            console.warn('API call was blocked by protection, using fallback')
+            const response = generateResponse(currentInput)
+            const botResponse = { id: Date.now() + 1, type: 'bot', content: response, timestamp: new Date() }
+            setMessages(prev => [...prev, botResponse])
           }
         } catch (err2) {
+          console.error('HTTP fallback failed:', err2)
           const response = generateResponse(currentInput)
           const botResponse = { id: Date.now() + 1, type: 'bot', content: response, timestamp: new Date() }
           setMessages(prev => [...prev, botResponse])
@@ -258,9 +269,12 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
       }
     } else {
       // No WS connection — fallback to HTTP
+      console.log('No WebSocket connection, using HTTP fallback')
       setIsTyping(true)
       try {
+        console.log('Attempting HTTP call with protectedChatSend')
         const res = await protectedChatSend(currentInput, threadId)
+        console.log('HTTP response:', res)
         if (res) { // Only process if API call wasn't blocked
           const botResponse = {
             id: Date.now() + 1,
@@ -269,8 +283,14 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
             timestamp: new Date()
           }
           setMessages(prev => [...prev, botResponse])
+        } else {
+          console.warn('API call was blocked by protection, using fallback response')
+          const response = generateResponse(currentInput)
+          const botResponse = { id: Date.now() + 1, type: 'bot', content: response, timestamp: new Date() }
+          setMessages(prev => [...prev, botResponse])
         }
       } catch (err) {
+        console.error('HTTP call failed:', err)
         const response = generateResponse(currentInput)
         const botResponse = { id: Date.now() + 1, type: 'bot', content: response, timestamp: new Date() }
         setMessages(prev => [...prev, botResponse])
@@ -434,6 +454,8 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
           <button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isTyping}
+            aria-label="Send message"
+            title="Send message"
             className={cn(
               "p-2 rounded-lg transition-colors",
               inputValue.trim() && !isTyping
