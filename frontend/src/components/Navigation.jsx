@@ -29,7 +29,6 @@ const Navigation = () => {
       ]
     },
     { name: 'AI Teaching Assistant', href: '/ai-teaching-assistant' },
-    { name: 'Admin Portal', href: '/admin' },
   ]
 
   const isHomePage = location.pathname === '/'
