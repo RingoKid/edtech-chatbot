@@ -63,7 +63,7 @@ const AITeachingAssistant = () => {
         {/* Chatbot Container */}
         <motion.div
           className="bg-white rounded-2xl shadow-lg overflow-hidden h-[calc(100vh-300px)]"
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{  opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
