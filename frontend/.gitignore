@@ -23,3 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 
 FRONTEND_ANALYSIS.md
+
+.env
+.env.production
