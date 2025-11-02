@@ -18,13 +18,14 @@ COPY ./backend/langgraph.json ./langgraph.json
 COPY ./backend/load_forms.py ./load_forms.py
 COPY ./backend/startup.sh ./startup.sh
 
+# Copy educational forms data (required for load_forms.py)
+COPY ./data /app/data
+
+# Make startup script executable
 RUN chmod +x ./startup.sh
+
 # Expose the ports the application will listen on.
 EXPOSE 8000 2024
-# Make startup script executable
 
+# Run startup script which loads forms and starts services
 CMD ["./startup.sh"]
-RUN chmod +x ./startup.sh
-# The command to start the Uvicorn ASGI server for FastAPI.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-#CMD ["python", "backend/test_config.py"]
