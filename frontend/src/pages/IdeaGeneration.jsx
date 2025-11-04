@@ -10,14 +10,14 @@ const IdeaGeneration = () => {
       title: "Clearly explain the writing topic and its purpose, and identify key features of the genre that support that purpose.",
       description: "Facilitates construction of a mental blueprint for organizing and retrieving relevant ideas related to topic and genre purpose.",
       thumbnail: "/src/assets/images/topicandpurpose.png",
-      videoUrl: "/idea-generation/topic-purpose",
+      videoUrl: "https://youtu.be/QUXCkF2ZGRs",
     },
     {
       id: 2,
       title: "Use visuals, read-alouds, and multimedia to help children learn about the topic. These tools support understanding by connecting new information to what children already know, making it easier ",
       description: "Supports creative thinking by prompting comparisons, analogies, and synthesis",
       thumbnail: "/src/assets/images/topicandpurpose.png",
-      videoUrl: "https://example.com/idea-video2"
+      videoUrl: "https://youtu.be/HZ9SBtU4_3c"
     },
     {
       id: 3,
@@ -45,21 +45,21 @@ const IdeaGeneration = () => {
       title: "Have young children draw their ideas before writing. This helps them clarify what they want to say and supports their memory when turning ideas into written words",
       description: "Supports childrens ability to hold ideas in working memory to clarify and refine ideas in relation to topic",
       thumbnail: "/src/assets/images/topicandpurpose.png",
-      videoUrl: "/idea-generation/content-integration"
+      videoUrl: "https://youtu.be/BT_ox3OpRLM"
     },
     {
       id: 7,
       title: "Use questions and prompts to help children expand their ideas, clarify their thinking, and revise their language before and during writing.",
       description: "Sustains attention to topic and relevant details while supporting progression from contextualized to decontextualized oral language",
       thumbnail: "/src/assets/images/contentnew.png",
-      videoUrl: "/idea-generation/cue-question"
+      videoUrl: "https://youtu.be/of4-9NpK2as"
     },
     {
       id: 8,
       title: "Encourage children to orally rehearse their ideas by saying their complete “crafted” sentence aloud before writing.",
       description: "Cements the idea in working memory, supporting transition from oral language to transcription of language in writing",
       thumbnail: "/src/assets/images/drawcontent.png",
-      videoUrl: "https://example.com/idea-video8"
+      videoUrl: "https://example.com/idea-video8" // video limit reached so will add it later
     }
   ]
 

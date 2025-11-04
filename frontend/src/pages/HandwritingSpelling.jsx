@@ -10,63 +10,63 @@ const HandwritingSpelling = () => {
       title: "Teaching Proper Pencil Grip",
       description: "Learn effective techniques for teaching children the correct way to hold a pencil for comfortable, legible writing.",
       thumbnail: "/src/assets/images/pencil-grip.jpg",
-      videoUrl: "/handwriting-spelling/proper-way-to-hold",
+      videoUrl: "https://youtu.be/U_GkAYvrrFM",
     },
     {
       id: 2,
       title: "Help children pronounce, identify, and isolate phonemes correctly",
       description: "Enhances phoneme isolation and focuses attention for accurate sound-symbol mapping and memory encoding",
       thumbnail: "/src/assets/images/pronounce-identify.jpg",
-      videoUrl: "/handwriting-spelling/pronounce-identify",
+      videoUrl: "https://youtu.be/vFNLPkLJDRY",
     },
     {
       id: 3,
       title: "Teach how to form each letter step by step, showing the exact order and direction of strokes",
       description: "Supports coordination of timed movement with correct stroke order",
       thumbnail: "/src/assets/images/letter-formation.jpg",
-      videoUrl: "/handwriting-spelling/sequence-strokes"
+      videoUrl: "https://youtu.be/a6-IX-DltGA"
     },
     {
       id: 4,
       title: "Have children retrieve prior phoneme-grapheme knowledge and connect to new phoneme-grapheme patterns",
       description: "Activates prior phoneme-graphene knowledge to support orthographic mapping",
       thumbnail: "/src/assets/images/phonemic-awareness.jpg",
-      videoUrl: "/handwriting-spelling/retrieve-connect"
+      videoUrl: "https://youtu.be/QqR9LvjkAew"
     },
     {
       id: 5,
       title: "Cue children to apply phoneme-grapheme patterns during activities",
       description: "Strengths Fluency through retrieval and consolidation of phoneme-graphene patterns",
       thumbnail: "/src/assets/images/phoneme-grapheme.jpg",
-      videoUrl: "/handwriting-spelling/phoneme-graphene"
+      videoUrl: "https://youtu.be/3AlrEZNH-q8"
     },
     {
       id: 6,
       title: "Talk with children about how letters look—compare their shapes and the strokes used to write them.",
       description: "Promotes deep encoding of letter forms for memory retention",
       thumbnail: "/src/assets/images/invented-spelling.jpg",
-      videoUrl: "/handwriting-spelling/compare-contrast"
+      videoUrl: "https://youtu.be/3AlrEZNH-q8"
     },
     {
       id: 7,
       title: "Provide corrective and confirmatory feedback explaining what part is incorrect and showing them how to fix it.",
       description: "Supports deeper processing of spelling patterns to enhance retrieval and automaticity",
       thumbnail: "/src/assets/images/directionality.jpg",
-      videoUrl: "/handwriting-spelling/corrective-feedback"
+      videoUrl: "https://youtu.be/BfaaY27TuxM"
     },
     {
       id: 8,
       title: "Encourage children to use what they’ve learned about sounds, spelling patterns, and word parts to try spelling new words",
       description: "Promotes application of phonological and knowledge through invented spelling, strengthening",
       thumbnail: "/src/assets/images/corrective-feedback.jpg",
-      videoUrl: "/handwriting-spelling/invented-spelling"
+      videoUrl: "https://youtu.be/dmwYhpraEwg"
     },
     {
       id: 9,
       title: "Support writing within lines left to right (directionality)",
       description: "Helps children learn to keep letter on the line and moves smoothly from left to right.",
       thumbnail: "/src/assets/images/phonological-awareness.jpg",
-      videoUrl: "/handwriting-spelling/directionality"
+      videoUrl: "https://youtu.be/RN8HsZCWAks"
     }
   ]
 

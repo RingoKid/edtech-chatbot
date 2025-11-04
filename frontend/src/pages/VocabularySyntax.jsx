@@ -10,14 +10,14 @@ const VocabularySyntax = () => {
       title: "Provide multiple opportunities for children to use vocabulary words from their unit or theme during sentence generation tasks",
       description: "Supports retrieval of vocabulary words in different contexts, strengthening word depth",
       thumbnail: "/src/assets/images/vocab1.png",
-      videoUrl: "/vocabulary/sentence-building"
+      videoUrl: "https://youtu.be/U1fiBHOwzH0"
     },
     {
       id: 2,
       title: "Encourage children to play with words by making connections, grouping them into categories, and exploring how they relate to the writing topic or unit theme",
       description: "Supports retrieval of vocabulary across contexts, enhancing depth of word knowledge.",
       thumbnail: "/src/assets/images/structure.png",
-      videoUrl: "/vocabulary/vocabulary-support"
+      videoUrl: "https://youtu.be/qKrwVdmi70o"
     },
     {
       id: 3,
@@ -31,14 +31,14 @@ const VocabularySyntax = () => {
       title: "Explicitly and systematically focus on one language structure at a time–like subject-verb clauses or prepositional phrases–to build sentence awareness",
       description: "Explicitly and systematically focus on one language structure at a time–like subject-verb clauses or prepositional phrases–to build sentence awareness",
       thumbnail: "/src/assets/images/vocab2.png",
-      videoUrl: "/vocabulary/sentence-awareness"
+      videoUrl: "https://youtu.be/vFFicsmtTDE"
     },
     {
       id: 5,
       title: "Support children’s sentence development by having them build, rearrange, combine, and expand sentences related to the writing topic or unit theme.",
       description: "Promotes retrieval and application of syntactic structures, enhancing syntactic fluency.",
       thumbnail: "/src/assets/images/sentencecompletion.png",
-      videoUrl: "/vocabulary/sentence-manipulation"
+      videoUrl: "https://youtu.be/JWNfYqCnYyU"
     },
     {
       id: 6,
