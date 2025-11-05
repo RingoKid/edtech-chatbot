@@ -8,7 +8,34 @@
   "python.analysis.autoImportCompletions": true,
   "python.analysis.inlayHints.functionReturnTypes": true,
   "python.analysis.inlayHints.variableTypes": true,
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/backend/app"
+  ],
+  "python.analysis.indexing": true,
+  "python.analysis.packageIndexDepths": [
+    {
+      "name": "langchain",
+      "depth": 3
+    },
+    {
+      "name": "langchain_core",
+      "depth": 3
+    },
+    {
+      "name": "langgraph",
+      "depth": 3
+    },
+    {
+      "name": "fastapi",
+      "depth": 3
+    }
+  ],
   "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": [
+    "backend/tests"
+  ],
   "python.testing.unittestEnabled": false,
   "python.languageServer": "Pylance",
   "[python]": {
@@ -103,7 +130,22 @@
     "**/__pycache__/**": true,
     "**/node_modules/**": true,
     "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true
+    "**/.git/subtree-cache/**": true,
+    "**/.venv/**": true,
+    "**/venv/**": true,
+    "**/checkpointer.sqlite*": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.venv": true,
+    "**/venv": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true
+  },
+
+  // Terminal
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}/backend"
   },
 
   // Git
