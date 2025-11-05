@@ -172,6 +172,112 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     setThreadId(null)
   }
 
+  const handleDownloadPDF = async () => {
+    if (!threadId) return
+
+    try {
+      // Fetch chat history from API
+      const history = await chat2.getHistory(threadId)
+
+      // Create new PDF document
+      const doc = new jsPDF()
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      const margin = 20
+      const maxWidth = pageWidth - 2 * margin
+      let yPosition = margin
+
+      // Helper function to add new page if needed
+      const checkAndAddPage = (requiredSpace) => {
+        if (yPosition + requiredSpace > pageHeight - margin) {
+          doc.addPage()
+          yPosition = margin
+          return true
+        }
+        return false
+      }
+
+      // Helper function to wrap text
+      const wrapText = (text, maxWidth) => {
+        return doc.splitTextToSize(text, maxWidth)
+      }
+
+      // Add title
+      doc.setFontSize(18)
+      doc.setFont(undefined, 'bold')
+      doc.text('Chat History', margin, yPosition)
+      yPosition += 10
+
+      // Add metadata
+      doc.setFontSize(10)
+      doc.setFont(undefined, 'normal')
+      doc.setTextColor(100, 100, 100)
+      doc.text(`Thread ID: ${history.thread_id}`, margin, yPosition)
+      yPosition += 6
+
+      const date = new Date(history.created_at)
+      doc.text(`Date: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, margin, yPosition)
+      yPosition += 10
+
+      // Add separator line
+      doc.setDrawColor(200, 200, 200)
+      doc.line(margin, yPosition, pageWidth - margin, yPosition)
+      yPosition += 10
+
+      // Add messages
+      doc.setTextColor(0, 0, 0)
+
+      if (history.messages && history.messages.length > 0) {
+        history.messages.forEach((message, index) => {
+          // Determine role label
+          const roleLabel = message.role === 'user' ? 'User' : 'Assistant'
+          const timestamp = new Date(message.timestamp)
+          const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+          // Check if we need a new page for the message header
+          checkAndAddPage(20)
+
+          // Add role and timestamp
+          doc.setFontSize(11)
+          doc.setFont(undefined, 'bold')
+          doc.text(`${roleLabel} (${timeString}):`, margin, yPosition)
+          yPosition += 7
+
+          // Add message content
+          doc.setFontSize(10)
+          doc.setFont(undefined, 'normal')
+          const wrappedContent = wrapText(message.content, maxWidth)
+
+          wrappedContent.forEach((line) => {
+            checkAndAddPage(7)
+            doc.text(line, margin, yPosition)
+            yPosition += 5
+          })
+
+          // Add spacing between messages
+          yPosition += 8
+
+          // Add separator line between messages (except for last message)
+          if (index < history.messages.length - 1) {
+            checkAndAddPage(5)
+            doc.setDrawColor(230, 230, 230)
+            doc.line(margin, yPosition, pageWidth - margin, yPosition)
+            yPosition += 8
+          }
+        })
+      }
+
+      // Generate filename with thread_id
+      const filename = `chat-${threadId}.pdf`
+
+      // Save the PDF
+      doc.save(filename)
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      alert('Failed to download chat history. Please try again.')
+    }
+  }
+
 
   return (
     <div className={cn(
