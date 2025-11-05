@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Loader, RotateCcw, ChevronDown } from 'lucide-react'
+import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Download } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat2 } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
+import jsPDF from 'jspdf'
 
 const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [messages, setMessages] = useState([
@@ -192,13 +193,23 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
               </div>
             </div>
           </div>
-          <button
-            onClick={clearChat}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            title="Clear conversation"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleDownloadPDF}
+              disabled={!threadId}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={threadId ? "Download chat as PDF" : "Start a conversation to download"}
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button
+              onClick={clearChat}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              title="Clear conversation"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 
