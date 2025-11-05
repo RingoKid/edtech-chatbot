@@ -213,6 +213,7 @@ __marimo__/
 
 # LangGraph
 .langgraph/
+.langgraph_api/
 langgraph_*
 *.langgraph
 .langsmith/
@@ -223,6 +224,7 @@ langserve_*
 checkpoints/
 *.checkpoint
 .checkpoints/
+checkpointer.sqlite*
 
 # Environment files
 .env.*
