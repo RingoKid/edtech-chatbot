@@ -33,14 +33,21 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   // Auto-scroll to latest message only if user is at bottom
   const scrollToBottom = () => {
     if (!isUserScrolling || isAtBottom()) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      }
       setIsUserScrolling(false)
     }
   }
 
   // Force scroll to bottom (used by the scroll-to-bottom button)
   const forceScrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
     setIsUserScrolling(false)
   }
 
