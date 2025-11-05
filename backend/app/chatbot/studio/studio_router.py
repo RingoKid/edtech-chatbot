@@ -360,25 +360,45 @@ def create_studio_routing_graph_with_memory():
     graph.add_edge("vocabulary_specialist", END)
     graph.add_edge("ideas_specialist", END)
 
-    # Compile WITH SqliteSaver for persistent conversation memory
-    print("⚙️ Compiling graph with SqliteSaver (persistent storage)...")
-    checkpointer = get_shared_checkpointer()  # SqliteSaver - persists across restarts
+    # Compile WITH AsyncSqliteSaver for persistent conversation memory
+    print("⚙️ Compiling graph with AsyncSqliteSaver (persistent storage)...")
+    checkpointer = get_shared_checkpointer()  # AsyncSqliteSaver - persists across restarts
     compiled_graph = graph.compile(checkpointer=checkpointer)
 
     print("✅ Router-First Graph WITH PERSISTENT MEMORY compiled successfully!")
-    print("💾 Memory: SqliteSaver enabled - conversation history persists across server restarts")
+    print("💾 Memory: AsyncSqliteSaver enabled - conversation history persists across server restarts")
     print("🔄 Cross-bot context: ENABLED - context shared across specialist switches")
     print("📁 Database: backend/checkpoints/conversations.db")
 
     return compiled_graph
 
 
-# Create TWO graph instances:
+# ===================================================================
+# LAZY GRAPH INITIALIZATION
+# ===================================================================
+# Graphs are created on-demand to avoid checkpointer initialization race conditions
+
 # 1. For LangGraph Studio (no checkpointer)
 studio_router = create_studio_routing_graph()
 
-# 2. For API with conversation memory (with checkpointer)
-studio_router_with_memory = create_studio_routing_graph_with_memory()
+# 2. For API with conversation memory (with checkpointer) - LAZY INITIALIZATION
+_studio_router_with_memory_cache = None
+
+def get_studio_router_with_memory():
+    """
+    Lazy initialization of the routing graph with memory.
+    Creates the graph on first use, after checkpointer is initialized.
+
+    Returns:
+        Compiled LangGraph with AsyncSqliteSaver checkpointer
+    """
+    global _studio_router_with_memory_cache
+
+    if _studio_router_with_memory_cache is None:
+        print("🔧 First access: Creating routing graph with persistent memory...")
+        _studio_router_with_memory_cache = create_studio_routing_graph_with_memory()
+
+    return _studio_router_with_memory_cache
 
 # Keep backward compatibility
 studio_routing_graph = studio_router

@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
-from app.chatbot.studio.studio_router import studio_router_with_memory
+from app.chatbot.studio.studio_router import get_studio_router_with_memory
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse, ChatHistoryResponse, ChatMessage, ChatMetadata
 
@@ -34,7 +34,8 @@ class ChatService:
         - Cross-bot context sharing (handwriting → vocabulary transitions preserve context)
         - Transparent specialist handoffs
         """
-        self.graph = studio_router_with_memory
+        # Lazy initialization: graph is created on first use after checkpointer is ready
+        self.graph = get_studio_router_with_memory()
 
     def create_new_thread(self, user_id: str) -> str:
         """

@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -7,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Import routers
 from app.routers import health, chat, auth, users
 from app.config import settings
+from app.chatbot.checkpointer import checkpointer_manager
 # Temporarily disable handwriting_bot router - needs refactoring after graph cleanup
 # from app.routers import handwriting_bot
 # Temporarily disable educational_bot due to LangGraph installation issue
@@ -18,8 +20,28 @@ API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
 # Initialize LangSmith tracing
 settings.initialize_langsmith()
 
-# Initialize the FastAPI application
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan event handler for FastAPI application.
+    Initializes resources on startup and cleans up on shutdown.
+    """
+    # Startup: Initialize the AsyncSqliteSaver checkpointer
+    print("🚀 Application startup: Initializing checkpointer...")
+    await checkpointer_manager.async_init()
+    print("✅ Checkpointer initialized successfully")
+
+    yield  # Application is running
+
+    # Shutdown: Close the checkpointer properly
+    print("🛑 Application shutdown: Closing checkpointer...")
+    await checkpointer_manager.async_close()
+    print("✅ Checkpointer closed successfully")
+
+
+# Initialize the FastAPI application with lifespan handler
+app = FastAPI(lifespan=lifespan)
 
 # Define allowed origins for CORS
 allowed_origins = ['*']
