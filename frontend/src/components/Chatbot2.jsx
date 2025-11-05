@@ -212,8 +212,6 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
       doc.setFontSize(10)
       doc.setFont(undefined, 'normal')
       doc.setTextColor(100, 100, 100)
-      doc.text(`Thread ID: ${history.thread_id}`, margin, yPosition)
-      yPosition += 6
 
       const date = new Date(history.created_at)
       doc.text(`Date: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, margin, yPosition)
