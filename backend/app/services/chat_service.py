@@ -14,6 +14,7 @@ from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from app.chatbot.studio.studio_router import get_studio_router_with_memory
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse, ChatHistoryResponse, ChatMessage, ChatMetadata
+from app.services.audio_service import AudioService, AudioBuffer
 
 
 class ChatService:
@@ -349,3 +350,159 @@ class ChatService:
         except Exception as e:
             print(f"Error in WebSocket connection: {str(e)}")
             await websocket.close()
+
+    async def handle_audio_websocket_connection(self, websocket: WebSocket):
+        """
+        Handle WebSocket connection for voice input (audio streaming + transcription).
+
+        This endpoint:
+        1. Receives binary audio chunks from frontend (WebM/Opus format)
+        2. Buffers audio until sufficient data for transcription
+        3. Transcribes using OpenAI Whisper API
+        4. Sends transcribed text to LLM via existing handle_message()
+        5. Streams LLM response back to client
+
+        Protocol:
+        - Client sends: Binary audio frames (WebSocket binary messages)
+        - Client sends: {"type": "audio_end", "thread_id": "..."} to finalize
+        - Server sends: {"type": "transcript", "text": "..."} for interim transcripts
+        - Server sends: {"type": "response", "text": "...", "thread_id": "..."} for LLM response chunks
+        - Server sends: {"type": "error", "message": "..."} for errors
+
+        Args:
+            websocket (WebSocket): The WebSocket connection instance from FastAPI
+        """
+        await websocket.accept()
+        print("🎤 Audio WebSocket connection established")
+
+        audio_service = AudioService()
+        audio_buffer = AudioBuffer()
+        user_id = "default_user"
+        thread_id = None
+
+        try:
+            while True:
+                # Determine message type
+                message = await websocket.receive()
+
+                # Handle binary audio data
+                if "bytes" in message:
+                    audio_chunk = message["bytes"]
+                    print(f"📥 Received audio chunk: {len(audio_chunk)} bytes")
+
+                    try:
+                        await audio_buffer.append(audio_chunk)
+                        buffer_size = await audio_buffer.size()
+                        print(f"📦 Buffer size: {buffer_size} bytes")
+
+                        # Optional: Send buffer status to client
+                        await websocket.send_json({
+                            "type": "buffer_status",
+                            "size": buffer_size
+                        })
+
+                    except BufferError as e:
+                        await websocket.send_json({
+                            "type": "error",
+                            "message": str(e)
+                        })
+                        await audio_buffer.clear()
+
+                # Handle text control messages
+                elif "text" in message:
+                    data = json.loads(message["text"])
+                    message_type = data.get("type")
+
+                    # Client signals end of audio recording
+                    if message_type == "audio_end":
+                        print("🎬 Audio recording ended, processing...")
+
+                        # Get thread_id from client or use existing
+                        thread_id = data.get("thread_id", thread_id)
+
+                        try:
+                            # Get all buffered audio
+                            audio_data = await audio_buffer.get_and_clear()
+
+                            if len(audio_data) == 0:
+                                await websocket.send_json({
+                                    "type": "error",
+                                    "message": "No audio data received"
+                                })
+                                continue
+
+                            print(f"🎤 Transcribing {len(audio_data)} bytes of audio...")
+
+                            # Send status update
+                            await websocket.send_json({
+                                "type": "status",
+                                "message": "Transcribing audio..."
+                            })
+
+                            # Transcribe audio using Whisper
+                            transcript = await audio_service.transcribe_audio(
+                                audio_data,
+                                format="webm"
+                            )
+
+                            print(f"✅ Transcription: {transcript}")
+
+                            # Send transcript to client
+                            await websocket.send_json({
+                                "type": "transcript",
+                                "text": transcript
+                            })
+
+                            # Process transcribed text through LLM
+                            if transcript.strip():
+                                # Send status update
+                                await websocket.send_json({
+                                    "type": "status",
+                                    "message": "Processing with AI..."
+                                })
+
+                                # Use existing handle_message for LLM processing
+                                result = await self.handle_message(
+                                    user_message=transcript,
+                                    user_id=user_id,
+                                    thread_id=thread_id
+                                )
+
+                                # Update thread_id for subsequent messages
+                                thread_id = result["thread_id"]
+
+                                # Send complete LLM response
+                                await websocket.send_json({
+                                    "type": "response",
+                                    "text": result["reply"],
+                                    "thread_id": thread_id
+                                })
+
+                                print(f"✅ Sent LLM response for thread {thread_id}")
+
+                        except Exception as e:
+                            print(f"❌ Error processing audio: {str(e)}")
+                            await websocket.send_json({
+                                "type": "error",
+                                "message": f"Failed to process audio: {str(e)}"
+                            })
+                            await audio_buffer.clear()
+
+                    # Client requests to clear buffer
+                    elif message_type == "clear_buffer":
+                        await audio_buffer.clear()
+                        await websocket.send_json({
+                            "type": "status",
+                            "message": "Buffer cleared"
+                        })
+
+        except WebSocketDisconnect:
+            print("🔌 Audio WebSocket client disconnected")
+        except Exception as e:
+            print(f"❌ Error in audio WebSocket connection: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            try:
+                await websocket.close()
+            except:
+                pass

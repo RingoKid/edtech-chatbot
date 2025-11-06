@@ -189,3 +189,62 @@ async def websocket_message(
         chat_service: Injected ChatService instance
     """
     await chat_service.handle_websocket_connection(websocket)
+
+
+@router.websocket("/ws/audio")
+async def websocket_audio(
+    websocket: WebSocket,
+    chat_service: ChatService = Depends(get_chat_service)
+):
+    """
+    WebSocket endpoint for voice input (audio streaming + transcription).
+
+    **Protocol:**
+    - Client sends binary audio frames (WebM/Opus format recommended)
+    - Client sends control messages: {"type": "audio_end", "thread_id": "..."}
+    - Server sends: {"type": "transcript", "text": "..."} after transcription
+    - Server sends: {"type": "response", "text": "...", "thread_id": "..."} with LLM response
+    - Server sends: {"type": "error", "message": "..."} on errors
+
+    **Audio Format Recommendations:**
+    - Codec: WebM with Opus audio
+    - Sample Rate: 16kHz (optimal for Whisper)
+    - Channels: Mono (1 channel)
+    - Bitrate: 16-32 kbps
+
+    **Example Usage (JavaScript):**
+    ```javascript
+    const ws = new WebSocket('ws://localhost:8000/api/v1/chat2/ws/audio');
+    const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+    });
+
+    mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+            ws.send(event.data);  // Send binary audio
+        }
+    };
+
+    // When recording stops
+    mediaRecorder.onstop = () => {
+        ws.send(JSON.stringify({
+            type: 'audio_end',
+            thread_id: currentThreadId
+        }));
+    };
+
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'transcript') {
+            console.log('Transcribed:', data.text);
+        } else if (data.type === 'response') {
+            console.log('AI Response:', data.text);
+        }
+    };
+    ```
+
+    Args:
+        websocket: The WebSocket connection instance
+        chat_service: Injected ChatService instance
+    """
+    await chat_service.handle_audio_websocket_connection(websocket)
