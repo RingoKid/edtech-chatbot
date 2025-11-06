@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Download } from 'lucide-react'
+import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Download, Mic, MicOff } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat2 } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
 import jsPDF from 'jspdf'
+import { useWebSpeech } from '../hooks/useWebSpeech'
 
 const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [messages, setMessages] = useState([
@@ -22,6 +23,85 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [threadId, setThreadId] = useState(null) // Store thread_id for conversation persistence
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
+
+  // Web Speech API hook
+  const {
+    isListening,
+    transcript,
+    interimTranscript,
+    fullTranscript,
+    isSupported: isSpeechSupported,
+    error: speechError,
+    toggleListening,
+    resetTranscript
+  } = useWebSpeech()
+
+  // Handle voice input completion
+  const handleVoiceComplete = async () => {
+    const finalText = fullTranscript.trim()
+
+    if (!finalText) {
+      alert('No speech detected. Please try again.')
+      return
+    }
+
+    // Add user message with transcript
+    const userMessage = {
+      id: Date.now(),
+      type: 'user',
+      content: finalText,
+      timestamp: new Date()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    resetTranscript()
+
+    // Notify parent
+    if (onNewMessage) {
+      onNewMessage()
+    }
+
+    // Send to LLM
+    setIsTyping(true)
+    try {
+      const res = await chat2.send(finalText, threadId)
+
+      if (res?.thread_id) {
+        setThreadId(res.thread_id)
+      }
+
+      const botResponse = {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: res?.reply ?? generateResponse(finalText),
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, botResponse])
+    } catch (err) {
+      const response = generateResponse(finalText)
+      const botResponse = {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: response,
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, botResponse])
+    } finally {
+      setIsTyping(false)
+    }
+  }
+
+  // Handle voice toggle
+  const handleVoiceToggle = () => {
+    if (isListening) {
+      // Stop and process
+      toggleListening()
+      handleVoiceComplete()
+    } else {
+      // Start listening
+      toggleListening()
+    }
+  }
 
   // Check if user is at the bottom of the chat
   const isAtBottom = () => {
@@ -421,6 +501,19 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
 
       {/* Input */}
       <div className="p-4 border-t bg-gray-50">
+        {/* Real-time transcript display */}
+        {isListening && (fullTranscript || interimTranscript) && (
+          <div className="mb-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="text-xs text-purple-600 font-semibold mb-1">Listening...</div>
+            <div className="text-sm text-gray-800">
+              {fullTranscript}
+              {interimTranscript && (
+                <span className="text-gray-400 italic"> {interimTranscript}</span>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-end space-x-2">
           <div className="flex-1">
             <textarea
@@ -430,15 +523,35 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
               placeholder="Ask about lesson planning, student assessment, classroom management..."
               className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               rows="2"
-              disabled={isTyping}
+              disabled={isTyping || isListening}
             />
           </div>
+
+          {/* Voice input button */}
+          {isSpeechSupported && (
+            <button
+              onClick={handleVoiceToggle}
+              disabled={isTyping}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                isListening
+                  ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                  : "bg-purple-500 text-white hover:bg-purple-600",
+                isTyping && "opacity-50 cursor-not-allowed"
+              )}
+              title={isListening ? "Stop and send" : "Start voice input"}
+            >
+              {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </button>
+          )}
+
+          {/* Send button */}
           <button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isTyping}
+            disabled={!inputValue.trim() || isTyping || isListening}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              inputValue.trim() && !isTyping
+              inputValue.trim() && !isTyping && !isListening
                 ? "bg-purple-500 text-white hover:bg-purple-600"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             )}
@@ -446,6 +559,20 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             <Send className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Speech error */}
+        {speechError && (
+          <div className="mt-2 text-sm text-red-600">
+            {speechError}
+          </div>
+        )}
+
+        {/* Browser not supported */}
+        {!isSpeechSupported && (
+          <div className="mt-2 text-sm text-amber-600">
+            Voice input not supported. Please use Chrome or Edge browser.
+          </div>
+        )}
       </div>
     </div>
   )
