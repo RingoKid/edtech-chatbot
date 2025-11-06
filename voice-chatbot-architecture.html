@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice-Enabled Chatbot Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1400px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+        .architecture-section {
+            margin-bottom: 50px;
+        }
+        .section-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .component {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            min-width: 180px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .component:hover {
+            transform: translateY(-5px);
+        }
+        .component.frontend {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .component.backend {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .component.stt {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        .component.llm {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+        .component.db {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+        .component-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .component-tech {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .arrow {
+            font-size: 32px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .flow-description {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+        .flow-step {
+            margin: 8px 0;
+            color: #444;
+            font-size: 14px;
+        }
+        .flow-step strong {
+            color: #667eea;
+        }
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .pros, .cons {
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .pros {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .cons {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        .pros h4, .cons h4 {
+            margin-top: 0;
+            font-size: 14px;
+        }
+        .pros ul, .cons ul {
+            margin: 10px 0;
+            padding-left: 20px;
+            font-size: 13px;
+        }
+        .recommendation {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .recommendation h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        @media (max-width: 768px) {
+            .diagram {
+                flex-direction: column;
+            }
+            .arrow {
+                transform: rotate(90deg);
+            }
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Voice-Enabled Chatbot Architecture</h1>
+        <p class="subtitle">Two Approaches: Backend-Based vs Frontend-Based STT</p>
+
+        <!-- Approach 1: Backend-Based -->
+        <div class="architecture-section">
+            <div class="section-title">🔷 Approach 1: Backend-Based STT (Recommended for Real-time)</div>
+            
+            <div class="diagram">
+                <div class="component frontend">
+                    <div class="component-title">Frontend</div>
+                    <div class="component-tech">React + WebSocket</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="component backend">
+                    <div class="component-title">Backend</div>
+                    <div class="component-tech">Django + WebSocket</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="component stt">
+                    <div class="component-title">STT API</div>
+                    <div class="component-tech">OpenAI Whisper / Deepgram</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="component llm">
+                    <div class="component-title">LLM</div>
+                    <div class="component-tech">OpenAI GPT</div>
+                </div>
+            </div>
+
+            <div class="diagram" style="justify-content: flex-end;">
+                <div class="component db">
+                    <div class="component-title">Database</div>
+                    <div class="component-tech">DynamoDB + SQLite</div>
+                </div>
+                <div class="arrow" style="transform: rotate(180deg);">→</div>
+                <div class="component backend">
+                    <div class="component-title">Backend</div>
+                    <div class="component-tech">Process & Store</div>
+                </div>
+                <div class="arrow" style="transform: rotate(180deg);">→</div>
+                <div class="component frontend">
+                    <div class="component-title">Frontend</div>
+                    <div class="component-tech">Display Response</div>
+                </div>
+            </div>
+
+            <div class="flow-description">
+                <div class="flow-step"><strong>1.</strong> User speaks into microphone (React captures audio stream)</div>
+                <div class="flow-step"><strong>2.</strong> Audio chunks sent via WebSocket to Django backend</div>
+                <div class="flow-step"><strong>3.</strong> Django forwards audio to STT API (Whisper/Deepgram)</div>
+                <div class="flow-step"><strong>4.</strong> STT returns transcribed text in real-time</div>
+                <div class="flow-step"><strong>5.</strong> Django sends text to OpenAI LLM</div>
+                <div class="flow-step"><strong>6.</strong> LLM response saved to DB and streamed back to React</div>
+                <div class="flow-step"><strong>7.</strong> React displays text response to user</div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Pros</h4>
+                    <ul>
+                        <li>True real-time streaming</li>
+                        <li>Better control & security</li>
+                        <li>Can process audio on backend</li>
+                        <li>Consistent across all browsers</li>
+                        <li>Better for production apps</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Cons</h4>
+                    <ul>
+                        <li>More complex implementation</li>
+                        <li>Requires WebSocket setup</li>
+                        <li>Higher latency than client-side</li>
+                        <li>STT API costs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approach 2: Frontend-Based -->
+        <div class="architecture-section">
+            <div class="section-title">🔶 Approach 2: Frontend-Based STT (Simpler)</div>
+            
+            <div class="diagram">
+                <div class="component frontend">
+                    <div class="component-title">Frontend</div>
+                    <div class="component-tech">React + Microphone</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="component stt">
+                    <div class="component-title">STT API</div>
+                    <div class="component-tech">Web Speech API (Browser)</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="component frontend">
+                    <div class="component-title">Frontend</div>
+                    <div class="component-tech">Text Processing</div>
+                </div>
+            </div>
+
+            <div class="diagram" style="margin-top: -10px;">
+                <div style="width: 180px;"></div>
+                <div class="arrow">↓</div>
+            </div>
+
+            <div class="diagram">
+                <div class="component backend">
+                    <div class="component-title">Backend</div>
+                    <div class="component-tech">Django API</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="component llm">
+                    <div class="component-title">LLM</div>
+                    <div class="component-tech">OpenAI GPT</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="component db">
+                    <div class="component-title">Database</div>
+                    <div class="component-tech">DynamoDB + SQLite</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="component frontend">
+                    <div class="component-title">Frontend</div>
+                    <div class="component-tech">Display Response</div>
+                </div>
+            </div>
+
+            <div class="flow-description">
+                <div class="flow-step"><strong>1.</strong> User speaks into microphone (React captures audio)</div>
+                <div class="flow-step"><strong>2.</strong> Web Speech API (browser) converts speech to text locally</div>
+                <div class="flow-step"><strong>3.</strong> React sends transcribed text to Django API (HTTP/REST)</div>
+                <div class="flow-step"><strong>4.</strong> Django processes text with existing LLM logic</div>
+                <div class="flow-step"><strong>5.</strong> Response saved to DB and returned to React</div>
+                <div class="flow-step"><strong>6.</strong> React displays text response to user</div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Pros</h4>
+                    <ul>
+                        <li>Very simple implementation</li>
+                        <li>No backend changes needed</li>
+                        <li>No STT API costs (free)</li>
+                        <li>Low latency (client-side)</li>
+                        <li>Works with existing Django API</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Cons</h4>
+                    <ul>
+                        <li>Only works in Chrome/Edge</li>
+                        <li>Less accurate than Whisper</li>
+                        <li>Limited language support</li>
+                        <li>Privacy concerns (Google servers)</li>
+                        <li>Not truly "real-time" streaming</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="recommendation">
+            <h3>💡 Recommendation</h3>
+            <p><strong>For Production & Real-time:</strong> Use Approach 1 with <strong>OpenAI Whisper API</strong> or <strong>Deepgram</strong> (WebSocket-based)</p>
+            <p><strong>For Quick MVP/Testing:</strong> Use Approach 2 with <strong>Web Speech API</strong> (frontend only)</p>
+            <p style="margin-top: 15px; font-size: 14px;">Start with Approach 2 to validate the concept, then migrate to Approach 1 for production deployment.</p>
+        </div>
+    </div>
+</body>
+</html>
