@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Loader, RotateCcw, ChevronDown } from 'lucide-react'
+import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Download } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat2 } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
+import jsPDF from 'jspdf'
 
 const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [messages, setMessages] = useState([
@@ -32,14 +33,21 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   // Auto-scroll to latest message only if user is at bottom
   const scrollToBottom = () => {
     if (!isUserScrolling || isAtBottom()) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      }
       setIsUserScrolling(false)
     }
   }
 
   // Force scroll to bottom (used by the scroll-to-bottom button)
   const forceScrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
     setIsUserScrolling(false)
   }
 
@@ -171,6 +179,110 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     setThreadId(null)
   }
 
+  const handleDownloadPDF = async () => {
+    if (!threadId) return
+
+    try {
+      // Fetch chat history from API
+      const history = await chat2.getHistory(threadId)
+
+      // Create new PDF document
+      const doc = new jsPDF()
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      const margin = 20
+      const maxWidth = pageWidth - 2 * margin
+      let yPosition = margin
+
+      // Helper function to add new page if needed
+      const checkAndAddPage = (requiredSpace) => {
+        if (yPosition + requiredSpace > pageHeight - margin) {
+          doc.addPage()
+          yPosition = margin
+          return true
+        }
+        return false
+      }
+
+      // Helper function to wrap text
+      const wrapText = (text, maxWidth) => {
+        return doc.splitTextToSize(text, maxWidth)
+      }
+
+      // Add title
+      doc.setFontSize(18)
+      doc.setFont(undefined, 'bold')
+      doc.text('Chat History', margin, yPosition)
+      yPosition += 10
+
+      // Add metadata
+      doc.setFontSize(10)
+      doc.setFont(undefined, 'normal')
+      doc.setTextColor(100, 100, 100)
+
+      const date = new Date(history.created_at)
+      doc.text(`Date: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, margin, yPosition)
+      yPosition += 10
+
+      // Add separator line
+      doc.setDrawColor(200, 200, 200)
+      doc.line(margin, yPosition, pageWidth - margin, yPosition)
+      yPosition += 10
+
+      // Add messages
+      doc.setTextColor(0, 0, 0)
+
+      if (history.messages && history.messages.length > 0) {
+        history.messages.forEach((message, index) => {
+          // Determine role label
+          const roleLabel = message.role === 'user' ? 'User' : 'Assistant'
+          const timestamp = new Date(message.timestamp)
+          const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+          // Check if we need a new page for the message header
+          checkAndAddPage(20)
+
+          // Add role and timestamp
+          doc.setFontSize(11)
+          doc.setFont(undefined, 'bold')
+          doc.text(`${roleLabel} (${timeString}):`, margin, yPosition)
+          yPosition += 7
+
+          // Add message content
+          doc.setFontSize(10)
+          doc.setFont(undefined, 'normal')
+          const wrappedContent = wrapText(message.content, maxWidth)
+
+          wrappedContent.forEach((line) => {
+            checkAndAddPage(7)
+            doc.text(line, margin, yPosition)
+            yPosition += 5
+          })
+
+          // Add spacing between messages
+          yPosition += 8
+
+          // Add separator line between messages (except for last message)
+          if (index < history.messages.length - 1) {
+            checkAndAddPage(5)
+            doc.setDrawColor(230, 230, 230)
+            doc.line(margin, yPosition, pageWidth - margin, yPosition)
+            yPosition += 8
+          }
+        })
+      }
+
+      // Generate filename with thread_id
+      const filename = `chat-${threadId}.pdf`
+
+      // Save the PDF
+      doc.save(filename)
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      alert('Failed to download chat history. Please try again.')
+    }
+  }
+
 
   return (
     <div className={cn(
@@ -192,13 +304,23 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
               </div>
             </div>
           </div>
-          <button
-            onClick={clearChat}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            title="Clear conversation"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleDownloadPDF}
+              disabled={!threadId}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={threadId ? "Download chat as PDF" : "Start a conversation to download"}
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button
+              onClick={clearChat}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              title="Clear conversation"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 

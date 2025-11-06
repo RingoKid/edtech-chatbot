@@ -12,7 +12,8 @@ export const chat = {
 
 export const chat2 = {
   status: () => client.apiGet('/chat2/ws/info'),
-  send: (message, threadId = null) => client.apiPost('/chat2/message', { message, thread_id: threadId })
+  send: (message, threadId = null) => client.apiPost('/chat2/message', { message, thread_id: threadId }),
+  getHistory: (threadId) => client.apiGet(`/chat2/history/${threadId}`)
 };
 
 export const users = {

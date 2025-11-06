@@ -1,22 +1,24 @@
 """
 Centralized Checkpointer for Educational Chatbot.
 Single source of truth for conversation state persistence across all graphs.
-Uses SqliteSaver for persistent storage like LangGraph Studio.
+Uses AsyncSqliteSaver for persistent storage with proper lifecycle management.
 """
 import os
+import asyncio
 from pathlib import Path
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from app.config import settings
 
 class CheckpointerManager:
     """
     Singleton manager for conversation state persistence.
     Ensures all graphs (routing, handwriting, vocabulary, ideas) use the same checkpointer.
-    Uses SqliteSaver with persistent file storage (same as LangGraph Studio).
+    Uses AsyncSqliteSaver with persistent file storage.
     """
 
     _instance = None
     _checkpointer = None
+    _context_manager = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -26,11 +28,17 @@ class CheckpointerManager:
     def __init__(self):
         """Initialize the checkpointer only once."""
         if self._checkpointer is None:
-            self._initialize_checkpointer()
+            # Note: Actual initialization happens in async_init()
+            # which must be called from an async context
+            pass
 
-    def _initialize_checkpointer(self):
-        """Create the checkpointer based on configuration."""
-        # Using SqliteSaver for persistent conversation storage (same as LangGraph Studio)
+    async def async_init(self):
+        """
+        Async initialization of the checkpointer.
+        Must be called once at application startup.
+        """
+        if self._checkpointer is not None:
+            return  # Already initialized
 
         # Create checkpoints directory if it doesn't exist
         checkpoint_dir = Path(__file__).parent.parent.parent / "checkpoints"
@@ -39,24 +47,45 @@ class CheckpointerManager:
         # Database file path
         db_path = checkpoint_dir / "conversations.db"
 
-        print("🗄️ Initializing SQLITE checkpointer for persistent conversation storage")
+        print("🗄️ Initializing ASYNC SQLITE checkpointer for persistent conversation storage")
         print(f"💾 Database path: {db_path}")
-        print("✅ Conversations will persist across server restarts (same as LangGraph Studio)")
 
-        # Create SqliteSaver with connection string
-        # Using synchronous SqliteSaver (same pattern as LangGraph Studio)
-        self._checkpointer = SqliteSaver.from_conn_string(str(db_path))
+        # Create AsyncSqliteSaver context manager
+        self._context_manager = AsyncSqliteSaver.from_conn_string(str(db_path))
 
-        print("✅ Shared SqliteSaver checkpointer initialized successfully")
-        print("💾 All conversation state will be persisted to SQLite database")
+        # Enter the context manager and keep it alive
+        self._checkpointer = await self._context_manager.__aenter__()
 
-    def get_checkpointer(self) -> SqliteSaver:
+        print("✅ Shared AsyncSqliteSaver checkpointer initialized successfully")
+        print("💾 Conversation history will persist across server restarts")
+        print("📁 Database: backend/checkpoints/conversations.db")
+
+    async def async_close(self):
+        """
+        Close the checkpointer properly.
+        Should be called at application shutdown.
+        """
+        if self._context_manager and self._checkpointer:
+            print("🔄 Closing AsyncSqliteSaver checkpointer...")
+            await self._context_manager.__aexit__(None, None, None)
+            self._checkpointer = None
+            self._context_manager = None
+            print("✅ Checkpointer closed")
+
+    def get_checkpointer(self) -> AsyncSqliteSaver:
         """
         Get the shared checkpointer instance.
 
         Returns:
-            MemorySaver: The shared checkpointer for all graphs
+            AsyncSqliteSaver: The shared async checkpointer for all graphs
+
+        Raises:
+            RuntimeError: If checkpointer hasn't been initialized yet
         """
+        if self._checkpointer is None:
+            raise RuntimeError(
+                "Checkpointer not initialized! Call await checkpointer_manager.async_init() first."
+            )
         return self._checkpointer
 
     def reset_checkpointer(self):
@@ -74,7 +103,7 @@ class CheckpointerManager:
 checkpointer_manager = CheckpointerManager()
 
 
-def get_shared_checkpointer() -> SqliteSaver:
+def get_shared_checkpointer() -> AsyncSqliteSaver:
     """
     Get the shared checkpointer for all graphs.
 
@@ -85,6 +114,6 @@ def get_shared_checkpointer() -> SqliteSaver:
         graph = graph_builder.compile(checkpointer=checkpointer)
 
     Returns:
-        SqliteSaver: The shared checkpointer instance with persistent storage
+        AsyncSqliteSaver: The shared async checkpointer instance with persistent storage
     """
     return checkpointer_manager.get_checkpointer()

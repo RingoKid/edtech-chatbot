@@ -8,11 +8,12 @@ NOW WITH CONVERSATION MEMORY AND CROSS-BOT CONTEXT SHARING!
 from typing import Dict, Any
 import uuid
 import json
+from datetime import datetime
 
-from fastapi import WebSocket, WebSocketDisconnect
-from app.chatbot.studio.studio_router import studio_router_with_memory
+from fastapi import WebSocket, WebSocketDisconnect, HTTPException
+from app.chatbot.studio.studio_router import get_studio_router_with_memory
 from langchain_core.messages import HumanMessage
-from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
+from app.schemas.chat import ChatMessageRequest, ChatMessageResponse, ChatHistoryResponse, ChatMessage, ChatMetadata
 
 
 class ChatService:
@@ -33,7 +34,8 @@ class ChatService:
         - Cross-bot context sharing (handwriting → vocabulary transitions preserve context)
         - Transparent specialist handoffs
         """
-        self.graph = studio_router_with_memory
+        # Lazy initialization: graph is created on first use after checkpointer is ready
+        self.graph = get_studio_router_with_memory()
 
     def create_new_thread(self, user_id: str) -> str:
         """
@@ -161,6 +163,109 @@ class ChatService:
         }
 
         return response
+
+    async def get_chat_history(self, thread_id: str) -> ChatHistoryResponse:
+        """
+        Retrieve full conversation history for a thread.
+
+        This method fetches all messages from the checkpointer and transforms them
+        into a structured format suitable for frontend consumption and PDF generation.
+
+        Args:
+            thread_id: The conversation thread identifier
+
+        Returns:
+            ChatHistoryResponse: Complete conversation history with metadata
+
+        Raises:
+            HTTPException: 404 if thread not found, 500 if retrieval fails
+        """
+        try:
+            # Create config with thread_id
+            config = {"configurable": {"thread_id": thread_id}}
+
+            # Retrieve state from checkpointer
+            print(f"📜 Retrieving chat history for thread: {thread_id}")
+            state = await self.graph.aget_state(config)
+
+            # Check if state exists and has messages
+            if not state or not state.values:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No chat history found for thread_id: {thread_id}"
+                )
+
+            # Extract messages from state
+            messages = state.values.get("messages", [])
+
+            if not messages:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No messages found in thread: {thread_id}"
+                )
+
+            print(f"✅ Found {len(messages)} messages in thread {thread_id}")
+
+            # Transform LangChain messages to ChatMessage format
+            formatted_messages = []
+            for idx, msg in enumerate(messages):
+                # Determine role from LangChain message type
+                if hasattr(msg, 'type'):
+                    role = "user" if msg.type == "human" else "assistant"
+                else:
+                    # Fallback: check message class name
+                    role = "user" if "Human" in msg.__class__.__name__ else "assistant"
+
+                # Extract content
+                content = msg.content if hasattr(msg, 'content') else str(msg)
+
+                # Create timestamp (sequential for now - could be enhanced later)
+                timestamp = datetime.utcnow().isoformat() + "Z"
+
+                formatted_messages.append(
+                    ChatMessage(
+                        id=idx + 1,
+                        role=role,
+                        content=content,
+                        timestamp=timestamp
+                    )
+                )
+
+            # Extract metadata from state
+            metadata = ChatMetadata(
+                bot_type=state.values.get("bot_type"),
+                target_letters=state.values.get("target_letters", []),
+                grade_level=state.values.get("grade_level"),
+                intent=str(state.values.get("intent")) if state.values.get("intent") else None
+            )
+
+            # Determine created_at and last_updated from messages
+            created_at = formatted_messages[0].timestamp if formatted_messages else None
+            last_updated = formatted_messages[-1].timestamp if formatted_messages else None
+
+            print(f"✅ Chat history prepared: {len(formatted_messages)} messages, bot_type: {metadata.bot_type}")
+
+            # Build and return response
+            return ChatHistoryResponse(
+                thread_id=thread_id,
+                message_count=len(formatted_messages),
+                created_at=created_at,
+                last_updated=last_updated,
+                metadata=metadata,
+                messages=formatted_messages
+            )
+
+        except HTTPException:
+            # Re-raise HTTP exceptions as-is
+            raise
+        except Exception as e:
+            print(f"❌ Error retrieving chat history: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to retrieve chat history: {str(e)}"
+            )
 
     async def handle_websocket_connection(self, websocket: WebSocket):
         """

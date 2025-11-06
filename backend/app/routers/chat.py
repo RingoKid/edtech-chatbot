@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, WebSocket
 from fastapi.responses import JSONResponse
 
 from app.services.chat_service import ChatService
-from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
+from app.schemas.chat import ChatMessageRequest, ChatMessageResponse, ChatHistoryResponse
 
 
 router = APIRouter(prefix="/chat2", tags=["Chat2"])
@@ -43,6 +43,56 @@ async def send_message(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to process message: {str(e)}"
+        )
+
+
+@router.get("/history/{thread_id}", response_model=ChatHistoryResponse)
+async def get_chat_history(
+    thread_id: str,
+    chat_service: ChatService = Depends(get_chat_service)
+):
+    """
+    Retrieve full conversation history for a specific thread.
+
+    This endpoint returns all messages in a conversation thread, along with metadata
+    like bot type, target letters, and grade level. The frontend can use this data
+    to generate a downloadable PDF or display conversation history.
+
+    **Example Usage:**
+    ```
+    GET /api/v1/chat2/history/default_user_abc12345
+    ```
+
+    **Response includes:**
+    - `thread_id`: The conversation thread identifier
+    - `message_count`: Total number of messages in the conversation
+    - `created_at`: Timestamp of the first message
+    - `last_updated`: Timestamp of the last message
+    - `metadata`: Conversation context (bot_type, target_letters, grade_level, intent)
+    - `messages`: Array of all messages with role (user/assistant), content, and timestamp
+
+    Args:
+        thread_id: The unique conversation thread identifier
+        chat_service: Injected ChatService instance
+
+    Returns:
+        ChatHistoryResponse: Complete conversation history with metadata
+
+    Raises:
+        404: Thread ID not found or no messages in thread
+        500: Server error retrieving history
+    """
+    try:
+        return await chat_service.get_chat_history(thread_id)
+
+    except HTTPException:
+        # Re-raise HTTP exceptions (404, 500) from service layer
+        raise
+    except Exception as e:
+        print(f"Error retrieving chat history: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error retrieving chat history: {str(e)}"
         )
 
 
