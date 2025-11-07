@@ -1,0 +1,15 @@
+# docker-compose.devcontainer.yml
+# Override file for devcontainer to mount entire project
+services:
+  backend:
+    volumes:
+      # Mount project root to /workspace (in addition to /app mount from base)
+      - .:/workspace:cached
+    working_dir: /workspace/backend
+    # Install Node.js for frontend development
+    command: sh -c "
+      curl -fsSL https://deb.nodesource.com/setup_22.x | bash - &&
+      apt-get install -y nodejs &&
+      langgraph dev --host 0.0.0.0 --port 2024 &
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "

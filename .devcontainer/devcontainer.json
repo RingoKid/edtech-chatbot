@@ -1,10 +1,14 @@
 {
-  "name": "EdTech Chatbot Backend",
+  "name": "EdTech Chatbot - Full Stack",
   "dockerComposeFile": [
-    "../docker-compose.yml"
+    "../docker-compose.yml",
+    "docker-compose.devcontainer.yml"
   ],
   "service": "backend",
-  "workspaceFolder": "/app",
+  "dockerComposeOptions": ["--project-directory", ".."],
+  "runServices": ["backend", "frontend", "dynamodb-local"],
+  "workspaceFolder": "/workspace",
+  "overrideCommand": true,
   "customizations": {
     "vscode": {
       "settings": {
@@ -14,13 +18,13 @@
         "python.formatting.provider": "none",
         "python.analysis.autoSearchPaths": true,
         "python.analysis.extraPaths": [
-          "/app"
+          "/workspace/backend"
         ],
         "python.analysis.typeCheckingMode": "basic",
         "python.analysis.indexing": true,
         "python.testing.pytestEnabled": true,
         "python.testing.pytestArgs": [
-          "tests"
+          "backend/tests"
         ],
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
@@ -32,6 +36,24 @@
           "**/venv/**": true,
           "**/__pycache__/**": true,
           "**/.pytest_cache/**": true
+        },
+        "eslint.workingDirectories": [
+          "./frontend"
+        ],
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[javascriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
         }
       },
       "extensions": [
@@ -40,11 +62,35 @@
         "ms-python.debugpy",
         "ms-azuretools.vscode-docker",
         "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint"
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "dsznajder.es7-react-js-snippets",
+        "humao.rest-client"
       ]
     }
   },
-  "forwardPorts": [8000, 2024],
-  "postCreateCommand": "pip install -r requirements.txt",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "forwardPorts": [3000, 8000, 2024, 8001],
+  "portsAttributes": {
+    "3000": {
+      "label": "Frontend",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "Backend API",
+      "onAutoForward": "notify"
+    },
+    "2024": {
+      "label": "LangGraph Studio",
+      "onAutoForward": "notify"
+    },
+    "8001": {
+      "label": "DynamoDB Local",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "pip install -r /workspace/backend/requirements.txt",
   "remoteUser": "root"
 }
