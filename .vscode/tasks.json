@@ -2,40 +2,87 @@
 {
     "version": "2.0.0",
     "tasks": [
+        // NOTE: These docker-compose tasks only work when running VS Code on HOST machine (not in devcontainer)
+        // {
+        //     "label": "docker-compose-up (debug)",
+        //     "type": "docker-compose",
+        //     "dockerCompose": {
+        //         "up": {
+        //             "build": true,
+        //             "detached": true
+        //         },
+        //         "files": [
+        //             "${workspaceFolder}/docker-compose.yml",
+        //             "${workspaceFolder}/docker-compose.override.yml"
+        //         ]
+        //     },
+        //     "problemMatcher": [],
+        //     "group": "build"
+        // },
+        // {
+        //     "label": "Start Debug Containers (Shell)",
+        //     "type": "shell",
+        //     "command": "docker-compose",
+        //     "args": [
+        //         "-f", "docker-compose.yml",
+        //         "-f", "docker-compose.override.yml",
+        //         "up", "--build", "-d"
+        //     ],
+        //     "group": "build",
+        //     "presentation": {
+        //         "echo": true,
+        //         "reveal": "always",
+        //         "focus": false,
+        //         "panel": "shared",
+        //         "showReuseMessage": true
+        //     },
+        //     "problemMatcher": []
+        // },
         {
-            "label": "docker-compose-up (debug)",
-            "type": "docker-compose",
-            "dockerCompose": {
-                "up": {
-                    "build": true,
-                    "detached": true
-                },
-                "files": [
-                    "${workspaceFolder}/docker-compose.yml",
-                    "${workspaceFolder}/docker-compose.override.yml"
-                ]
-            },
-            "problemMatcher": [],
-            "group": "build"
-        },
-        {
-            "label": "Start Debug Containers (Shell)",
+            "label": "DevContainer: Start Backend Services",
             "type": "shell",
-            "command": "docker-compose",
-            "args": [
-                "-f", "docker-compose.yml",
-                "-f", "docker-compose.override.yml",
-                "up", "--build", "-d"
-            ],
-            "group": "build",
+            "command": "cd /workspace/backend && langgraph dev --host 0.0.0.0 --port 2024 & uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+            "isBackground": true,
+            "problemMatcher": [],
             "presentation": {
                 "echo": true,
                 "reveal": "always",
                 "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true
+                "panel": "dedicated",
+                "showReuseMessage": false
             },
-            "problemMatcher": []
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "DevContainer: Start FastAPI Only",
+            "type": "shell",
+            "command": "cd /workspace/backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "DevContainer: Start LangGraph Studio Only",
+            "type": "shell",
+            "command": "cd /workspace/backend && langgraph dev --host 0.0.0.0 --port 2024",
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false
+            }
         }
     ]
 }

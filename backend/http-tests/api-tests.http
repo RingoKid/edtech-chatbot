@@ -1,0 +1,9 @@
+### EdTech Chatbot API Tests
+### Install "REST Client" extension by Huachao Mao to use this file
+### Click "Send Request" above any request to test it
+
+@baseUrl = http://localhost:8000
+@apiPrefix = /api/v1
+
+### Health Check
+GET {{baseUrl}}{{apiPrefix}}/health
