@@ -1,12 +1,14 @@
-# [Modify Schema]
-from pydantic import BaseModel, Field
-from typing import Literal
+"""
+Placeholder for task routing schemas.
 
-class TaskRoute(BaseModel):
-    """
-    Routes the user's request to the correct lesson planning task or indicates clarification is needed.
-    """
-    task_name: Literal["Handwriting", "Vocabulary", "Idea Generation", "__CLARIFY__"] = Field(
-        ...,
-        description="The specific lesson planning task the user wants to start, or '__CLARIFY__' if the user's intent is unclear."
-    )
+TODO: Define routing schemas if needed for your implementation
+"""
+
+from pydantic import BaseModel, Field
+
+
+# TODO: Define your routing schemas here
+# Example:
+# class TaskRoute(BaseModel):
+#     """Routes the user's request to the appropriate handler."""
+#     task_name: str = Field(..., description="The task to route to")
