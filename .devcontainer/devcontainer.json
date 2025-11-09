@@ -65,13 +65,18 @@
         "dbaeumer.vscode-eslint",
         "bradlc.vscode-tailwindcss",
         "dsznajder.es7-react-js-snippets",
-        "humao.rest-client"
+        "humao.rest-client",
+        "anthropic.claude-code"
       ]
     }
   },
   "features": {
     "ghcr.io/devcontainers/features/git:1": {}
   },
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/root/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/claude,target=/root/.config/claude,type=bind,consistency=cached"
+  ],
   "forwardPorts": [3000, 8000, 2024, 8001],
   "portsAttributes": {
     "3000": {
@@ -91,6 +96,9 @@
       "onAutoForward": "silent"
     }
   },
-  "postCreateCommand": "pip install -r /workspace/backend/requirements.txt",
-  "remoteUser": "root"
+  "postCreateCommand": "apt-get update && apt-get install -y curl && pip install -r /workspace/backend/requirements.txt && curl -fsSL https://claude.ai/install.sh | bash && echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> /root/.bashrc",
+  "remoteUser": "root",
+  "remoteEnv": {
+    "PATH": "/root/.local/bin:${containerEnv:PATH}"
+  }
 }
