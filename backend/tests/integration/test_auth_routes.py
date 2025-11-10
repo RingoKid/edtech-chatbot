@@ -1,85 +1,89 @@
 """
 Integration tests for auth routes.
+Uses DynamoDB Local container for testing.
 """
 
 import pytest
 from fastapi.testclient import TestClient
-from moto import mock_aws
 import boto3
-import os
+from botocore.exceptions import ClientError
+from app.config import settings
+from app.main import app
 
 
 @pytest.fixture(scope="module")
-def setup_test_env():
-    """Setup test environment variables."""
-    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
-    os.environ['AWS_REGION'] = 'us-east-1'
-    os.environ['DYNAMODB_ENDPOINT_URL'] = 'http://localhost:8000'
-    os.environ['APP_ENV'] = 'local'
-    os.environ['SECRET_KEY'] = 'test-secret-key-for-jwt-testing-only-32bytes'
-    os.environ['ACCESS_TOKEN_EXPIRE_MINUTES'] = '30'
-    os.environ['REFRESH_TOKEN_EXPIRE_DAYS'] = '7'
-    os.environ['FRONTEND_URL'] = 'http://localhost:3000'
-    yield
+def dynamodb_table():
+    """Setup DynamoDB table in DynamoDB Local container for testing."""
+    # Connect to DynamoDB Local
+    dynamodb = boto3.resource(
+        'dynamodb',
+        endpoint_url=settings.dynamodb_endpoint_url,
+        region_name=settings.aws_region,
+        aws_access_key_id='dummy',
+        aws_secret_access_key='dummy'
+    )
 
+    table_name = settings.table_name
 
-@pytest.fixture(scope="module")
-def client(setup_test_env):
-    """Create test client with mocked DynamoDB."""
-    with mock_aws():
-        # Create DynamoDB resource
-        dynamodb = boto3.resource(
-            'dynamodb',
-            region_name='us-east-1',
-            aws_access_key_id='testing',
-            aws_secret_access_key='testing'
-        )
+    # Try to delete table if it exists from previous test run
+    try:
+        table = dynamodb.Table(table_name)
+        table.delete()
+        table.wait_until_not_exists()
+    except ClientError:
+        pass  # Table doesn't exist, which is fine
 
-        # Create table
-        dynamodb.create_table(
-            TableName='EdTechChatbotTable-local',
-            KeySchema=[
-                {'AttributeName': 'PK', 'KeyType': 'HASH'},
-                {'AttributeName': 'SK', 'KeyType': 'RANGE'}
-            ],
-            AttributeDefinitions=[
-                {'AttributeName': 'PK', 'AttributeType': 'S'},
-                {'AttributeName': 'SK', 'AttributeType': 'S'},
-                {'AttributeName': 'GSI1PK', 'AttributeType': 'S'},
-                {'AttributeName': 'GSI1SK', 'AttributeType': 'S'}
-            ],
-            GlobalSecondaryIndexes=[
-                {
-                    'IndexName': 'GSI1',
-                    'KeySchema': [
-                        {'AttributeName': 'GSI1PK', 'KeyType': 'HASH'},
-                        {'AttributeName': 'GSI1SK', 'KeyType': 'RANGE'}
-                    ],
-                    'Projection': {'ProjectionType': 'ALL'},
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
+    # Create fresh table
+    table = dynamodb.create_table(
+        TableName=table_name,
+        KeySchema=[
+            {'AttributeName': 'PK', 'KeyType': 'HASH'},
+            {'AttributeName': 'SK', 'KeyType': 'RANGE'}
+        ],
+        AttributeDefinitions=[
+            {'AttributeName': 'PK', 'AttributeType': 'S'},
+            {'AttributeName': 'SK', 'AttributeType': 'S'},
+            {'AttributeName': 'GSI1PK', 'AttributeType': 'S'},
+            {'AttributeName': 'GSI1SK', 'AttributeType': 'S'}
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                'IndexName': 'GSI1',
+                'KeySchema': [
+                    {'AttributeName': 'GSI1PK', 'KeyType': 'HASH'},
+                    {'AttributeName': 'GSI1SK', 'KeyType': 'RANGE'}
+                ],
+                'Projection': {'ProjectionType': 'ALL'},
+                'ProvisionedThroughput': {
+                    'ReadCapacityUnits': 5,
+                    'WriteCapacityUnits': 5
                 }
-            ],
-            BillingMode='PROVISIONED',
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 5,
-                'WriteCapacityUnits': 5
             }
-        )
+        ],
+        BillingMode='PROVISIONED',
+        ProvisionedThroughput={
+            'ReadCapacityUnits': 5,
+            'WriteCapacityUnits': 5
+        }
+    )
 
-        # Reload modules to pick up mocked AWS
-        import importlib
-        import app.database
-        import app.main
-        importlib.reload(app.database)
-        importlib.reload(app.main)
+    # Wait for table to be ready
+    table.wait_until_exists()
 
-        from app.main import app
-        test_client = TestClient(app)
-        yield test_client
+    yield table
+
+    # Cleanup after all tests
+    try:
+        table.delete()
+    except ClientError:
+        pass
+
+
+@pytest.fixture(scope="module")
+def client(dynamodb_table):
+    """Create test client with DynamoDB table."""
+    test_client = TestClient(app)
+    yield test_client
 
 
 def test_signup_success(client):
