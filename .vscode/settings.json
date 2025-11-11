@@ -38,6 +38,9 @@
   ],
   "python.testing.unittestEnabled": false,
   "python.languageServer": "Pylance",
+  "python.analysis.logLevel": "Information",
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.completeFunctionParens": true,
   "[python]": {
     "editor.defaultFormatter": "ms-python.python",
     "editor.formatOnSave": true,

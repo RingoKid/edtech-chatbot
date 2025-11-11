@@ -6,7 +6,7 @@ from functools import lru_cache
 from fastapi import APIRouter, HTTPException, Depends, WebSocket
 from fastapi.responses import JSONResponse
 
-from app.service.chat_service import ChatService
+from app.services.chat_service import ChatService
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 
 
