@@ -21,8 +21,20 @@ def create_main_table(dynamodb_client, table_name):
         dynamodb_client: Boto3 DynamoDB client
         table_name: Name of the table to create
     """
+    # Check if table already exists
     try:
-        table = dynamodb_client.create_table(
+        table_description = dynamodb_client.describe_table(TableName=table_name)
+        table_status = table_description['Table']['TableStatus']
+        print(f"⚠️  Table {table_name} already exists (Status: {table_status})")
+        return False
+    except ClientError as e:
+        if e.response['Error']['Code'] != 'ResourceNotFoundException':
+            print(f"❌ Error checking table existence: {e}")
+            raise
+        # Table doesn't exist, continue to create it
+
+    try:
+        dynamodb_client.create_table(
             TableName=table_name,
             KeySchema=[
                 {'AttributeName': 'PK', 'KeyType': 'HASH'},
@@ -69,12 +81,8 @@ def create_main_table(dynamodb_client, table_name):
         return True
 
     except ClientError as e:
-        if e.response['Error']['Code'] == 'ResourceInUseException':
-            print(f"⚠️  Table {table_name} already exists")
-            return False
-        else:
-            print(f"❌ Error creating table {table_name}: {e}")
-            raise
+        print(f"❌ Error creating table {table_name}: {e}")
+        raise
 
 
 def create_checkpoint_table(dynamodb_client, table_name):
@@ -85,8 +93,20 @@ def create_checkpoint_table(dynamodb_client, table_name):
         dynamodb_client: Boto3 DynamoDB client
         table_name: Name of the checkpoint table to create
     """
+    # Check if table already exists
     try:
-        table = dynamodb_client.create_table(
+        table_description = dynamodb_client.describe_table(TableName=table_name)
+        table_status = table_description['Table']['TableStatus']
+        print(f"⚠️  Checkpoint table {table_name} already exists (Status: {table_status})")
+        return False
+    except ClientError as e:
+        if e.response['Error']['Code'] != 'ResourceNotFoundException':
+            print(f"❌ Error checking checkpoint table existence: {e}")
+            raise
+        # Table doesn't exist, continue to create it
+
+    try:
+        dynamodb_client.create_table(
             TableName=table_name,
             KeySchema=[
                 {'AttributeName': 'PK', 'KeyType': 'HASH'},
@@ -108,12 +128,8 @@ def create_checkpoint_table(dynamodb_client, table_name):
         return True
 
     except ClientError as e:
-        if e.response['Error']['Code'] == 'ResourceInUseException':
-            print(f"⚠️  Checkpoint table {table_name} already exists")
-            return False
-        else:
-            print(f"❌ Error creating checkpoint table {table_name}: {e}")
-            raise
+        print(f"❌ Error creating checkpoint table {table_name}: {e}")
+        raise
 
 
 def main():
