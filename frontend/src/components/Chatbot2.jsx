@@ -20,6 +20,10 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const [isInitialMount, setIsInitialMount] = useState(true)
   const [threadId, setThreadId] = useState(null) // Store thread_id for conversation persistence
+  const [selectedCategory, setSelectedCategory] = useState(null) // 'handwriting', 'vocabulary', or 'idea'
+  const [showAgeButtons, setShowAgeButtons] = useState(false)
+  const [selectedAge, setSelectedAge] = useState(null) // 'Pre-K', 'K', or '1st class'
+  const [suggestionClicked, setSuggestionClicked] = useState(false) // Track if a suggestion button was clicked
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
 
@@ -177,6 +181,197 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }])
     // Reset thread_id to start a new conversation
     setThreadId(null)
+    // Reset button states
+    setSelectedCategory(null)
+    setShowAgeButtons(false)
+    setSelectedAge(null)
+    setSuggestionClicked(false)
+  }
+
+  const handleStartOver = () => {
+    // Reset all selection states to show category buttons again
+    setSelectedCategory(null)
+    setShowAgeButtons(false)
+    setSelectedAge(null)
+    setSuggestionClicked(false)
+  }
+
+  // Get age-specific suggestions based on selected age
+  const getAgeSpecificSuggestions = (age) => {
+    const suggestions = {
+      'Pre-K': [
+        'Basic Shapes',
+        'Simple Words',
+        'Play-based Activities',
+        'Fine Motor Skills'
+      ],
+      'K': [
+        'Letter Recognition',
+        'Beginning Sounds',
+        'Hands-on Learning',
+        'Sight Words'
+      ],
+      '1st class': [
+        'Reading Comprehension',
+        'Sentence Building',
+        'Advanced Skills',
+        'Writing Practice'
+      ]
+    }
+    return suggestions[age] || []
+  }
+
+  const handleSuggestionClick = (suggestion) => {
+    // Hide suggestion buttons after clicking
+    setSuggestionClicked(true)
+    
+    // Send the suggestion as a message
+    const suggestionMessage = {
+      id: Date.now(),
+      type: 'user',
+      content: suggestion,
+      timestamp: new Date()
+    }
+    setMessages(prev => [...prev, suggestionMessage])
+    
+    // Notify parent component
+    if (onNewMessage) {
+      onNewMessage()
+    }
+    
+    // Send to backend
+    setIsTyping(true)
+    const sendSuggestion = async () => {
+      try {
+        const res = await chat2.send(suggestion, threadId)
+        if (res?.thread_id) {
+          setThreadId(res.thread_id)
+        }
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: res?.reply ?? `Great! Let me help you with ${suggestion}.`,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botResponse])
+      } catch (err) {
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: `Great! Let me help you with ${suggestion}.`,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botResponse])
+      } finally {
+        setIsTyping(false)
+      }
+    }
+    sendSuggestion()
+  }
+
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category)
+    setShowAgeButtons(true)
+    
+    // Send the category selection as a message
+    const categoryMessage = {
+      id: Date.now(),
+      type: 'user',
+      content: category.charAt(0).toUpperCase() + category.slice(1),
+      timestamp: new Date()
+    }
+    setMessages(prev => [...prev, categoryMessage])
+    
+    // Notify parent component
+    if (onNewMessage) {
+      onNewMessage()
+    }
+    
+    // Send to backend
+    setIsTyping(true)
+    const sendCategoryMessage = async () => {
+      try {
+        const res = await chat2.send(categoryMessage.content, threadId)
+        if (res?.thread_id) {
+          setThreadId(res.thread_id)
+        }
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: res?.reply ?? `Great choice! You've selected ${category.charAt(0).toUpperCase() + category.slice(1)}. Now, please select an age group.`,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botResponse])
+      } catch (err) {
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: `Great choice! You've selected ${category.charAt(0).toUpperCase() + category.slice(1)}. Now, please select an age group.`,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botResponse])
+      } finally {
+        setIsTyping(false)
+      }
+    }
+    sendCategoryMessage()
+  }
+
+  const handleAgeClick = (age) => {
+    // Store the selected age
+    setSelectedAge(age)
+    
+    // Capitalize category name for display
+    const categoryName = selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)
+    
+    // Create a fixed, user-friendly message
+    const fixedMessage = `I selected ${categoryName} for ${age}`
+    
+    // Send the age selection as a message
+    const ageMessage = {
+      id: Date.now(),
+      type: 'user',
+      content: fixedMessage,
+      timestamp: new Date()
+    }
+    setMessages(prev => [...prev, ageMessage])
+    
+    // Notify parent component
+    if (onNewMessage) {
+      onNewMessage()
+    }
+    
+    // Send to backend
+    setIsTyping(true)
+    const sendAgeMessage = async () => {
+      try {
+        const res = await chat2.send(fixedMessage, threadId)
+        if (res?.thread_id) {
+          setThreadId(res.thread_id)
+        }
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: res?.reply ?? `Perfect! I'll help you with ${categoryName} for ${age}. How can I assist you?`,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botResponse])
+        // Hide age buttons but keep selectedCategory and selectedAge for suggestions
+        setShowAgeButtons(false)
+      } catch (err) {
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: `Perfect! I'll help you with ${categoryName} for ${age}. How can I assist you?`,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botResponse])
+        setShowAgeButtons(false)
+      } finally {
+        setIsTyping(false)
+      }
+    }
+    sendAgeMessage()
   }
 
   const handleDownloadPDF = async () => {
@@ -379,6 +574,105 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
               </div>
             </motion.div>
           ))}
+        </AnimatePresence>
+
+        {/* Category Selection Buttons - Show when no category is selected and no age is selected */}
+        <AnimatePresence mode="wait">
+          {!selectedCategory && !showAgeButtons && !selectedAge && (
+            <motion.div
+              key="category-buttons"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex flex-wrap gap-3 justify-start mt-4"
+            >
+              <button
+                onClick={() => handleCategoryClick('handwriting')}
+                className="px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                Handwriting
+              </button>
+              <button
+                onClick={() => handleCategoryClick('vocabulary')}
+                className="px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                Vocabulary
+              </button>
+              <button
+                onClick={() => handleCategoryClick('idea')}
+                className="px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                Idea
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Age Selection Buttons - Show when category is selected but age is not */}
+        <AnimatePresence mode="wait">
+          {selectedCategory && showAgeButtons && !selectedAge && (
+            <motion.div
+              key="age-buttons"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex flex-wrap gap-3 justify-start mt-4"
+            >
+              <button
+                onClick={() => handleAgeClick('Pre-K')}
+                className="px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                Pre-K
+              </button>
+              <button
+                onClick={() => handleAgeClick('K')}
+                className="px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                K
+              </button>
+              <button
+                onClick={() => handleAgeClick('1st class')}
+                className="px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                1st class
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Age-Specific Suggestions and Start Over Button - Show after age is selected */}
+        <AnimatePresence mode="wait">
+          {selectedAge && !showAgeButtons && (
+            <motion.div
+              key="age-suggestions"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mt-4"
+            >
+              {/* Age-specific suggestions - Hide after a suggestion is clicked */}
+              {!suggestionClicked && (
+                <div className="flex flex-wrap gap-3 justify-start mb-3">
+                  {getAgeSpecificSuggestions(selectedAge).map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* Start Over button - Always visible when age is selected */}
+              <button
+                onClick={handleStartOver}
+                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md text-sm"
+              >
+                Start Over
+              </button>
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Typing indicator */}
