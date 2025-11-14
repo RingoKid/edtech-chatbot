@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Download, Mic, MicOff } from 'lucide-react'
+import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Download, Mic, MicOff, Image, Camera, Plus, X } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat2 } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
 import jsPDF from 'jspdf'
 import useAudioRecorder from '../hooks/useAudioRecorder'
 import TranscriptionWebSocket from '../api/transcriptionWebSocket'
+import CameraModal from './CameraModal'
 
 
 const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
@@ -25,11 +26,16 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [threadId, setThreadId] = useState(null) // Store thread_id for conversation persistence
   const [liveTranscript, setLiveTranscript] = useState('') // Live transcript display
   const [transcriptionError, setTranscriptionError] = useState(null) // Transcription errors
+  const [selectedImage, setSelectedImage] = useState(null) // Store selected image file
+  const [imagePreview, setImagePreview] = useState(null) // Store image preview URL
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false) // Show/hide attachment menu
+  const [showCameraModal, setShowCameraModal] = useState(false) // Show/hide camera modal
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
   const transcriptionWsRef = useRef(null)
   const wsConnectedRef = useRef(false) // Track if WebSocket was successfully connected
   const accumulatedTranscriptRef = useRef('') // Accumulate all transcripts during recording session
+  const fileInputRef = useRef(null) // Reference for file input
 
   // Initialize audio recorder hook
   const { isRecording, error: recorderError, startRecording, stopRecording, clearError } = useAudioRecorder()
@@ -200,6 +206,77 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }])
     // Reset thread_id to start a new conversation
     setThreadId(null)
+  }
+
+  // Handle image selection
+  const handleImageSelect = (event) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file')
+        return
+      }
+
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Image size should be less than 10MB')
+        return
+      }
+
+      setSelectedImage(file)
+
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Remove selected image
+  const handleRemoveImage = () => {
+    setSelectedImage(null)
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  // Handle plus button click
+  const handlePlusButtonClick = () => {
+    setShowAttachmentMenu(!showAttachmentMenu)
+  }
+
+  // Handle photo/video upload
+  const handlePhotoVideoClick = () => {
+    fileInputRef.current?.click()
+    setShowAttachmentMenu(false)
+  }
+
+  // Handle camera click - open camera modal
+  const handleCameraClick = () => {
+    setShowCameraModal(true)
+    setShowAttachmentMenu(false)
+  }
+
+  // Handle camera capture
+  const handleCameraCapture = (file) => {
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image size should be less than 10MB')
+      return
+    }
+
+    setSelectedImage(file)
+
+    // Create preview URL
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setImagePreview(reader.result)
+    }
+    reader.readAsDataURL(file)
   }
 
   // Handle voice recording toggle
@@ -638,7 +715,38 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           </motion.div>
         )}
 
+        {/* Image preview */}
+        {imagePreview && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 relative inline-block"
+          >
+            <img
+              src={imagePreview}
+              alt="Selected"
+              className="max-h-32 rounded-lg border border-gray-200"
+            />
+            <button
+              onClick={handleRemoveImage}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+              title="Remove image"
+            >
+              ×
+            </button>
+          </motion.div>
+        )}
+
         <div className="flex items-end space-x-2">
+          {/* Hidden file input for gallery */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+
           <div className="flex-1">
             <textarea
               value={inputValue}
@@ -649,6 +757,49 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
               rows="2"
               disabled={isTyping || isRecording}
             />
+          </div>
+
+          {/* Plus button with attachment menu */}
+          <div className="relative">
+            <button
+              onClick={handlePlusButtonClick}
+              disabled={isTyping || isRecording}
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                isTyping || isRecording
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-purple-500 text-white hover:bg-purple-600"
+              )}
+              title="Add attachment"
+            >
+              {showAttachmentMenu ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+            </button>
+
+            {/* Attachment menu */}
+            {showAttachmentMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute bottom-full mb-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+              >
+                <button
+                  onClick={handleCameraClick}
+                  className="flex items-center space-x-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <Camera className="w-5 h-5 text-purple-500" />
+                  <span className="text-sm text-gray-700 whitespace-nowrap">Take Photo</span>
+                </button>
+                <div className="border-t border-gray-100" />
+                <button
+                  onClick={handlePhotoVideoClick}
+                  className="flex items-center space-x-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <Image className="w-5 h-5 text-purple-500" />
+                  <span className="text-sm text-gray-700 whitespace-nowrap">Photo/Video</span>
+                </button>
+              </motion.div>
+            )}
           </div>
 
           {/* Microphone button */}
@@ -682,6 +833,13 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           </button>
         </div>
       </div>
+
+      {/* Camera Modal */}
+      <CameraModal
+        isOpen={showCameraModal}
+        onClose={() => setShowCameraModal(false)}
+        onCapture={handleCameraCapture}
+      />
     </div>
   )
 }
