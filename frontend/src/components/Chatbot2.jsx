@@ -208,6 +208,9 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
       // Stop recording
       stopRecording()
 
+      // Clear live transcript immediately when stopping
+      setLiveTranscript('')
+
       // Send end-of-stream signal and disconnect
       if (transcriptionWsRef.current) {
         transcriptionWsRef.current.endStream()
@@ -221,12 +224,14 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
         }, 500) // Small delay to allow final messages to arrive
       }
 
-      // Create final message with accumulated transcript
+      // Create final message with accumulated transcript and send to chat API
       if (accumulatedTranscriptRef.current.trim()) {
+        const transcriptContent = accumulatedTranscriptRef.current.trim()
+
         const transcriptMessage = {
           id: Date.now(),
           type: 'user',
-          content: accumulatedTranscriptRef.current.trim(),
+          content: transcriptContent,
           timestamp: new Date()
         }
         setMessages(prev => [...prev, transcriptMessage])
@@ -234,6 +239,38 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
         // Notify parent component of new message
         if (onNewMessage) {
           onNewMessage()
+        }
+
+        // Send transcript to chat API and get bot response
+        setIsTyping(true)
+        try {
+          // Pass the thread_id to maintain conversation context
+          const res = await chat2.send(transcriptContent, threadId)
+
+          // Store the thread_id from response for next request
+          if (res?.thread_id) {
+            setThreadId(res.thread_id)
+          }
+
+          const botResponse = {
+            id: Date.now() + 1,
+            type: 'bot',
+            content: res?.reply ?? generateResponse(transcriptContent),
+            timestamp: new Date()
+          }
+          setMessages(prev => [...prev, botResponse])
+        } catch (err) {
+          // fallback to local response
+          const response = generateResponse(transcriptContent)
+          const botResponse = {
+            id: Date.now() + 1,
+            type: 'bot',
+            content: response,
+            timestamp: new Date()
+          }
+          setMessages(prev => [...prev, botResponse])
+        } finally {
+          setIsTyping(false)
         }
       }
 
@@ -602,6 +639,18 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
         )}
 
         <div className="flex items-end space-x-2">
+          <div className="flex-1">
+            <textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask about lesson planning, student assessment, classroom management..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              rows="2"
+              disabled={isTyping || isRecording}
+            />
+          </div>
+
           {/* Microphone button */}
           <button
             onClick={handleVoiceToggle}
@@ -617,18 +666,6 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           >
             {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
-
-          <div className="flex-1">
-            <textarea
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask about lesson planning, student assessment, classroom management..."
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              rows="2"
-              disabled={isTyping || isRecording}
-            />
-          </div>
 
           {/* Send button */}
           <button
