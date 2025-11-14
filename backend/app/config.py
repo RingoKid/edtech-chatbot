@@ -69,6 +69,11 @@ class Settings(BaseSettings):
     # OpenAI API configuration
     openai_api_key: Optional[SecretStr] = Field(default=None, alias="OPENAI_API_KEY")
 
+    # Speechmatics STT configuration
+    SPEECHMATICS_API_KEY: Optional[str] = Field(default=None, alias="SPEECHMATICS_API_Key")
+    CONNECTION_URL: str = Field(default="wss://us2.rt.speechmatics.com/v2", alias="CONNECTION_URL")
+    SPEECHMATICS_LANGUAGE: str = Field(default="en", alias="SPEECHMATICS_LANGUAGE")
+
     def initialize_langsmith(self) -> None:
         """Initialize LangSmith tracing if configured."""
         if self.langsmith_tracing and self.langsmith_api_key:
