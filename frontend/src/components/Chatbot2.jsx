@@ -5,7 +5,9 @@ import { cn } from '../utils/cn'
 import { chat2 } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
 import jsPDF from 'jspdf'
-import { useWebSpeech } from '../hooks/useWebSpeech'
+import useAudioRecorder from '../hooks/useAudioRecorder'
+import TranscriptionWebSocket from '../api/transcriptionWebSocket'
+
 
 const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [messages, setMessages] = useState([
@@ -21,87 +23,28 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const [isInitialMount, setIsInitialMount] = useState(true)
   const [threadId, setThreadId] = useState(null) // Store thread_id for conversation persistence
+  const [liveTranscript, setLiveTranscript] = useState('') // Live transcript display
+  const [transcriptionError, setTranscriptionError] = useState(null) // Transcription errors
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
+  const transcriptionWsRef = useRef(null)
+  const wsConnectedRef = useRef(false) // Track if WebSocket was successfully connected
+  const accumulatedTranscriptRef = useRef('') // Accumulate all transcripts during recording session
 
-  // Web Speech API hook
-  const {
-    isListening,
-    transcript,
-    interimTranscript,
-    fullTranscript,
-    isSupported: isSpeechSupported,
-    error: speechError,
-    toggleListening,
-    resetTranscript
-  } = useWebSpeech()
+  // Initialize audio recorder hook
+  const { isRecording, error: recorderError, startRecording, stopRecording, clearError } = useAudioRecorder()
 
-  // Handle voice input completion
-  const handleVoiceComplete = async () => {
-    const finalText = fullTranscript.trim()
-
-    if (!finalText) {
-      alert('No speech detected. Please try again.')
-      return
-    }
-
-    // Add user message with transcript
-    const userMessage = {
-      id: Date.now(),
-      type: 'user',
-      content: finalText,
-      timestamp: new Date()
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    resetTranscript()
-
-    // Notify parent
-    if (onNewMessage) {
-      onNewMessage()
-    }
-
-    // Send to LLM
-    setIsTyping(true)
-    try {
-      const res = await chat2.send(finalText, threadId)
-
-      if (res?.thread_id) {
-        setThreadId(res.thread_id)
+  // Cleanup WebSocket on unmount
+  useEffect(() => {
+    return () => {
+      if (transcriptionWsRef.current) {
+        transcriptionWsRef.current.disconnect()
       }
-
-      const botResponse = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: res?.reply ?? generateResponse(finalText),
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, botResponse])
-    } catch (err) {
-      const response = generateResponse(finalText)
-      const botResponse = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: response,
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, botResponse])
-    } finally {
-      setIsTyping(false)
     }
-  }
+  }, [])
 
-  // Handle voice toggle
-  const handleVoiceToggle = () => {
-    if (isListening) {
-      // Stop and process
-      toggleListening()
-      handleVoiceComplete()
-    } else {
-      // Start listening
-      toggleListening()
-    }
-  }
+
+
 
   // Check if user is at the bottom of the chat
   const isAtBottom = () => {
@@ -257,6 +200,129 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }])
     // Reset thread_id to start a new conversation
     setThreadId(null)
+  }
+
+  // Handle voice recording toggle
+  const handleVoiceToggle = async () => {
+    if (isRecording) {
+      // Stop recording
+      stopRecording()
+
+      // Send end-of-stream signal and disconnect
+      if (transcriptionWsRef.current) {
+        transcriptionWsRef.current.endStream()
+
+        // Disconnect WebSocket after user stops recording
+        setTimeout(() => {
+          if (transcriptionWsRef.current) {
+            transcriptionWsRef.current.disconnect()
+            transcriptionWsRef.current = null
+          }
+        }, 500) // Small delay to allow final messages to arrive
+      }
+
+      // Create final message with accumulated transcript
+      if (accumulatedTranscriptRef.current.trim()) {
+        const transcriptMessage = {
+          id: Date.now(),
+          type: 'user',
+          content: accumulatedTranscriptRef.current.trim(),
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, transcriptMessage])
+
+        // Notify parent component of new message
+        if (onNewMessage) {
+          onNewMessage()
+        }
+      }
+
+      // Reset accumulated transcript
+      accumulatedTranscriptRef.current = ''
+      setLiveTranscript('')
+
+      // Reset connection tracking
+      wsConnectedRef.current = false
+    } else {
+      // Start recording
+      try {
+        // Clear any previous errors and accumulated transcript
+        setTranscriptionError(null)
+        clearError()
+        setLiveTranscript('')
+        accumulatedTranscriptRef.current = ''
+
+        // FIRST: Start audio recording to request microphone permission
+        await startRecording((audioChunk) => {
+          if (transcriptionWsRef.current) {
+            transcriptionWsRef.current.sendAudioChunk(audioChunk)
+          }
+        })
+
+        // SECOND: After mic permission granted, initialize WebSocket connection
+        transcriptionWsRef.current = new TranscriptionWebSocket()
+        await transcriptionWsRef.current.connect({
+          onTranscriptUpdate: (transcript, isFinal) => {
+            // Ignore partial transcripts - we only care about final ones
+          },
+          onTranscriptComplete: (finalTranscript) => {
+            console.log('onTranscriptComplete called with:', finalTranscript)
+
+            // Only process non-empty final transcripts
+            if (finalTranscript.trim()) {
+              // Add space if there's already accumulated text
+              if (accumulatedTranscriptRef.current) {
+                accumulatedTranscriptRef.current += ' ' + finalTranscript.trim()
+              } else {
+                accumulatedTranscriptRef.current = finalTranscript.trim()
+              }
+              console.log('Accumulated transcript:', accumulatedTranscriptRef.current)
+
+              // Update live transcript to show accumulated final text only
+              setLiveTranscript(accumulatedTranscriptRef.current)
+            }
+
+            // DON'T disconnect - keep listening for more speech!
+            // WebSocket will only disconnect when user clicks stop button
+            // Final message will be created when user stops recording
+          },
+          onError: (error) => {
+            setTranscriptionError(error)
+            setLiveTranscript('')
+            stopRecording()
+          },
+          onConnectionChange: (connected) => {
+            if (connected) {
+              // Mark that WebSocket successfully connected
+              wsConnectedRef.current = true
+            } else if (!connected && wsConnectedRef.current && isRecording) {
+              // Only show error if we were previously connected (i.e., connection was lost)
+              setTranscriptionError('Connection lost. Please try again.')
+              stopRecording()
+              wsConnectedRef.current = false
+            }
+          }
+        })
+
+      } catch (error) {
+        console.error('Failed to start voice recording:', error)
+
+        // Provide more specific error messages
+        let errorMessage = 'Failed to start voice recording. Please try again.'
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          errorMessage = 'Microphone access denied. Please grant permission to use voice recording.'
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = 'No microphone found. Please connect a microphone and try again.'
+        }
+
+        setTranscriptionError(errorMessage)
+        stopRecording()
+        if (transcriptionWsRef.current) {
+          transcriptionWsRef.current.disconnect()
+          transcriptionWsRef.current = null
+        }
+      }
+    }
   }
 
   const handleDownloadPDF = async () => {
@@ -461,6 +527,27 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           ))}
         </AnimatePresence>
 
+        {/* Live transcript display */}
+        {liveTranscript && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-end"
+          >
+            <div className="flex flex-row-reverse max-w-[80%]">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm bg-purple-500 ml-2">
+                <Mic className="w-4 h-4 animate-pulse" />
+              </div>
+              <div className="rounded-lg px-4 py-2 shadow-sm bg-purple-400 text-white">
+                <p className="text-sm leading-relaxed italic">{liveTranscript}</p>
+                <div className="text-xs mt-1 opacity-70 text-white/70">
+                  Listening...
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Typing indicator */}
         {isTyping && (
           <motion.div
@@ -501,20 +588,36 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
 
       {/* Input */}
       <div className="p-4 border-t bg-gray-50">
-        {/* Real-time transcript display */}
-        {isListening && (fullTranscript || interimTranscript) && (
-          <div className="mb-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-            <div className="text-xs text-purple-600 font-semibold mb-1">Listening...</div>
-            <div className="text-sm text-gray-800">
-              {fullTranscript}
-              {interimTranscript && (
-                <span className="text-gray-400 italic"> {interimTranscript}</span>
-              )}
-            </div>
-          </div>
+        {/* Error messages */}
+        {(transcriptionError || recorderError) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg"
+          >
+            <p className="text-sm text-red-600 font-medium">
+              {transcriptionError || recorderError}
+            </p>
+          </motion.div>
         )}
 
         <div className="flex items-end space-x-2">
+          {/* Microphone button */}
+          <button
+            onClick={handleVoiceToggle}
+            disabled={isTyping}
+            className={cn(
+              "p-2 rounded-lg transition-all duration-200",
+              isRecording
+                ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                : "bg-purple-500 text-white hover:bg-purple-600",
+              isTyping && "opacity-50 cursor-not-allowed"
+            )}
+            title={isRecording ? "Stop recording" : "Start voice recording"}
+          >
+            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
+
           <div className="flex-1">
             <textarea
               value={inputValue}
@@ -523,35 +626,17 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
               placeholder="Ask about lesson planning, student assessment, classroom management..."
               className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               rows="2"
-              disabled={isTyping || isListening}
+              disabled={isTyping || isRecording}
             />
           </div>
-
-          {/* Voice input button */}
-          {isSpeechSupported && (
-            <button
-              onClick={handleVoiceToggle}
-              disabled={isTyping}
-              className={cn(
-                "p-2 rounded-lg transition-all",
-                isListening
-                  ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
-                  : "bg-purple-500 text-white hover:bg-purple-600",
-                isTyping && "opacity-50 cursor-not-allowed"
-              )}
-              title={isListening ? "Stop and send" : "Start voice input"}
-            >
-              {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-            </button>
-          )}
 
           {/* Send button */}
           <button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isTyping || isListening}
+            disabled={!inputValue.trim() || isTyping || isRecording}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              inputValue.trim() && !isTyping && !isListening
+              inputValue.trim() && !isTyping && !isRecording
                 ? "bg-purple-500 text-white hover:bg-purple-600"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             )}
@@ -559,20 +644,6 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             <Send className="w-5 h-5" />
           </button>
         </div>
-
-        {/* Speech error */}
-        {speechError && (
-          <div className="mt-2 text-sm text-red-600">
-            {speechError}
-          </div>
-        )}
-
-        {/* Browser not supported */}
-        {!isSpeechSupported && (
-          <div className="mt-2 text-sm text-amber-600">
-            Voice input not supported. Please use Chrome or Edge browser.
-          </div>
-        )}
       </div>
     </div>
   )

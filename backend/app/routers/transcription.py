@@ -20,13 +20,15 @@ router = APIRouter()
 class AudioStreamBuffer:
     """
     Buffer for collecting audio chunks from WebSocket and providing them
-    to the Speechmatics service as a synchronous iterator.
+    to the Speechmatics service as a file-like object.
     """
 
     def __init__(self):
         self.chunks = []
         self.is_active = True
         self.lock = asyncio.Lock()
+        self.current_chunk = b''
+        self.position = 0
 
     async def add_chunk(self, chunk: bytes):
         """Add an audio chunk to the buffer."""
@@ -39,6 +41,42 @@ class AudioStreamBuffer:
         async with self.lock:
             self.is_active = False
 
+    def read(self, size: int = -1):
+        """
+        Read bytes from the buffer.
+        This method makes the buffer compatible with Speechmatics SDK's expectations.
+        """
+        import time
+
+        # Wait for data to be available
+        # Keep waiting while stream is active and no chunks available
+        while self.is_active and not self.chunks:
+            time.sleep(0.01)  # 10ms sleep to prevent busy-waiting
+
+        # Get chunk from buffer if available
+        if self.chunks:
+            try:
+                chunk = self.chunks.pop(0)
+
+                # If size is specified, return only that amount
+                if size > 0 and len(chunk) > size:
+                    # Split chunk and put remainder back
+                    self.chunks.insert(0, chunk[size:])
+                    return chunk[:size]
+
+                return chunk
+            except IndexError:
+                # Race condition - chunk was removed
+                # Continue waiting for more chunks
+                return self.read(size)
+
+        # If stream is closed and no chunks, return empty bytes to signal EOF
+        if not self.is_active:
+            return b''
+
+        # Should not reach here, but return empty if we do
+        return b''
+
     def __iter__(self):
         """Make the buffer iterable for Speechmatics SDK."""
         return self
@@ -48,18 +86,10 @@ class AudioStreamBuffer:
         Get the next chunk synchronously.
         This is required by Speechmatics SDK which expects a synchronous iterator.
         """
-        # Wait for chunks to be available
-        while self.is_active:
-            if self.chunks:
-                return self.chunks.pop(0)
-            # Small sleep to prevent busy-waiting
-            import time
-            time.sleep(0.01)
-
-        # Stream is closed and no more chunks
-        if not self.chunks:
+        chunk = self.read()
+        if not chunk and not self.is_active:
             raise StopIteration
-        return self.chunks.pop(0)
+        return chunk
 
 
 @router.websocket("/transcribe")
@@ -82,45 +112,54 @@ async def websocket_transcription(websocket: WebSocket):
     # Create audio stream buffer
     audio_buffer = AudioStreamBuffer()
     transcription_task: Optional[asyncio.Task] = None
+    ws_active = True
 
     try:
         # Initialize Speechmatics service
+        logger.info("Initializing Speechmatics service...")
         speechmatics_service = SpeechmaticsService()
+        logger.info("Speechmatics service initialized successfully")
 
         # Define callback for partial transcripts
         async def on_partial_transcript(text: str, is_final: bool = False):
             """Send partial transcript to client."""
+            if not ws_active:
+                return
             try:
                 await websocket.send_json({
                     "type": "partial",
                     "text": text,
                     "is_final": False
                 })
-            except Exception as e:
-                logger.error(f"Error sending partial transcript: {e}")
+            except Exception as send_error:
+                logger.error(f"Error sending partial transcript: {send_error}")
 
         # Define callback for final transcripts
         async def on_final_transcript(text: str, is_final: bool = True):
             """Send final transcript to client."""
+            if not ws_active:
+                return
             try:
                 await websocket.send_json({
                     "type": "final",
                     "text": text,
                     "is_final": True
                 })
-            except Exception as e:
-                logger.error(f"Error sending final transcript: {e}")
+            except Exception as send_error:
+                logger.error(f"Error sending final transcript: {send_error}")
 
         # Define callback for errors
         async def on_error(error_message: str):
             """Send error to client."""
+            if not ws_active:
+                return
             try:
                 await websocket.send_json({
                     "type": "error",
                     "message": error_message
                 })
-            except Exception as e:
-                logger.error(f"Error sending error message: {e}")
+            except Exception as send_error:
+                logger.error(f"Error sending error message: {send_error}")
 
         # Start transcription in a background task
         transcription_task = asyncio.create_task(
@@ -159,23 +198,30 @@ async def websocket_transcription(websocket: WebSocket):
 
             except WebSocketDisconnect:
                 logger.info("Client disconnected")
+                ws_active = False
                 break
             except Exception as e:
                 logger.error(f"Error receiving message: {e}")
                 await on_error(f"Error processing audio: {str(e)}")
+                ws_active = False
                 break
 
     except Exception as e:
         logger.error(f"Error in transcription WebSocket: {e}")
-        try:
-            await websocket.send_json({
-                "type": "error",
-                "message": f"Transcription error: {str(e)}"
-            })
-        except:
-            pass
+        if ws_active:
+            try:
+                await websocket.send_json({
+                    "type": "error",
+                    "message": f"Transcription error: {str(e)}"
+                })
+            except:
+                pass
+        ws_active = False
 
     finally:
+        # Mark WebSocket as inactive to stop callbacks
+        ws_active = False
+
         # Clean up
         logger.info("Cleaning up transcription WebSocket")
         await audio_buffer.close()

@@ -14,7 +14,6 @@ from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from app.chatbot.studio.studio_router import get_studio_router_with_memory
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse, ChatHistoryResponse, ChatMessage, ChatMetadata
-from app.services.audio_service import AudioService, AudioBuffer
 
 
 class ChatService:
