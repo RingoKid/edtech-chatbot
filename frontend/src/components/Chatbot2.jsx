@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Download, Mic, MicOff, Image, Camera, Plus, X } from 'lucide-react'
 import { cn } from '../utils/cn'
-import { chat2 } from '../api'
+import { chat2, handwriting } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
 import jsPDF from 'jspdf'
 import useAudioRecorder from '../hooks/useAudioRecorder'
@@ -139,54 +139,170 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }
   }
 
+  // Poll for handwriting analysis results
+  const pollAnalysisStatus = async (jobId, maxAttempts = 30) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const statusRes = await handwriting.getAnalysisStatus(jobId)
+
+        if (statusRes.status === 'completed' && statusRes.result) {
+          return statusRes.result
+        } else if (statusRes.status === 'failed') {
+          throw new Error(statusRes.result?.error_message || 'Analysis failed')
+        }
+
+        // Wait 2 seconds before next poll
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      } catch (error) {
+        console.error('Error polling analysis status:', error)
+        throw error
+      }
+    }
+
+    throw new Error('Analysis timed out. Please try again.')
+  }
+
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return
+    // Check if we have an image or text message
+    const hasImage = selectedImage !== null
+    const hasText = inputValue.trim().length > 0
 
-    const newUserMessage = {
-      id: Date.now(),
-      type: 'user',
-      content: inputValue,
-      timestamp: new Date()
-    }
+    if (!hasImage && !hasText) return
 
-    setMessages(prev => [...prev, newUserMessage])
-    setInputValue('')
+    // If we have an image, use handwriting analysis API
+    if (hasImage) {
+      const userMessage = inputValue.trim() || 'Please analyze this handwriting.'
+      const imageFile = selectedImage
+      const imageUrl = imagePreview
 
-    // Notify parent component of new message
-    if (onNewMessage) {
-      onNewMessage()
-    }
-
-    // First try backend chat endpoint; if it fails fall back to local generator
-    setIsTyping(true)
-    try {
-      // Pass the thread_id to maintain conversation context
-      const res = await chat2.send(inputValue, threadId)
-
-      // Store the thread_id from response for next request
-      if (res?.thread_id) {
-        setThreadId(res.thread_id)
-      }
-
-      const botResponse = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: res?.reply ?? generateResponse(inputValue),
+      // Create user message with image
+      const newUserMessage = {
+        id: Date.now(),
+        type: 'user',
+        content: userMessage,
+        image: imageUrl, // Store image preview URL for display
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, botResponse])
-    } catch (err) {
-      // fallback to local response
-      const response = generateResponse(inputValue)
-      const botResponse = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: response,
+
+      setMessages(prev => [...prev, newUserMessage])
+      setInputValue('')
+      setSelectedImage(null)
+      setImagePreview(null)
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+
+      // Notify parent component
+      if (onNewMessage) {
+        onNewMessage()
+      }
+
+      // Send image for analysis
+      setIsTyping(true)
+      try {
+        // Upload image and get job_id
+        const uploadRes = await handwriting.analyzeImage(imageFile, userMessage)
+
+        if (uploadRes?.thread_id) {
+          setThreadId(uploadRes.thread_id)
+        }
+
+        // Poll for results
+        const analysisResult = await pollAnalysisStatus(uploadRes.job_id)
+
+        // Format analysis results for display
+        let responseContent = `**Handwriting Analysis Complete**\n\n`
+
+        if (analysisResult.detected_character) {
+          responseContent += `**Detected Character:** ${analysisResult.detected_character}\n\n`
+        }
+
+        if (analysisResult.feedback) {
+          responseContent += `**Feedback:** ${analysisResult.feedback}\n\n`
+        }
+
+        if (analysisResult.suggestions && analysisResult.suggestions.length > 0) {
+          responseContent += `**Suggestions:**\n`
+          analysisResult.suggestions.forEach(suggestion => {
+            responseContent += `- ${suggestion}\n`
+          })
+          responseContent += `\n`
+        }
+
+        if (analysisResult.analysis_summary) {
+          responseContent += `**Summary:** ${analysisResult.analysis_summary}\n\n`
+        }
+
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: responseContent,
+          timestamp: new Date()
+        }
+
+        setMessages(prev => [...prev, botResponse])
+      } catch (error) {
+        console.error('Failed to analyze handwriting:', error)
+        const errorResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: `Sorry, I encountered an error analyzing the handwriting: ${error.message}. Please try again.`,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, errorResponse])
+      } finally {
+        setIsTyping(false)
+      }
+    } else {
+      // No image, send regular text message
+      const newUserMessage = {
+        id: Date.now(),
+        type: 'user',
+        content: inputValue,
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, botResponse])
-    } finally {
-      setIsTyping(false)
+
+      setMessages(prev => [...prev, newUserMessage])
+      setInputValue('')
+
+      // Notify parent component of new message
+      if (onNewMessage) {
+        onNewMessage()
+      }
+
+      // First try backend chat endpoint; if it fails fall back to local generator
+      setIsTyping(true)
+      try {
+        // Pass the thread_id to maintain conversation context
+        const res = await chat2.send(inputValue, threadId)
+
+        // Store the thread_id from response for next request
+        if (res?.thread_id) {
+          setThreadId(res.thread_id)
+        }
+
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: res?.reply ?? generateResponse(inputValue),
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botResponse])
+      } catch (err) {
+        // fallback to local response
+        const response = generateResponse(inputValue)
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: response,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botResponse])
+      } finally {
+        setIsTyping(false)
+      }
     }
   }
 
@@ -621,6 +737,15 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
                     ? 'bg-purple-500 text-white'
                     : 'bg-gray-100 text-gray-900'
                 )}>
+                  {/* Show image if present */}
+                  {message.image && (
+                    <img
+                      src={message.image}
+                      alt="Uploaded"
+                      className="max-w-full rounded-lg mb-2 max-h-48 object-contain"
+                    />
+                  )}
+
                   {message.type === 'user' ? (
                     <p className="text-sm leading-relaxed">{message.content}</p>
                   ) : (
@@ -821,10 +946,10 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           {/* Send button */}
           <button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isTyping || isRecording}
+            disabled={(!inputValue.trim() && !selectedImage) || isTyping || isRecording}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              inputValue.trim() && !isTyping && !isRecording
+              (inputValue.trim() || selectedImage) && !isTyping && !isRecording
                 ? "bg-purple-500 text-white hover:bg-purple-600"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             )}

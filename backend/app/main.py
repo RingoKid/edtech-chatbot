@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
-from app.routers import health, chat, auth, users, transcription
+from app.routers import health, chat, auth, users, transcription, handwriting_analysis
 from app.config import settings
 from app.chatbot.checkpointer import checkpointer_manager
 # Temporarily disable handwriting_bot router - needs refactoring after graph cleanup
@@ -62,6 +62,7 @@ app.include_router(chat.router, prefix=API_PREFIX, tags=["Chat"])
 app.include_router(auth.router, prefix=API_PREFIX, tags=["Authentication"])
 app.include_router(users.router, prefix=API_PREFIX, tags=["Users"])
 app.include_router(transcription.router, prefix=API_PREFIX, tags=["Transcription"])
+app.include_router(handwriting_analysis.router, prefix=API_PREFIX, tags=["Handwriting Analysis"])
 # Temporarily disable handwriting_bot router - needs refactoring after graph cleanup
 # app.include_router(handwriting_bot.router, prefix=API_PREFIX, tags=["Handwriting Bot"])
 # Temporarily disable educational_bot router due to LangGraph installation issue
