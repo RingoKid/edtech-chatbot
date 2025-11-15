@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     # OpenAI API configuration
     openai_api_key: Optional[SecretStr] = Field(default=None, alias="OPENAI_API_KEY")
     
+    # JWT configuration for authentication
+    jwt_secret_key: str = Field(default="your-secret-key-change-in-production", alias="JWT_SECRET_KEY")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    jwt_expiration_hours: int = Field(default=24, alias="JWT_EXPIRATION_HOURS")
+    
     # PostgreSQL Database configuration
     database_url: Optional[str] = Field(default=None, alias="DATABASE_URL")
     db_host: str = Field(default="localhost", alias="DB_HOST")

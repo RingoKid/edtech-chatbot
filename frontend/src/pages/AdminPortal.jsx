@@ -14,6 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import CreateFormModal from '../components/CreateFormModal'
+import { authenticatedFetch } from '../utils/api'
 
 const AdminPortal = () => {
   const [forms, setForms] = useState([])
@@ -39,8 +40,14 @@ const AdminPortal = () => {
   const fetchForms = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/v1/forms')
-      if (!response.ok) throw new Error('Failed to fetch forms')
+      const response = await authenticatedFetch('/api/v1/forms')
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Authentication required. Please log in again.')
+          return
+        }
+        throw new Error('Failed to fetch forms')
+      }
       const data = await response.json()
       setForms(data.forms)
       setError(null)
@@ -54,18 +61,21 @@ const AdminPortal = () => {
   // Update form
   const updateForm = async (formId, title, content) => {
     try {
-      const response = await fetch(`/api/v1/forms/${formId}`, {
+      const response = await authenticatedFetch(`/api/v1/forms/${formId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           title,
           content: JSON.parse(content)
         })
       })
       
-      if (!response.ok) throw new Error('Failed to update form')
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Authentication required. Please log in again.')
+          return
+        }
+        throw new Error('Failed to update form')
+      }
       
       // Refresh forms list
       await fetchForms()
@@ -81,11 +91,17 @@ const AdminPortal = () => {
     if (!window.confirm('Are you sure you want to delete this form?')) return
     
     try {
-      const response = await fetch(`/api/v1/forms/${formId}`, {
+      const response = await authenticatedFetch(`/api/v1/forms/${formId}`, {
         method: 'DELETE'
       })
       
-      if (!response.ok) throw new Error('Failed to delete form')
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Authentication required. Please log in again.')
+          return
+        }
+        throw new Error('Failed to delete form')
+      }
       
       // Refresh forms list
       await fetchForms()
@@ -127,15 +143,18 @@ const AdminPortal = () => {
   // Create form
   const createForm = async (formData) => {
     try {
-      const response = await fetch('/api/v1/forms', {
+      const response = await authenticatedFetch('/api/v1/forms', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(formData)
       })
       
-      if (!response.ok) throw new Error('Failed to create form')
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Authentication required. Please log in again.')
+          return
+        }
+        throw new Error('Failed to create form')
+      }
       
       // Refresh forms list
       await fetchForms()

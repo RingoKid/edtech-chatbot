@@ -201,16 +201,35 @@ class FileDynamoDBTable:
         if 'FilterExpression' in kwargs and 'ExpressionAttributeValues' in kwargs:
             filter_expr = kwargs['FilterExpression']
             attr_values = kwargs['ExpressionAttributeValues']
+            attr_names = kwargs.get('ExpressionAttributeNames', {})
             
             # Handle simple equality filters like 'source_file = :filename'
             if 'source_file = :filename' in filter_expr:
                 filename = attr_values.get(':filename')
                 if filename:
                     items = [item for item in items if item.get('source_file') == filename]
-            elif 'type = :type' in filter_expr:
+            elif 'type = :type' in filter_expr or '#type = :type' in filter_expr:
                 type_value = attr_values.get(':type')
                 if type_value:
                     items = [item for item in items if item.get('type') == type_value]
+            elif 'email = :email' in filter_expr:
+                # Handle email filter
+                email = attr_values.get(':email')
+                type_value = attr_values.get(':type')
+                if email:
+                    items = [item for item in items if item.get('email') == email]
+                    # Also filter by type if provided
+                    if type_value:
+                        items = [item for item in items if item.get('type') == type_value]
+            elif 'email = :email AND #type = :type' in filter_expr:
+                # Handle combined email and type filter
+                email = attr_values.get(':email')
+                type_value = attr_values.get(':type')
+                if email and type_value:
+                    items = [
+                        item for item in items 
+                        if item.get('email') == email and item.get('type') == type_value
+                    ]
         
         return {'Items': items}
     

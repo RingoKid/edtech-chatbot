@@ -9,6 +9,7 @@ import IdeaGeneration from './pages/IdeaGeneration'
 import AITeachingAssistant from './pages/AITeachingAssistant'
 import VideoPlayer from './pages/VideoPlayer'
 import AdminPortal from './pages/AdminPortal'
+import ProtectedRoute from './components/ProtectedRoute'
 import TeachProperWayToHold from './pages/handwriting-spelling/TeachProperWayToHoldPencil.jsx'
 import SequenceofStroles from './pages/handwriting-spelling/SequenceofStroles.jsx'
 import RetrieveandConnectPatterns from './pages/handwriting-spelling/RetrieveandConnectPatterns.jsx'
@@ -36,6 +37,17 @@ import CueQuestion from './pages/idea-generation/CueQuestion.jsx'
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Admin route - outside MainLayout, protected with authentication */}
+      <Route 
+        path="admin" 
+        element={
+          <ProtectedRoute>
+            <AdminPortal />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* All other routes - inside MainLayout */}
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="best-practices" element={<BestPractices />} />
@@ -44,7 +56,6 @@ const AppRoutes = () => {
         <Route path="videos/idea-generation" element={<IdeaGeneration />} />
         <Route path="video/:videoId" element={<VideoPlayer />} />
         <Route path="ai-teaching-assistant" element={<AITeachingAssistant />} />
-        <Route path="admin" element={<AdminPortal />} />
         
         {/* Handwriting & Spelling Individual Pages */}
         <Route path="handwriting-spelling/proper-way-to-hold" element={<TeachProperWayToHold/>} />

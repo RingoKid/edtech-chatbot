@@ -1778,11 +1778,267 @@
       "source_file": "FORM-P.json",
       "created_at": "2025-10-23T22:57:24.584453",
       "updated_at": "2025-10-23T22:57:24.584453"
+    },
+    "USER#ce1af263-c1ad-45d8-a2f1-8c1923d89241#PROFILE": {
+      "PK": "USER#ce1af263-c1ad-45d8-a2f1-8c1923d89241",
+      "SK": "PROFILE",
+      "user_id": "ce1af263-c1ad-45d8-a2f1-8c1923d89241",
+      "email": "l4c@gmail.com",
+      "name": "L4C",
+      "password_hash": "$2b$12$ouYuD/vU/WltHBpsbV1XsOSNzzbe80JajNz1bHhd4RLZTEa1SyoPy",
+      "created_at": "2025-11-15T01:31:59.226333",
+      "updated_at": "2025-11-15T01:31:59.226333",
+      "type": "user"
     }
   },
   "indexes": {
     "TypeIndex": {
       "Form": [
+        {
+          "PK": "FORM#9ed78d08-7683-44b1-9e12-c91b081966b4",
+          "SK": "METADATA",
+          "type": "Form",
+          "form_id": "9ed78d08-7683-44b1-9e12-c91b081966b4",
+          "category": "B",
+          "domain": "handwriting",
+          "title": "Handwriting and Spelling Lesson Structure and Components",
+          "content": {
+            "form_b": {
+              "title": "Haaaaaandwriting and Spelling Lesson Structure and Components",
+              "structure_overview": "This is FORM B - Structure of Major Part 1 Handwriting/Spelling",
+              "major_sections": [
+                "Standards",
+                "Objectives",
+                "Materials",
+                "Scripted Lesson Plan for Handwriting & Spelling"
+              ],
+              "subsections_of_handwriting_spelling_lesson": {
+                "1_review_connect": {
+                  "name": "Review & Connect",
+                  "purpose": "The purpose of this part of the lesson is to start with a quick review of previously learned sounds. Do not use sounds that have not been directly taught. Do not use words that have sounds that have not been directly taught.",
+                  "order": 1
+                },
+                "2_model_explain_engage": {
+                  "name": "Model, Explain & Engage",
+                  "purpose": "The purpose of this part of the lesson is to connect a sound or sound patterns that you focused on during your reading block to writing its corresponding grapheme patterns. First, make sure children clearly can distinguish the targeted sound; then, hook that sound to the letter patterns through modeling and explaining the sequence of strokes for letters and correct order of letters.",
+                  "order": 2
+                },
+                "3_guided_practice": {
+                  "name": "Guided Practice",
+                  "purpose": "The purpose of this part of the lesson is to give children practice writing the letter while supporting proper pencil grip and correct sequence of stroke formation using handwriting lines.",
+                  "order": 3
+                },
+                "4_application": {
+                  "name": "Application",
+                  "purpose": "The purpose of this part of the lesson is to facilitate children's spelling of the letter or letter patterns when they hear the sound(s). This supports children's early coordination of matching sound to letter(s) for the purpose of spelling words.",
+                  "order": 4
+                },
+                "5_wrap_up": {
+                  "name": "Wrap-Up",
+                  "purpose": "The purpose of this part of the lesson is to remind students what they were focused on and provide praise for their accomplishments.",
+                  "order": 5
+                }
+              },
+              "components_of_scripted_lesson": {
+                "note": "All 5 Subsections of 'Section D Scripted Lesson Plan for Handwriting & Spelling' will have the following components:",
+                "explanation": {
+                  "definition": "AI explains the parts of the lesson",
+                  "formatting": "Set apart in brackets [ ]"
+                },
+                "teacher_script": {
+                  "definition": "Detailed example of what the teacher actually says as a rehearsal of the lesson",
+                  "formatting": "Set apart with #"
+                },
+                "level_indicators": {
+                  "definition": "Activities will be categorized as High, Middle, Low. For every activity indicate the child level ability",
+                  "formatting": "Set apart with +Level in italics",
+                  "levels": {
+                    "low": "an activity for children with low ability level",
+                    "middle": "an activity for children with middle ability level",
+                    "high": "an activity for children with high ability level"
+                  }
+                },
+                "child_response": {
+                  "definition": "Expected child response within the script",
+                  "formatting": "will be set off in parentheses ( )"
+                },
+                "teacher_does": {
+                  "definition": "What the teacher is doing within the script",
+                  "formatting": "will be set off in curly brackets { }, also called braces"
+                },
+                "gesture": {
+                  "definition": "a mnemonic device to support children's memory of a phoneme",
+                  "formatting": "Set apart with +",
+                  "requirement": "You will always provide a gesture for phoneme sounds that are the focus of the Handwriting & Spelling lesson",
+                  "reference": "Use FORM G"
+                },
+                "sequence_verbal_cues": {
+                  "definition": "verbal representations of the sequence of strokes for all letters in the alphabet",
+                  "formatting": "Set apart with ##Sequence Verbal Cues",
+                  "requirement": "You will always provide ##Sequence Verbal Cues for the handwriting of the target letter",
+                  "reference": "Use FORM F"
+                },
+                "adaptation": {
+                  "definition": "AI prompts teacher request for activity examples, modifications according to child ability level",
+                  "formatting": "Set apart with *",
+                  "adaptation_prompt": "*Adaptation: Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high).",
+                  "reference": "Use FORM H"
+                },
+                "modification": {
+                  "definition": "modified teacher script # in response to teacher request",
+                  "formatting": "Set apart with ^",
+                  "response_to": "teacher request",
+                  "options": [
+                    "Provide activity example",
+                    "Provide modification: low, middle, high"
+                  ]
+                }
+              }
+            }
+          },
+          "source_file": "Form-B.json",
+          "created_at": "2025-10-23T22:57:24.175107",
+          "updated_at": "2025-11-01T00:51:33.376343"
+        },
+        {
+          "PK": "FORM#d2f30203-499a-40fb-8bbd-d1e4f48d0845",
+          "SK": "METADATA",
+          "type": "Form",
+          "form_id": "d2f30203-499a-40fb-8bbd-d1e4f48d0845",
+          "category": "C",
+          "domain": "handwriting",
+          "title": "Handwriting and Spelling Structured Lesson Plan Template",
+          "content": {
+            "form_c": {
+              "title": "Handwriting and Spelling Structured Lesson Plan Template",
+              "dynamic_sections": {
+                "standards": "refer to Form X, Form Y, and IXL.pdf",
+                "objectives": "chatbot has to derive based on lesson content",
+                "materials": "chatbot has to derive based on activities and lesson requirements"
+              },
+              "lesson_structure": {
+                "review_connect": {
+                  "explanation": "The purpose of this part of the lesson is to start with a quick review of previously learned sounds. Do not use sounds that have not been directly taught. Do not use words that have sounds that have not been directly taught.",
+                  "teacher_script": [
+                    "[TEACHER NOTE: Use only sounds that have been directly taught. Ask teacher: 'What sounds have you previously taught with this group?']",
+                    "Let's review our sounds. We are doing our Sound Sparks game +Level: Middle (refer to Form D for other activities). Look up here. When I point to a sound. You will all say that sound when I say go, and when you see my hand close to a fist.",
+                    "Ready. My Turn. {Teacher points to [PREVIOUSLY_TAUGHT_SOUND_1]}.}",
+                    "Get Ready. Go. (children chorally respond [PREVIOUSLY_TAUGHT_SOUND_1]).",
+                    "Ready. My Turn. {Teacher points to [PREVIOUSLY_TAUGHT_SOUND_2]}.}",
+                    "Get Ready. Go. (children chorally respond [PREVIOUSLY_TAUGHT_SOUND_2]).",
+                    "{Teacher continues this process with other previously taught sounds. Should be around 2-3 minutes}",
+                    "*Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
+                  ],
+                  "example_output": "Sound Sparks variations: Point to different previously taught sounds, have children chorally respond. Modifications: change pointing speed, add gestures, use different sound sequences. Alternative activities: Tap that Sound (sticky note cards), Sound Detective (listen for position), Write the Sound (mini whiteboards).",
+                  "reference": "Form D, adaptation_1_activities for alternative review activities"
+                },
+                "model_explain_engage": {
+                  "explanation": "The purpose of this part of the lesson is to connect a sound or sound patterns that you focused on during your reading block to writing its corresponding grapheme patterns. First, make sure children clearly can distinguish the targeted sound; then, hook that sound to the letter patterns through modeling and explaining the sequence of strokes for letters and correct order of letters.",
+                  "teacher_script": [
+                    "We've been working on the [TARGET_SOUND] sound.",
+                    "My turn. Listen to my sound [TARGET_SOUND].",
+                    "Put your hand on your vocal box–now say the sound [TARGET_SOUND].",
+                    "Did you feel your vocal box? (Children should respond based on voiced/voiceless sound)",
+                    "That means you are using your voice, so we use our voice to make the [TARGET_SOUND] sound. (or adjust for voiceless sounds)",
+                    "Where are your lips when you make the sound? (Children expected to say [LIP_POSITION]).",
+                    "Right, [LIP_POSITION_DESCRIPTION].",
+                    "And where is your tongue? (Children expected to say [TONGUE_POSITION]).",
+                    "Yes, [TONGUE_POSITION_DESCRIPTION].",
+                    "Let's do our sound motion. Get Ready Go. (children use [GESTURE_DESCRIPTION] while saying [TARGET_SOUND]. +Gesture: refer to Form G for gestures).",
+                    "Let's try. My turn. [TARGET_SOUND]. [Student name], get ready. Go. (child pronounces sound)",
+                    "{The teacher has each child in the group demonstrate the correct pronunciation and provides correction if necessary; if this is a whole group lesson, the teacher has all children repeat first. Then, the teacher will call on a few children who may need extra support}.",
+                    "Great! Now we are going to play our Sound Hunt Game +Level: Middle. Each of you has a [TARGET_WORD] card because [TARGET_WORD] starts with the [TARGET_SOUND] sound. We are listening for the [TARGET_SOUND] sound at the beginning of the word. I will say a word, and if you hear the [TARGET_SOUND] sound at the beginning, I want you to lift up your [TARGET_WORD] card when I say go. If you don't hear it, do not lift up the card.",
+                    "My turn. The word is [TARGET_WORD]. Get Ready...Go. (children should have lifted the card). Right. Everyone should have lifted the card because [TARGET_WORD] begins with [TARGET_SOUND]. Alright put your listening ears on. My turn. The word is [CONTRASTING_WORD]. Get Ready…Go. (children should not have lifted their card).",
+                    "{Teacher repeats this process to cement sound to memory then connects to letter form}",
+                    "Wonderful! The letter that matches the [TARGET_SOUND] sound – is the letter [TARGET_LETTER]. Watch me closely. I will show you how to form uppercase [TARGET_LETTER] then lower case [TARGET_LETTER]. No one is using their pencil yet or writing. You are watching me.",
+                    "{teacher demonstrates on a visual that shows children the correct sequence of letter strokes and uses sequence verbal cues}.",
+                    "##Sequence Verbal Cues for letter [TARGET_LETTER]: [LETTER_FORMATION_CUES]",
+                    "First, [FIRST_STROKE_INSTRUCTION]. Next, [SECOND_STROKE_INSTRUCTION]. And then [THIRD_STROKE_INSTRUCTION]. [NUMBER_COUNT] lines.",
+                    "Say it with me as you watch.",
+                    "[STARTING_POSITION]. Say It. (children repeat).",
+                    "[FIRST_STROKE_CUE]. Say it. (children repeat).",
+                    "[SECOND_STROKE_CUE]. Say It (children repeat).",
+                    "[THIRD_STROKE_CUE]. (children repeat).",
+                    "Let's Count. Ready. Go. (Children count [STROKE_COUNT]).",
+                    "{Teacher repeats this process for lowercase [TARGET_LETTER]–drawing children's attention to where lowercase [TARGET_LETTER] starts}.",
+                    "What is different from where I started my uppercase [TARGET_LETTER] and where I started lower case [TARGET_LETTER]? (Children expected to say [STARTING_DIFFERENCE]).",
+                    "Exactly, where I start the line. Uppercase [TARGET_LETTER] starts at the [UPPERCASE_START]. Lowercase [TARGET_LETTER] starts at the [LOWERCASE_START]. What's the same about both these letters? (Children expected to notice [SIMILARITIES]).",
+                    "Right. [SIMILARITY_EXPLANATION].",
+                    "*Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
+                  ],
+                  "example_output": "Sound Hunt: Children listen for target sound and lift cards. Hide-and-Seek Sound: Find where sound appears in words (beginning/middle/end). Chop-a-Sound: Remove target sound from words. Sound Puzzle: Add target sound to create words.",
+                  "reference": "Form D, adaptation_2_activities"
+                },
+                "guided_practice": {
+                  "explanation": "The purpose is to give children practice writing the letter while supporting proper pencil grip and correct sequence of stroke formation using handwriting lines.",
+                  "teacher_script": [
+                    "Let's practice how to write uppercase letter [TARGET_LETTER] first. We are not using our pencils yet. Let's do our Magic Finger Write +Level: Low. Place your finger at the [STARTING_POSITION]. Let me see {teacher checks students finger placement} Remember it's important when we are writing to try to touch the lines. The lines are there to help us.",
+                    "[LETTER_FORMATION_CUES with finger movements]",
+                    "{Teacher has students do that a few times and repeat for lowercase [TARGET_LETTER]}.",
+                    "Now, pick up the pencil. Show me how you hold your pencil. Remember we slant our paper. Your free hand holds the paper.",
+                    "Let's do our Trace & Say +Level: Low. I have dotted lines for you to trace. We are doing uppercase [TARGET_LETTER] first {Teacher points to uppercase [TARGET_LETTER]}. Where do we start if we want to write uppercase [TARGET_LETTER]? (children should say [STARTING_POSITION]). Yes. Everyone put your pencil at the [STARTING_POSITION]. You want to start here. {Teacher points to [STARTING_POSITION]} Let me see. {Teacher corrects students if needed}. Ready. Write and say. Go. (Children write using dotted lines as guides and say the sequence verbal cues: [LETTER_FORMATION_CUES])",
+                    "Now you do one using the dotted lines. {Teacher monitors children's letter writing}.",
+                    "Do one more using the dotted lines {Teacher monitors and repeats process for lowercase [TARGET_LETTER]}.",
+                    "*Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
+                  ],
+                  "example_output": "Level 1 (Low): Magic Finger Write, Sky Writing, Bumpy Road Letters. Level 2 (Guided): Trace & Say, Start Dot Letters, Rainbow Write. Level 3 (Independent): Top to Bottom Challenge, Line Talkers, Cover & Try.",
+                  "reference": "Form D, adaptation_3_activities"
+                },
+                "application": {
+                  "explanation": "The purpose of this part of the lesson is to facilitate children's spelling of the letter or letter patterns when they hear the sound(s). This supports children's early coordination of matching sound to letter(s) for the purpose of spelling words.",
+                  "teacher_script": [
+                    "Boys and girls, I am going back to the [TARGET_SOUND] Sound Hunt game, but now it's the Sound-Letter Hunt game +Level: Middle. I am going to say a word. You are listening to the beginning sound of that word. You are going to write the letter of the sound you hear in the beginning of the word. Let me show you. My turn. The word is [EXAMPLE_WORD]. So I am thinking the beginning sound of '[EXAMPLE_WORD]' is [EXAMPLE_SOUND]. I know that the [EXAMPLE_SOUND] sound is written with the letter [EXAMPLE_LETTER]. I am going to look at my handwriting Sound-Letter Hunt worksheet. {Teacher directs students' attention to the handwriting sound-hunt worksheet. The worksheet displays some previously learned letter-sounds along with the new targeted letter-sound. The handout shows the proper way to write those letters and dotted lines for children to use as guides}",
+                    "I see letter [EXAMPLE_LETTER]. Now I am going to look to find letter [EXAMPLE_LETTER] on my paper. I am going to look at how to write the letter [EXAMPLE_LETTER]. Then, I am going to use the dotted lines to write the letter [EXAMPLE_LETTER].",
+                    "Okay are you ready? Listen. My turn. The word is [TARGET_WORD]. Get ready. Go. (children should hear the sound [TARGET_SOUND] and write the letter [TARGET_LETTER]). {Teacher uses the same list of words that were used in the Sound Hunt activity above. Teacher monitors students' answers providing corrective feedback.}",
+                    "*Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
+                  ],
+                  "example_output": "Trace the Sound You Hear: Children trace letters when hearing target sounds. Write the Sound You Hear: Children write matching letters. Sound-Letter Hunt: Listen and write corresponding sounds. Mystery Word Builder: Write sounds to form words.",
+                  "reference": "Form D, adaptation_4_activities"
+                },
+                "wrap_up": {
+                  "explanation": "The purpose of this part of the lesson is to remind students what they were focused on and provide praise for their accomplishments.",
+                  "teacher_script": [
+                    "Alright, boys and girls I am so proud of you. What sound have we been working on? {Teacher holds up [TARGET_WORD] sound card} (Children respond [TARGET_SOUND]).",
+                    "Perfect! And which of these letters say [TARGET_SOUND] {Teacher provides children with a choice} (Children can touch the correct letter that is displayed in small groups, or the teacher can call on a student to circle the correct letter for the whole class).",
+                    "Show me how to write it (children air write with sequence verbal cues: [LETTER_FORMATION_CUES])",
+                    "Wonderful! Kiss your brains."
+                  ]
+                }
+              },
+              "references": {
+                "form_d": "for alternative Review & Connect activities",
+                "form_e": "for evidence-based practices in handwriting, spelling, vocabulary, and idea generation",
+                "form_f": "for sequence verbal cues for all letters",
+                "form_g": "for phoneme gestures",
+                "form_x": "for standards (to be specified)",
+                "form_y": "for standards (to be specified)",
+                "ixl_pdf": "for standards reference"
+              },
+              "placeholder_variables": {
+                "TARGET_SOUND": "The phoneme being taught (e.g., /z/)",
+                "TARGET_LETTER": "The grapheme being taught (e.g., z)",
+                "TARGET_WORD": "Anchor word starting with target sound (e.g., zebra)",
+                "CONTRASTING_WORD": "Word that does NOT start with target sound",
+                "PREVIOUSLY_TAUGHT_SOUND_1": "First previously taught sound (teacher input)",
+                "PREVIOUSLY_TAUGHT_SOUND_2": "Second previously taught sound (teacher input)",
+                "LIP_POSITION": "Description of lip position for sound",
+                "LIP_POSITION_DESCRIPTION": "Detailed explanation of lip position",
+                "TONGUE_POSITION": "Description of tongue position for sound",
+                "TONGUE_POSITION_DESCRIPTION": "Detailed explanation of tongue position",
+                "GESTURE_DESCRIPTION": "Physical gesture for the sound",
+                "LETTER_FORMATION_CUES": "Sequence verbal cues for letter formation",
+                "STARTING_POSITION": "Where to start writing the letter",
+                "STROKE_COUNT": "Number of strokes in the letter",
+                "EXAMPLE_WORD": "Word used for demonstration",
+                "EXAMPLE_SOUND": "Sound from example word",
+                "EXAMPLE_LETTER": "Letter from example word"
+              }
+            }
+          },
+          "source_file": "Form-C.json",
+          "created_at": "2025-10-23T22:57:24.190567",
+          "updated_at": "2025-11-01T00:57:59.938682"
+        },
         {
           "PK": "FORM#7cf24d25-5071-48d2-8619-b36b18a3e39b",
           "SK": "METADATA",
@@ -3316,256 +3572,23 @@
           "source_file": "FORM-P.json",
           "created_at": "2025-10-23T22:57:24.584453",
           "updated_at": "2025-10-23T22:57:24.584453"
-        },
+        }
+      ],
+      "user": [
         {
-          "PK": "FORM#9ed78d08-7683-44b1-9e12-c91b081966b4",
-          "SK": "METADATA",
-          "type": "Form",
-          "form_id": "9ed78d08-7683-44b1-9e12-c91b081966b4",
-          "category": "B",
-          "domain": "handwriting",
-          "title": "Handwriting and Spelling Lesson Structure and Components",
-          "content": {
-            "form_b": {
-              "title": "Haaaaaandwriting and Spelling Lesson Structure and Components",
-              "structure_overview": "This is FORM B - Structure of Major Part 1 Handwriting/Spelling",
-              "major_sections": [
-                "Standards",
-                "Objectives",
-                "Materials",
-                "Scripted Lesson Plan for Handwriting & Spelling"
-              ],
-              "subsections_of_handwriting_spelling_lesson": {
-                "1_review_connect": {
-                  "name": "Review & Connect",
-                  "purpose": "The purpose of this part of the lesson is to start with a quick review of previously learned sounds. Do not use sounds that have not been directly taught. Do not use words that have sounds that have not been directly taught.",
-                  "order": 1
-                },
-                "2_model_explain_engage": {
-                  "name": "Model, Explain & Engage",
-                  "purpose": "The purpose of this part of the lesson is to connect a sound or sound patterns that you focused on during your reading block to writing its corresponding grapheme patterns. First, make sure children clearly can distinguish the targeted sound; then, hook that sound to the letter patterns through modeling and explaining the sequence of strokes for letters and correct order of letters.",
-                  "order": 2
-                },
-                "3_guided_practice": {
-                  "name": "Guided Practice",
-                  "purpose": "The purpose of this part of the lesson is to give children practice writing the letter while supporting proper pencil grip and correct sequence of stroke formation using handwriting lines.",
-                  "order": 3
-                },
-                "4_application": {
-                  "name": "Application",
-                  "purpose": "The purpose of this part of the lesson is to facilitate children's spelling of the letter or letter patterns when they hear the sound(s). This supports children's early coordination of matching sound to letter(s) for the purpose of spelling words.",
-                  "order": 4
-                },
-                "5_wrap_up": {
-                  "name": "Wrap-Up",
-                  "purpose": "The purpose of this part of the lesson is to remind students what they were focused on and provide praise for their accomplishments.",
-                  "order": 5
-                }
-              },
-              "components_of_scripted_lesson": {
-                "note": "All 5 Subsections of 'Section D Scripted Lesson Plan for Handwriting & Spelling' will have the following components:",
-                "explanation": {
-                  "definition": "AI explains the parts of the lesson",
-                  "formatting": "Set apart in brackets [ ]"
-                },
-                "teacher_script": {
-                  "definition": "Detailed example of what the teacher actually says as a rehearsal of the lesson",
-                  "formatting": "Set apart with #"
-                },
-                "level_indicators": {
-                  "definition": "Activities will be categorized as High, Middle, Low. For every activity indicate the child level ability",
-                  "formatting": "Set apart with +Level in italics",
-                  "levels": {
-                    "low": "an activity for children with low ability level",
-                    "middle": "an activity for children with middle ability level",
-                    "high": "an activity for children with high ability level"
-                  }
-                },
-                "child_response": {
-                  "definition": "Expected child response within the script",
-                  "formatting": "will be set off in parentheses ( )"
-                },
-                "teacher_does": {
-                  "definition": "What the teacher is doing within the script",
-                  "formatting": "will be set off in curly brackets { }, also called braces"
-                },
-                "gesture": {
-                  "definition": "a mnemonic device to support children's memory of a phoneme",
-                  "formatting": "Set apart with +",
-                  "requirement": "You will always provide a gesture for phoneme sounds that are the focus of the Handwriting & Spelling lesson",
-                  "reference": "Use FORM G"
-                },
-                "sequence_verbal_cues": {
-                  "definition": "verbal representations of the sequence of strokes for all letters in the alphabet",
-                  "formatting": "Set apart with ##Sequence Verbal Cues",
-                  "requirement": "You will always provide ##Sequence Verbal Cues for the handwriting of the target letter",
-                  "reference": "Use FORM F"
-                },
-                "adaptation": {
-                  "definition": "AI prompts teacher request for activity examples, modifications according to child ability level",
-                  "formatting": "Set apart with *",
-                  "adaptation_prompt": "*Adaptation: Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high).",
-                  "reference": "Use FORM H"
-                },
-                "modification": {
-                  "definition": "modified teacher script # in response to teacher request",
-                  "formatting": "Set apart with ^",
-                  "response_to": "teacher request",
-                  "options": [
-                    "Provide activity example",
-                    "Provide modification: low, middle, high"
-                  ]
-                }
-              }
-            }
-          },
-          "source_file": "Form-B.json",
-          "created_at": "2025-10-23T22:57:24.175107",
-          "updated_at": "2025-11-01T00:51:33.376343"
-        },
-        {
-          "PK": "FORM#d2f30203-499a-40fb-8bbd-d1e4f48d0845",
-          "SK": "METADATA",
-          "type": "Form",
-          "form_id": "d2f30203-499a-40fb-8bbd-d1e4f48d0845",
-          "category": "C",
-          "domain": "handwriting",
-          "title": "Handwriting and Spelling Structured Lesson Plan Template",
-          "content": {
-            "form_c": {
-              "title": "Handwriting and Spelling Structured Lesson Plan Template",
-              "dynamic_sections": {
-                "standards": "refer to Form X, Form Y, and IXL.pdf",
-                "objectives": "chatbot has to derive based on lesson content",
-                "materials": "chatbot has to derive based on activities and lesson requirements"
-              },
-              "lesson_structure": {
-                "review_connect": {
-                  "explanation": "The purpose of this part of the lesson is to start with a quick review of previously learned sounds. Do not use sounds that have not been directly taught. Do not use words that have sounds that have not been directly taught.",
-                  "teacher_script": [
-                    "[TEACHER NOTE: Use only sounds that have been directly taught. Ask teacher: 'What sounds have you previously taught with this group?']",
-                    "Let's review our sounds. We are doing our Sound Sparks game +Level: Middle (refer to Form D for other activities). Look up here. When I point to a sound. You will all say that sound when I say go, and when you see my hand close to a fist.",
-                    "Ready. My Turn. {Teacher points to [PREVIOUSLY_TAUGHT_SOUND_1]}.}",
-                    "Get Ready. Go. (children chorally respond [PREVIOUSLY_TAUGHT_SOUND_1]).",
-                    "Ready. My Turn. {Teacher points to [PREVIOUSLY_TAUGHT_SOUND_2]}.}",
-                    "Get Ready. Go. (children chorally respond [PREVIOUSLY_TAUGHT_SOUND_2]).",
-                    "{Teacher continues this process with other previously taught sounds. Should be around 2-3 minutes}",
-                    "*Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
-                  ],
-                  "example_output": "Sound Sparks variations: Point to different previously taught sounds, have children chorally respond. Modifications: change pointing speed, add gestures, use different sound sequences. Alternative activities: Tap that Sound (sticky note cards), Sound Detective (listen for position), Write the Sound (mini whiteboards).",
-                  "reference": "Form D, adaptation_1_activities for alternative review activities"
-                },
-                "model_explain_engage": {
-                  "explanation": "The purpose of this part of the lesson is to connect a sound or sound patterns that you focused on during your reading block to writing its corresponding grapheme patterns. First, make sure children clearly can distinguish the targeted sound; then, hook that sound to the letter patterns through modeling and explaining the sequence of strokes for letters and correct order of letters.",
-                  "teacher_script": [
-                    "We've been working on the [TARGET_SOUND] sound.",
-                    "My turn. Listen to my sound [TARGET_SOUND].",
-                    "Put your hand on your vocal box–now say the sound [TARGET_SOUND].",
-                    "Did you feel your vocal box? (Children should respond based on voiced/voiceless sound)",
-                    "That means you are using your voice, so we use our voice to make the [TARGET_SOUND] sound. (or adjust for voiceless sounds)",
-                    "Where are your lips when you make the sound? (Children expected to say [LIP_POSITION]).",
-                    "Right, [LIP_POSITION_DESCRIPTION].",
-                    "And where is your tongue? (Children expected to say [TONGUE_POSITION]).",
-                    "Yes, [TONGUE_POSITION_DESCRIPTION].",
-                    "Let's do our sound motion. Get Ready Go. (children use [GESTURE_DESCRIPTION] while saying [TARGET_SOUND]. +Gesture: refer to Form G for gestures).",
-                    "Let's try. My turn. [TARGET_SOUND]. [Student name], get ready. Go. (child pronounces sound)",
-                    "{The teacher has each child in the group demonstrate the correct pronunciation and provides correction if necessary; if this is a whole group lesson, the teacher has all children repeat first. Then, the teacher will call on a few children who may need extra support}.",
-                    "Great! Now we are going to play our Sound Hunt Game +Level: Middle. Each of you has a [TARGET_WORD] card because [TARGET_WORD] starts with the [TARGET_SOUND] sound. We are listening for the [TARGET_SOUND] sound at the beginning of the word. I will say a word, and if you hear the [TARGET_SOUND] sound at the beginning, I want you to lift up your [TARGET_WORD] card when I say go. If you don't hear it, do not lift up the card.",
-                    "My turn. The word is [TARGET_WORD]. Get Ready...Go. (children should have lifted the card). Right. Everyone should have lifted the card because [TARGET_WORD] begins with [TARGET_SOUND]. Alright put your listening ears on. My turn. The word is [CONTRASTING_WORD]. Get Ready…Go. (children should not have lifted their card).",
-                    "{Teacher repeats this process to cement sound to memory then connects to letter form}",
-                    "Wonderful! The letter that matches the [TARGET_SOUND] sound – is the letter [TARGET_LETTER]. Watch me closely. I will show you how to form uppercase [TARGET_LETTER] then lower case [TARGET_LETTER]. No one is using their pencil yet or writing. You are watching me.",
-                    "{teacher demonstrates on a visual that shows children the correct sequence of letter strokes and uses sequence verbal cues}.",
-                    "##Sequence Verbal Cues for letter [TARGET_LETTER]: [LETTER_FORMATION_CUES]",
-                    "First, [FIRST_STROKE_INSTRUCTION]. Next, [SECOND_STROKE_INSTRUCTION]. And then [THIRD_STROKE_INSTRUCTION]. [NUMBER_COUNT] lines.",
-                    "Say it with me as you watch.",
-                    "[STARTING_POSITION]. Say It. (children repeat).",
-                    "[FIRST_STROKE_CUE]. Say it. (children repeat).",
-                    "[SECOND_STROKE_CUE]. Say It (children repeat).",
-                    "[THIRD_STROKE_CUE]. (children repeat).",
-                    "Let's Count. Ready. Go. (Children count [STROKE_COUNT]).",
-                    "{Teacher repeats this process for lowercase [TARGET_LETTER]–drawing children's attention to where lowercase [TARGET_LETTER] starts}.",
-                    "What is different from where I started my uppercase [TARGET_LETTER] and where I started lower case [TARGET_LETTER]? (Children expected to say [STARTING_DIFFERENCE]).",
-                    "Exactly, where I start the line. Uppercase [TARGET_LETTER] starts at the [UPPERCASE_START]. Lowercase [TARGET_LETTER] starts at the [LOWERCASE_START]. What's the same about both these letters? (Children expected to notice [SIMILARITIES]).",
-                    "Right. [SIMILARITY_EXPLANATION].",
-                    "*Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
-                  ],
-                  "example_output": "Sound Hunt: Children listen for target sound and lift cards. Hide-and-Seek Sound: Find where sound appears in words (beginning/middle/end). Chop-a-Sound: Remove target sound from words. Sound Puzzle: Add target sound to create words.",
-                  "reference": "Form D, adaptation_2_activities"
-                },
-                "guided_practice": {
-                  "explanation": "The purpose is to give children practice writing the letter while supporting proper pencil grip and correct sequence of stroke formation using handwriting lines.",
-                  "teacher_script": [
-                    "Let's practice how to write uppercase letter [TARGET_LETTER] first. We are not using our pencils yet. Let's do our Magic Finger Write +Level: Low. Place your finger at the [STARTING_POSITION]. Let me see {teacher checks students finger placement} Remember it's important when we are writing to try to touch the lines. The lines are there to help us.",
-                    "[LETTER_FORMATION_CUES with finger movements]",
-                    "{Teacher has students do that a few times and repeat for lowercase [TARGET_LETTER]}.",
-                    "Now, pick up the pencil. Show me how you hold your pencil. Remember we slant our paper. Your free hand holds the paper.",
-                    "Let's do our Trace & Say +Level: Low. I have dotted lines for you to trace. We are doing uppercase [TARGET_LETTER] first {Teacher points to uppercase [TARGET_LETTER]}. Where do we start if we want to write uppercase [TARGET_LETTER]? (children should say [STARTING_POSITION]). Yes. Everyone put your pencil at the [STARTING_POSITION]. You want to start here. {Teacher points to [STARTING_POSITION]} Let me see. {Teacher corrects students if needed}. Ready. Write and say. Go. (Children write using dotted lines as guides and say the sequence verbal cues: [LETTER_FORMATION_CUES])",
-                    "Now you do one using the dotted lines. {Teacher monitors children's letter writing}.",
-                    "Do one more using the dotted lines {Teacher monitors and repeats process for lowercase [TARGET_LETTER]}.",
-                    "*Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
-                  ],
-                  "example_output": "Level 1 (Low): Magic Finger Write, Sky Writing, Bumpy Road Letters. Level 2 (Guided): Trace & Say, Start Dot Letters, Rainbow Write. Level 3 (Independent): Top to Bottom Challenge, Line Talkers, Cover & Try.",
-                  "reference": "Form D, adaptation_3_activities"
-                },
-                "application": {
-                  "explanation": "The purpose of this part of the lesson is to facilitate children's spelling of the letter or letter patterns when they hear the sound(s). This supports children's early coordination of matching sound to letter(s) for the purpose of spelling words.",
-                  "teacher_script": [
-                    "Boys and girls, I am going back to the [TARGET_SOUND] Sound Hunt game, but now it's the Sound-Letter Hunt game +Level: Middle. I am going to say a word. You are listening to the beginning sound of that word. You are going to write the letter of the sound you hear in the beginning of the word. Let me show you. My turn. The word is [EXAMPLE_WORD]. So I am thinking the beginning sound of '[EXAMPLE_WORD]' is [EXAMPLE_SOUND]. I know that the [EXAMPLE_SOUND] sound is written with the letter [EXAMPLE_LETTER]. I am going to look at my handwriting Sound-Letter Hunt worksheet. {Teacher directs students' attention to the handwriting sound-hunt worksheet. The worksheet displays some previously learned letter-sounds along with the new targeted letter-sound. The handout shows the proper way to write those letters and dotted lines for children to use as guides}",
-                    "I see letter [EXAMPLE_LETTER]. Now I am going to look to find letter [EXAMPLE_LETTER] on my paper. I am going to look at how to write the letter [EXAMPLE_LETTER]. Then, I am going to use the dotted lines to write the letter [EXAMPLE_LETTER].",
-                    "Okay are you ready? Listen. My turn. The word is [TARGET_WORD]. Get ready. Go. (children should hear the sound [TARGET_SOUND] and write the letter [TARGET_LETTER]). {Teacher uses the same list of words that were used in the Sound Hunt activity above. Teacher monitors students' answers providing corrective feedback.}",
-                    "*Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high), or additional modeling."
-                  ],
-                  "example_output": "Trace the Sound You Hear: Children trace letters when hearing target sounds. Write the Sound You Hear: Children write matching letters. Sound-Letter Hunt: Listen and write corresponding sounds. Mystery Word Builder: Write sounds to form words.",
-                  "reference": "Form D, adaptation_4_activities"
-                },
-                "wrap_up": {
-                  "explanation": "The purpose of this part of the lesson is to remind students what they were focused on and provide praise for their accomplishments.",
-                  "teacher_script": [
-                    "Alright, boys and girls I am so proud of you. What sound have we been working on? {Teacher holds up [TARGET_WORD] sound card} (Children respond [TARGET_SOUND]).",
-                    "Perfect! And which of these letters say [TARGET_SOUND] {Teacher provides children with a choice} (Children can touch the correct letter that is displayed in small groups, or the teacher can call on a student to circle the correct letter for the whole class).",
-                    "Show me how to write it (children air write with sequence verbal cues: [LETTER_FORMATION_CUES])",
-                    "Wonderful! Kiss your brains."
-                  ]
-                }
-              },
-              "references": {
-                "form_d": "for alternative Review & Connect activities",
-                "form_e": "for evidence-based practices in handwriting, spelling, vocabulary, and idea generation",
-                "form_f": "for sequence verbal cues for all letters",
-                "form_g": "for phoneme gestures",
-                "form_x": "for standards (to be specified)",
-                "form_y": "for standards (to be specified)",
-                "ixl_pdf": "for standards reference"
-              },
-              "placeholder_variables": {
-                "TARGET_SOUND": "The phoneme being taught (e.g., /z/)",
-                "TARGET_LETTER": "The grapheme being taught (e.g., z)",
-                "TARGET_WORD": "Anchor word starting with target sound (e.g., zebra)",
-                "CONTRASTING_WORD": "Word that does NOT start with target sound",
-                "PREVIOUSLY_TAUGHT_SOUND_1": "First previously taught sound (teacher input)",
-                "PREVIOUSLY_TAUGHT_SOUND_2": "Second previously taught sound (teacher input)",
-                "LIP_POSITION": "Description of lip position for sound",
-                "LIP_POSITION_DESCRIPTION": "Detailed explanation of lip position",
-                "TONGUE_POSITION": "Description of tongue position for sound",
-                "TONGUE_POSITION_DESCRIPTION": "Detailed explanation of tongue position",
-                "GESTURE_DESCRIPTION": "Physical gesture for the sound",
-                "LETTER_FORMATION_CUES": "Sequence verbal cues for letter formation",
-                "STARTING_POSITION": "Where to start writing the letter",
-                "STROKE_COUNT": "Number of strokes in the letter",
-                "EXAMPLE_WORD": "Word used for demonstration",
-                "EXAMPLE_SOUND": "Sound from example word",
-                "EXAMPLE_LETTER": "Letter from example word"
-              }
-            }
-          },
-          "source_file": "Form-C.json",
-          "created_at": "2025-10-23T22:57:24.190567",
-          "updated_at": "2025-11-01T00:57:59.938682"
+          "PK": "USER#ce1af263-c1ad-45d8-a2f1-8c1923d89241",
+          "SK": "PROFILE",
+          "user_id": "ce1af263-c1ad-45d8-a2f1-8c1923d89241",
+          "email": "l4c@gmail.com",
+          "name": "L4C",
+          "password_hash": "$2b$12$ouYuD/vU/WltHBpsbV1XsOSNzzbe80JajNz1bHhd4RLZTEa1SyoPy",
+          "created_at": "2025-11-15T01:31:59.226333",
+          "updated_at": "2025-11-15T01:31:59.226333",
+          "type": "user"
         }
       ]
     },
     "CategoryIndex": {
-      "A": [],
       "B": [
         {
           "PK": "FORM#9ed78d08-7683-44b1-9e12-c91b081966b4",
@@ -5374,9 +5397,8 @@
           "created_at": "2025-10-23T22:57:24.584453",
           "updated_at": "2025-10-23T22:57:24.584453"
         }
-      ],
-      "Q": []
+      ]
     }
   },
-  "last_updated": "2025-11-01T00:58:27.711894"
+  "last_updated": "2025-11-15T01:31:59.226333"
 }
