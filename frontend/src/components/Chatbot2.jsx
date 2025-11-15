@@ -28,6 +28,9 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [transcriptionError, setTranscriptionError] = useState(null) // Transcription errors
   const [selectedImage, setSelectedImage] = useState(null) // Store selected image file
   const [imagePreview, setImagePreview] = useState(null) // Store image preview URL
+  const [selectedVideo, setSelectedVideo] = useState(null) // Store selected video file
+  const [videoPreview, setVideoPreview] = useState(null) // Store video preview URL
+  const [fileType, setFileType] = useState(null) // Track if selected file is 'image' or 'video'
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false) // Show/hide attachment menu
   const [showCameraModal, setShowCameraModal] = useState(false) // Show/hide camera modal
   const messagesEndRef = useRef(null)
@@ -139,7 +142,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }
   }
 
-  // Poll for handwriting analysis results
+  // Poll for handwriting analysis results (image)
   const pollAnalysisStatus = async (jobId, maxAttempts = 30) => {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
@@ -162,15 +165,144 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     throw new Error('Analysis timed out. Please try again.')
   }
 
+  // Poll for video analysis results
+  const pollVideoAnalysisStatus = async (jobId, maxAttempts = 60) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const statusRes = await handwriting.getVideoAnalysisStatus(jobId)
+
+        if (statusRes.status === 'completed' && statusRes.result) {
+          return statusRes.result
+        } else if (statusRes.status === 'failed') {
+          throw new Error(statusRes.result?.error_message || 'Video analysis failed')
+        }
+
+        // Wait 2 seconds before next poll (videos take longer)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      } catch (error) {
+        console.error('Error polling video analysis status:', error)
+        throw error
+      }
+    }
+
+    throw new Error('Video analysis timed out. Please try again.')
+  }
+
   const handleSendMessage = async () => {
-    // Check if we have an image or text message
+    // Check if we have an image, video, or text message
     const hasImage = selectedImage !== null
+    const hasVideo = selectedVideo !== null
     const hasText = inputValue.trim().length > 0
 
-    if (!hasImage && !hasText) return
+    if (!hasImage && !hasVideo && !hasText) return
 
+    // If we have a video, use video handwriting analysis API
+    if (hasVideo) {
+      const userMessage = inputValue.trim() || 'Please analyze this handwriting video.'
+      const videoFile = selectedVideo
+      const videoUrl = videoPreview
+
+      // Create user message with video
+      const newUserMessage = {
+        id: Date.now(),
+        type: 'user',
+        content: userMessage,
+        video: videoUrl, // Store video preview URL for display
+        timestamp: new Date()
+      }
+
+      setMessages(prev => [...prev, newUserMessage])
+      setInputValue('')
+      setSelectedVideo(null)
+      setVideoPreview(null)
+      setFileType(null)
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+
+      // Notify parent component
+      if (onNewMessage) {
+        onNewMessage()
+      }
+
+      // Send video for analysis
+      setIsTyping(true)
+      try {
+        // Upload video and get job_id
+        const uploadRes = await handwriting.analyzeVideo(videoFile, userMessage)
+
+        if (uploadRes?.thread_id) {
+          setThreadId(uploadRes.thread_id)
+        }
+
+        // Poll for results
+        const analysisResult = await pollVideoAnalysisStatus(uploadRes.job_id)
+
+        // Format VIDEO analysis results for display
+        let responseContent = `**Video Handwriting Analysis Complete**\n\n`
+        responseContent += `**Frames Analyzed:** ${analysisResult.total_frames_analyzed}\n\n`
+
+        if (analysisResult.feedback) {
+          responseContent += `**Feedback:** ${analysisResult.feedback}\n\n`
+        }
+
+        if (analysisResult.suggestions && analysisResult.suggestions.length > 0) {
+          responseContent += `**Suggestions:**\n`
+          analysisResult.suggestions.forEach(suggestion => {
+            responseContent += `- ${suggestion}\n`
+          })
+          responseContent += `\n`
+        }
+
+        if (analysisResult.progression_analysis) {
+          const prog = analysisResult.progression_analysis
+          responseContent += `**Progression Analysis:**\n`
+          responseContent += `- Type: ${prog.progression_type}\n`
+          responseContent += `- Consistency Score: ${(prog.consistency_score * 100).toFixed(1)}%\n`
+          if (prog.stroke_count_change) {
+            responseContent += `- Stroke Count Change: ${prog.stroke_count_change}\n`
+          }
+          responseContent += `\n`
+        }
+
+        if (analysisResult.aggregated_features) {
+          const agg = analysisResult.aggregated_features
+          responseContent += `**Average Metrics:**\n`
+          responseContent += `- Stroke Count: ${agg.avg_stroke_count?.toFixed(1)}\n`
+          responseContent += `- Line Straightness: ${(agg.avg_line_straightness * 100)?.toFixed(1)}%\n`
+          responseContent += `- Most Common Baseline: ${agg.most_common_baseline}\n`
+          responseContent += `\n`
+        }
+
+        if (analysisResult.analysis_summary) {
+          responseContent += `**Summary:** ${analysisResult.analysis_summary}\n\n`
+        }
+
+        const botResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: responseContent,
+          timestamp: new Date()
+        }
+
+        setMessages(prev => [...prev, botResponse])
+      } catch (error) {
+        console.error('Failed to analyze video:', error)
+        const errorResponse = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: `Sorry, I encountered an error analyzing the video: ${error.message}. Please try again.`,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, errorResponse])
+      } finally {
+        setIsTyping(false)
+      }
+    }
     // If we have an image, use handwriting analysis API
-    if (hasImage) {
+    else if (hasImage) {
       const userMessage = inputValue.trim() || 'Please analyze this handwriting.'
       const imageFile = selectedImage
       const imageUrl = imagePreview
@@ -324,37 +456,75 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     setThreadId(null)
   }
 
-  // Handle image selection
+  // Handle file selection (image or video)
   const handleImageSelect = (event) => {
     const file = event.target.files?.[0]
-    if (file) {
-      // Check if file is an image
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file')
-        return
-      }
+    if (!file) return
 
-      // Check file size (max 10MB)
+    const isImage = file.type.startsWith('image/')
+    const isVideo = file.type.startsWith('video/')
+
+    // Validate file type
+    if (!isImage && !isVideo) {
+      alert('Please select an image or video file')
+      return
+    }
+
+    // Validate file size
+    if (isImage) {
       if (file.size > 10 * 1024 * 1024) {
         alert('Image size should be less than 10MB')
         return
       }
+    } else if (isVideo) {
+      if (file.size > 50 * 1024 * 1024) {
+        alert('Video size should be less than 50MB')
+        return
+      }
 
+      // Validate video format
+      const supportedFormats = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo']
+      if (!supportedFormats.includes(file.type)) {
+        alert('Unsupported video format. Please use MP4, MOV, WebM, or AVI.')
+        return
+      }
+    }
+
+    // Set file and file type
+    if (isImage) {
       setSelectedImage(file)
+      setSelectedVideo(null)
+      setVideoPreview(null)
+      setFileType('image')
 
-      // Create preview URL
+      // Create preview URL for image
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result)
       }
       reader.readAsDataURL(file)
+    } else if (isVideo) {
+      setSelectedVideo(file)
+      setSelectedImage(null)
+      setImagePreview(null)
+      setFileType('video')
+
+      // Create preview URL for video
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setVideoPreview(reader.result)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
-  // Remove selected image
+  // Remove selected file (image or video)
   const handleRemoveImage = () => {
     setSelectedImage(null)
     setImagePreview(null)
+    setSelectedVideo(null)
+    setVideoPreview(null)
+    setFileType(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -746,6 +916,15 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
                     />
                   )}
 
+                  {/* Show video if present */}
+                  {message.video && (
+                    <video
+                      src={message.video}
+                      controls
+                      className="max-w-full rounded-lg mb-2 max-h-48"
+                    />
+                  )}
+
                   {message.type === 'user' ? (
                     <p className="text-sm leading-relaxed">{message.content}</p>
                   ) : (
@@ -862,6 +1041,28 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           </motion.div>
         )}
 
+        {/* Video preview */}
+        {videoPreview && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 relative inline-block"
+          >
+            <video
+              src={videoPreview}
+              controls
+              className="max-h-32 rounded-lg border border-gray-200"
+            />
+            <button
+              onClick={handleRemoveImage}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+              title="Remove video"
+            >
+              ×
+            </button>
+          </motion.div>
+        )}
+
         <div className="flex items-end space-x-2">
           {/* Hidden file input for gallery */}
           <input
@@ -946,10 +1147,10 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           {/* Send button */}
           <button
             onClick={handleSendMessage}
-            disabled={(!inputValue.trim() && !selectedImage) || isTyping || isRecording}
+            disabled={(!inputValue.trim() && !selectedImage && !selectedVideo) || isTyping || isRecording}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              (inputValue.trim() || selectedImage) && !isTyping && !isRecording
+              (inputValue.trim() || selectedImage || selectedVideo) && !isTyping && !isRecording
                 ? "bg-purple-500 text-white hover:bg-purple-600"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             )}

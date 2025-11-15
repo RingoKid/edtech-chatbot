@@ -1,6 +1,6 @@
 """
 Handwriting Analysis Service using OpenCV.
-Analyzes uploaded handwriting images and extracts geometric features.
+Analyzes uploaded handwriting images and videos, extracts geometric features.
 """
 
 import cv2
@@ -9,6 +9,8 @@ import logging
 from typing import Dict, Any, List, Tuple, Optional
 from pathlib import Path
 import math
+import tempfile
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -425,5 +427,315 @@ class HandwritingAnalysisService:
             summary_parts.append("Moderately straight lines")
         else:
             summary_parts.append("Curved or irregular lines")
+
+        return ". ".join(summary_parts) + "."
+
+
+class VideoProcessor:
+    """Handles video preprocessing and frame extraction for handwriting analysis."""
+
+    @staticmethod
+    def extract_key_frames(video_path: str, num_frames: int = 3) -> List[str]:
+        """
+        Extract key frames from video at specific intervals.
+
+        Args:
+            video_path: Path to the video file
+            num_frames: Number of key frames to extract (default: 3)
+
+        Returns:
+            List of paths to extracted frame images
+
+        Raises:
+            ValueError: If video cannot be opened or has issues
+        """
+        logger.info(f"Extracting {num_frames} key frames from video: {video_path}")
+
+        # Open video file
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise ValueError(f"Failed to open video file: {video_path}")
+
+        try:
+            # Get video properties
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            duration = total_frames / fps if fps > 0 else 0
+
+            logger.info(f"Video info: {total_frames} frames, {fps:.2f} FPS, {duration:.2f}s duration")
+
+            if total_frames < num_frames:
+                logger.warning(f"Video has fewer frames ({total_frames}) than requested ({num_frames})")
+                num_frames = max(1, total_frames)
+
+            # Calculate frame positions (10%, 50%, 90% for 3 frames)
+            if num_frames == 3:
+                frame_positions = [0.10, 0.50, 0.90]
+            elif num_frames == 5:
+                frame_positions = [0.10, 0.30, 0.50, 0.70, 0.90]
+            else:
+                # Evenly distribute frames
+                frame_positions = [i / (num_frames - 1) for i in range(num_frames)]
+
+            frame_indices = [int(pos * total_frames) for pos in frame_positions]
+
+            # Extract frames
+            frame_paths = []
+            temp_dir = tempfile.gettempdir()
+            video_basename = Path(video_path).stem
+
+            for idx, frame_idx in enumerate(frame_indices):
+                # Set video position
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+                ret, frame = cap.read()
+
+                if not ret:
+                    logger.warning(f"Failed to read frame at index {frame_idx}")
+                    continue
+
+                # Save frame as temporary image
+                frame_filename = f"{video_basename}_frame_{idx+1}_at_{frame_positions[idx]*100:.0f}pct.jpg"
+                frame_path = os.path.join(temp_dir, frame_filename)
+
+                cv2.imwrite(frame_path, frame)
+                frame_paths.append(frame_path)
+                logger.info(f"Extracted frame {idx+1}/{num_frames} at {frame_positions[idx]*100:.0f}% -> {frame_path}")
+
+            logger.info(f"Successfully extracted {len(frame_paths)} frames")
+            return frame_paths
+
+        finally:
+            cap.release()
+
+    @staticmethod
+    def save_frames_permanently(frame_paths: List[str], output_dir: Path, job_id: str) -> List[str]:
+        """
+        Copy extracted frames from temp directory to permanent storage.
+
+        Args:
+            frame_paths: List of temporary frame paths
+            output_dir: Directory to save frames permanently
+            job_id: Job ID for unique filenames
+
+        Returns:
+            List of permanent frame paths
+        """
+        output_dir.mkdir(parents=True, exist_ok=True)
+        permanent_paths = []
+
+        for idx, temp_path in enumerate(frame_paths):
+            if not os.path.exists(temp_path):
+                logger.warning(f"Temp frame not found: {temp_path}")
+                continue
+
+            # Create permanent filename
+            frame_ext = Path(temp_path).suffix
+            permanent_filename = f"{job_id}_frame_{idx+1}{frame_ext}"
+            permanent_path = output_dir / permanent_filename
+
+            # Copy file
+            import shutil
+            shutil.copy2(temp_path, permanent_path)
+            permanent_paths.append(str(permanent_path))
+            logger.info(f"Saved frame {idx+1} to: {permanent_path}")
+
+        return permanent_paths
+
+
+class HandwritingVideoAnalysisService:
+    """
+    Service for handwriting video analysis.
+    Extracts key frames and analyzes handwriting progression over time.
+    """
+
+    @staticmethod
+    async def analyze_video(video_path: str, output_dir: Optional[Path] = None, job_id: str = "video") -> Dict[str, Any]:
+        """
+        Analyze a handwriting video by extracting key frames and analyzing each.
+
+        Args:
+            video_path: Path to the uploaded video
+            output_dir: Directory to save extracted frames (optional)
+            job_id: Job ID for organizing output files
+
+        Returns:
+            Dictionary containing aggregated analysis results
+        """
+        try:
+            logger.info(f"Starting video analysis for: {video_path}")
+
+            # Step 1: Extract key frames (3 frames: beginning, middle, end)
+            frame_paths = VideoProcessor.extract_key_frames(video_path, num_frames=3)
+
+            if not frame_paths:
+                raise ValueError("No frames could be extracted from video")
+
+            # Step 2: Save frames permanently if output directory provided
+            permanent_frame_paths = frame_paths
+            if output_dir:
+                permanent_frame_paths = VideoProcessor.save_frames_permanently(
+                    frame_paths, output_dir, job_id
+                )
+
+            # Step 3: Analyze each frame
+            frame_analyses = []
+            for idx, frame_path in enumerate(frame_paths):
+                logger.info(f"Analyzing frame {idx+1}/{len(frame_paths)}")
+
+                # Extract features from frame
+                features = FeatureExtractor.extract_all_features(frame_path)
+                frame_analyses.append({
+                    "frame_number": idx + 1,
+                    "frame_path": permanent_frame_paths[idx] if output_dir else frame_path,
+                    "features": features.to_dict(),
+                    "summary": HandwritingAnalysisService._generate_summary(features)
+                })
+
+            # Step 4: Aggregate analysis across frames
+            aggregated_features = HandwritingVideoAnalysisService._aggregate_features(frame_analyses)
+            progression_analysis = HandwritingVideoAnalysisService._analyze_progression(frame_analyses)
+
+            # Build result
+            result = {
+                "status": "success",
+                "video_path": video_path,
+                "total_frames_analyzed": len(frame_analyses),
+                "frame_analyses": frame_analyses,
+                "aggregated_features": aggregated_features,
+                "progression_analysis": progression_analysis,
+                "analysis_summary": HandwritingVideoAnalysisService._generate_video_summary(
+                    aggregated_features, progression_analysis
+                )
+            }
+
+            logger.info("Video analysis completed successfully")
+            return result
+
+        except Exception as e:
+            logger.error(f"Video analysis failed: {e}")
+            return {
+                "status": "error",
+                "error_message": str(e),
+                "video_path": video_path,
+                "total_frames_analyzed": 0,
+                "frame_analyses": [],
+                "aggregated_features": None,
+                "progression_analysis": None,
+                "analysis_summary": None
+            }
+
+    @staticmethod
+    def _aggregate_features(frame_analyses: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Aggregate features across all frames (average values).
+
+        Args:
+            frame_analyses: List of frame analysis results
+
+        Returns:
+            Dictionary of aggregated features
+        """
+        if not frame_analyses:
+            return {}
+
+        # Collect numeric features
+        stroke_counts = []
+        line_straightness = []
+        slant_angles = []
+        aspect_ratios = []
+
+        for analysis in frame_analyses:
+            features = analysis["features"]
+            stroke_counts.append(features["stroke_count"])
+            line_straightness.append(features["line_straightness"])
+            slant_angles.append(features["slant_angle"])
+            aspect_ratios.append(features["aspect_ratio"])
+
+        # Calculate averages
+        return {
+            "avg_stroke_count": round(np.mean(stroke_counts), 2),
+            "avg_line_straightness": round(np.mean(line_straightness), 2),
+            "avg_slant_angle": round(np.mean(slant_angles), 2),
+            "avg_aspect_ratio": round(np.mean(aspect_ratios), 2),
+            "stroke_count_range": [min(stroke_counts), max(stroke_counts)],
+            "most_common_continuity": frame_analyses[0]["features"]["stroke_continuity"],
+            "most_common_baseline": frame_analyses[0]["features"]["baseline_alignment"]
+        }
+
+    @staticmethod
+    def _analyze_progression(frame_analyses: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Analyze how handwriting changes throughout the video.
+
+        Args:
+            frame_analyses: List of frame analysis results
+
+        Returns:
+            Dictionary describing handwriting progression
+        """
+        if len(frame_analyses) < 2:
+            return {"progression": "insufficient_frames"}
+
+        # Compare first and last frame
+        first = frame_analyses[0]["features"]
+        last = frame_analyses[-1]["features"]
+
+        # Calculate changes
+        stroke_change = last["stroke_count"] - first["stroke_count"]
+        straightness_change = last["line_straightness"] - first["line_straightness"]
+
+        # Determine progression type
+        if abs(stroke_change) <= 1 and abs(straightness_change) < 0.1:
+            progression_type = "consistent"
+        elif straightness_change > 0.1:
+            progression_type = "improving"
+        elif straightness_change < -0.1:
+            progression_type = "declining"
+        else:
+            progression_type = "variable"
+
+        return {
+            "progression_type": progression_type,
+            "stroke_count_change": stroke_change,
+            "straightness_change": round(straightness_change, 2),
+            "consistency_score": round(1.0 - abs(straightness_change), 2)
+        }
+
+    @staticmethod
+    def _generate_video_summary(aggregated_features: Dict[str, Any], progression: Dict[str, Any]) -> str:
+        """
+        Generate human-readable summary of video analysis.
+
+        Args:
+            aggregated_features: Aggregated feature statistics
+            progression: Progression analysis results
+
+        Returns:
+            Summary string
+        """
+        if not aggregated_features or not progression:
+            return "Unable to generate summary due to analysis errors."
+
+        summary_parts = []
+
+        # Overall consistency
+        prog_type = progression.get("progression_type", "unknown")
+        if prog_type == "consistent":
+            summary_parts.append("Handwriting remains consistent throughout the video")
+        elif prog_type == "improving":
+            summary_parts.append("Handwriting shows improvement as writing progresses")
+        elif prog_type == "declining":
+            summary_parts.append("Handwriting quality decreases toward the end (possible fatigue)")
+        else:
+            summary_parts.append("Handwriting quality varies throughout the video")
+
+        # Average characteristics
+        avg_straightness = aggregated_features.get("avg_line_straightness", 0)
+        if avg_straightness > 0.7:
+            summary_parts.append("Lines are generally straight")
+        elif avg_straightness > 0.4:
+            summary_parts.append("Lines show moderate straightness")
+        else:
+            summary_parts.append("Lines tend to be curved")
 
         return ". ".join(summary_parts) + "."

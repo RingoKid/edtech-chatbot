@@ -44,7 +44,27 @@ export const handwriting = {
 
     return response.json()
   },
-  getAnalysisStatus: (jobId) => client.apiGet(`/handwriting/analysis/${jobId}`)
+  analyzeVideo: async (videoFile, message = null, gradeLevel = null, targetLetter = null) => {
+    const formData = new FormData()
+    formData.append('video', videoFile)
+    if (message) formData.append('message', message)
+    if (gradeLevel) formData.append('grade_level', gradeLevel)
+    if (targetLetter) formData.append('target_letter', targetLetter)
+
+    const response = await fetch(`${client.API_BASE}/handwriting/analyze-video`, {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || 'Failed to upload video')
+    }
+
+    return response.json()
+  },
+  getAnalysisStatus: (jobId) => client.apiGet(`/handwriting/analysis/${jobId}`),
+  getVideoAnalysisStatus: (jobId) => client.apiGet(`/handwriting/video-analysis/${jobId}`)
 };
 
 export default { health, chat, chat2, users, auth, handwriting };

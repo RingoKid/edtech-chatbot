@@ -21,9 +21,19 @@ from app.schemas.handwriting_analysis import (
     AnalysisStatusEnum,
     GradeLevelEnum,
     GeometricFeaturesSchema,
-    BoundingBox
+    BoundingBox,
+    # Video schemas
+    VideoAnalysisJobResponse,
+    VideoAnalysisJobStatusResponse,
+    VideoAnalysisResult,
+    FrameAnalysis,
+    AggregatedFeatures,
+    ProgressionAnalysis
 )
-from app.services.handwriting_analysis_service import HandwritingAnalysisService
+from app.services.handwriting_analysis_service import (
+    HandwritingAnalysisService,
+    HandwritingVideoAnalysisService
+)
 from app.services.chat_service import ChatService
 
 # Set up logging
@@ -33,12 +43,16 @@ router = APIRouter(prefix="/handwriting", tags=["Handwriting Analysis"])
 
 # In-memory job storage (will be replaced with DynamoDB later)
 analysis_jobs: dict = {}
+video_analysis_jobs: dict = {}
 
 
 # Configuration
 UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads" / "handwriting_images"
+VIDEO_UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads" / "handwriting_videos"
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50MB
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".heic", ".heif"}
+ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".mov", ".webm", ".avi"}
 
 
 def ensure_upload_directory():
@@ -411,6 +425,301 @@ async def get_analysis_status(job_id: str):
     )
 
 
+# ===========================
+# VIDEO ANALYSIS ENDPOINTS
+# ===========================
+
+def ensure_video_upload_directory():
+    """Create video upload directory if it doesn't exist."""
+    VIDEO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Video upload directory ready: {VIDEO_UPLOAD_DIR}")
+
+
+def validate_video_file(file: UploadFile) -> None:
+    """Validate uploaded video file."""
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in ALLOWED_VIDEO_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid video type. Allowed: {', '.join(ALLOWED_VIDEO_EXTENSIONS)}"
+        )
+
+
+async def save_uploaded_video(file: UploadFile, thread_id: str, job_id: str) -> str:
+    """Save uploaded video to disk."""
+    thread_dir = VIDEO_UPLOAD_DIR / thread_id
+    thread_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    file_ext = Path(file.filename).suffix.lower()
+    filename = f"{timestamp}_{job_id}{file_ext}"
+    file_path = thread_dir / filename
+
+    try:
+        content = await file.read()
+        if len(content) > MAX_VIDEO_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Video too large. Maximum size: {MAX_VIDEO_SIZE / (1024*1024):.1f}MB"
+            )
+
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        logger.info(f"Video saved: {file_path}")
+        return str(file_path)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error saving video: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save video: {str(e)}")
+
+
+async def process_video_analysis(
+    job_id: str,
+    video_path: str,
+    thread_id: str,
+    grade_level: Optional[str],
+    target_letter: Optional[str],
+    teacher_id: str,
+    user_message: Optional[str] = None
+):
+    """Background task for video analysis."""
+    try:
+        logger.info(f"Starting video analysis for job {job_id}")
+        video_analysis_jobs[job_id]["status"] = AnalysisStatusEnum.PROCESSING
+
+        # Extract frames directory
+        frames_dir = VIDEO_UPLOAD_DIR / thread_id / f"{job_id}_frames"
+
+        # Analyze video
+        analysis_result = await HandwritingVideoAnalysisService.analyze_video(
+            video_path, output_dir=frames_dir, job_id=job_id
+        )
+
+        if analysis_result["status"] != "success":
+            video_analysis_jobs[job_id]["status"] = AnalysisStatusEnum.FAILED
+            video_analysis_jobs[job_id]["error_message"] = analysis_result.get("error_message", "Unknown error")
+            video_analysis_jobs[job_id]["completed_at"] = datetime.utcnow().isoformat() + "Z"
+            return
+
+        # Generate LLM feedback
+        from app.chatbot.specialists.general.bot import GeneralBot
+
+        grade_context = f" for a {grade_level} student" if grade_level else ""
+        target_context = f" The student intended to write: '{target_letter}'." if target_letter else ""
+        user_context = f"\n\nUser's question/comment: \"{user_message}\"" if user_message else ""
+
+        agg_features = analysis_result["aggregated_features"]
+        progression = analysis_result["progression_analysis"]
+
+        prompt = f"""Analyze this handwriting video{grade_context}.{target_context}{user_context}
+
+Video Analysis Results ({analysis_result['total_frames_analyzed']} frames):
+- Average Stroke Count: {agg_features['avg_stroke_count']:.1f}
+- Average Line Straightness: {agg_features['avg_line_straightness']:.2f} (0=curved, 1=straight)
+- Average Slant Angle: {agg_features['avg_slant_angle']:.1f}°
+- Progression: {progression['progression_type']}
+- Consistency Score: {progression['consistency_score']:.2f}
+
+Summary: {analysis_result['analysis_summary']}
+
+Please provide:
+1. Encouraging feedback on writing progression
+2. Specific suggestions for improvement
+3. Keep tone appropriate for grade level
+4. Address any user questions"""
+
+        general_bot = GeneralBot()
+        feedback_result = await general_bot.process_message(
+            message=prompt, conversation_history=[], intent=None
+        )
+
+        llm_feedback = feedback_result.response
+        suggestions = [
+            line.strip("- •").strip()
+            for line in llm_feedback.split("\n")
+            if line.strip().startswith(("-", "•", "1.", "2.", "3."))
+        ][:5]
+
+        video_analysis_jobs[job_id].update({
+            "status": AnalysisStatusEnum.COMPLETED,
+            "frame_analyses": analysis_result["frame_analyses"],
+            "aggregated_features": agg_features,
+            "progression_analysis": progression,
+            "feedback": llm_feedback,
+            "suggestions": suggestions if suggestions else ["Keep practicing!"],
+            "analysis_summary": analysis_result["analysis_summary"],
+            "total_frames_analyzed": analysis_result["total_frames_analyzed"],
+            "completed_at": datetime.utcnow().isoformat() + "Z"
+        })
+
+        logger.info(f"Video analysis completed for job {job_id}")
+    except Exception as e:
+        logger.error(f"Video analysis error for job {job_id}: {e}")
+        video_analysis_jobs[job_id]["status"] = AnalysisStatusEnum.FAILED
+        video_analysis_jobs[job_id]["error_message"] = str(e)
+        video_analysis_jobs[job_id]["completed_at"] = datetime.utcnow().isoformat() + "Z"
+
+
+@router.post("/analyze-video", response_model=VideoAnalysisJobResponse)
+async def analyze_handwriting_video(
+    background_tasks: BackgroundTasks,
+    video: UploadFile = File(..., description="Handwriting video file"),
+    message: Optional[str] = Form(None, description="User's message/question"),
+    thread_id: Optional[str] = Form(None, description="Optional conversation thread ID"),
+    grade_level: Optional[str] = Form(None, description="Student grade level"),
+    target_letter: Optional[str] = Form(None, description="Target letter/word"),
+    teacher_id: Optional[str] = Form("default_teacher", description="Teacher ID")
+):
+    """
+    Upload a handwriting video for analysis.
+
+    This endpoint:
+    1. Accepts video upload (MP4, MOV, WebM, AVI)
+    2. Returns immediately with a job ID
+    3. Extracts 3 key frames (10%, 50%, 90%)
+    4. Analyzes handwriting progression over time
+
+    **Usage:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/v1/handwriting/analyze-video" \\
+      -F "video=@handwriting.mp4" \\
+      -F "grade_level=kindergarten" \\
+      -F "target_letter=A"
+    ```
+    """
+    try:
+        ensure_video_upload_directory()
+        validate_video_file(video)
+
+        job_id = f"video_{uuid.uuid4().hex[:12]}"
+
+        if not thread_id:
+            chat_service = ChatService()
+            thread_id = chat_service.create_new_thread(teacher_id)
+
+        video_path = await save_uploaded_video(video, thread_id, job_id)
+
+        video_analysis_jobs[job_id] = {
+            "job_id": job_id,
+            "thread_id": thread_id,
+            "status": AnalysisStatusEnum.PENDING,
+            "video_path": video_path,
+            "grade_level": grade_level,
+            "target_letter": target_letter,
+            "teacher_id": teacher_id,
+            "created_at": datetime.utcnow().isoformat() + "Z",
+            "completed_at": None,
+            "frame_analyses": [],
+            "aggregated_features": None,
+            "progression_analysis": None,
+            "feedback": None,
+            "suggestions": None,
+            "total_frames_analyzed": 0,
+            "error_message": None
+        }
+
+        background_tasks.add_task(
+            process_video_analysis,
+            job_id=job_id,
+            video_path=video_path,
+            thread_id=thread_id,
+            grade_level=grade_level,
+            target_letter=target_letter,
+            teacher_id=teacher_id,
+            user_message=message
+        )
+
+        logger.info(f"Video analysis job created: {job_id}")
+
+        return VideoAnalysisJobResponse(
+            job_id=job_id,
+            thread_id=thread_id,
+            status=AnalysisStatusEnum.PENDING,
+            message="Video uploaded successfully. Extracting frames and analyzing..."
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating video analysis job: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process video: {str(e)}")
+
+
+@router.get("/video-analysis/{job_id}", response_model=VideoAnalysisJobStatusResponse)
+async def get_video_analysis_status(job_id: str):
+    """
+    Check the status of a video analysis job.
+
+    **Usage:**
+    ```bash
+    curl "http://localhost:8000/api/v1/handwriting/video-analysis/video_abc123"
+    ```
+    """
+    if job_id not in video_analysis_jobs:
+        raise HTTPException(status_code=404, detail=f"Video job {job_id} not found")
+
+    job_data = video_analysis_jobs[job_id]
+    status = job_data["status"]
+
+    result = None
+    if status == AnalysisStatusEnum.COMPLETED:
+        # Build frame analyses
+        frame_analyses = [
+            FrameAnalysis(**frame) for frame in job_data["frame_analyses"]
+        ]
+
+        # Build aggregated features
+        agg_features = AggregatedFeatures(**job_data["aggregated_features"])
+
+        # Build progression analysis
+        progression = ProgressionAnalysis(**job_data["progression_analysis"])
+
+        result = VideoAnalysisResult(
+            job_id=job_id,
+            thread_id=job_data["thread_id"],
+            status=status,
+            video_path=job_data["video_path"],
+            total_frames_analyzed=job_data["total_frames_analyzed"],
+            frame_analyses=frame_analyses,
+            aggregated_features=agg_features,
+            progression_analysis=progression,
+            feedback=job_data["feedback"],
+            suggestions=job_data["suggestions"],
+            grade_level=job_data.get("grade_level"),
+            target_letter=job_data.get("target_letter"),
+            analysis_summary=job_data.get("analysis_summary"),
+            error_message=None,
+            created_at=job_data["created_at"],
+            completed_at=job_data["completed_at"]
+        )
+    elif status == AnalysisStatusEnum.FAILED:
+        result = VideoAnalysisResult(
+            job_id=job_id,
+            thread_id=job_data["thread_id"],
+            status=status,
+            video_path=job_data["video_path"],
+            total_frames_analyzed=0,
+            frame_analyses=[],
+            aggregated_features=None,
+            progression_analysis=None,
+            feedback=None,
+            suggestions=None,
+            grade_level=job_data.get("grade_level"),
+            target_letter=job_data.get("target_letter"),
+            analysis_summary=None,
+            error_message=job_data.get("error_message"),
+            created_at=job_data["created_at"],
+            completed_at=job_data["completed_at"]
+        )
+
+    return VideoAnalysisJobStatusResponse(
+        job_id=job_id,
+        status=status,
+        result=result
+    )
+
+
 @router.get("/health")
 async def health_check():
     """Health check endpoint for handwriting analysis service."""
@@ -418,6 +727,9 @@ async def health_check():
         "status": "healthy",
         "service": "handwriting_analysis",
         "upload_dir": str(UPLOAD_DIR),
+        "video_upload_dir": str(VIDEO_UPLOAD_DIR),
         "max_file_size_mb": MAX_FILE_SIZE / (1024 * 1024),
-        "allowed_extensions": list(ALLOWED_EXTENSIONS)
+        "max_video_size_mb": MAX_VIDEO_SIZE / (1024 * 1024),
+        "allowed_extensions": list(ALLOWED_EXTENSIONS),
+        "allowed_video_extensions": list(ALLOWED_VIDEO_EXTENSIONS)
     })

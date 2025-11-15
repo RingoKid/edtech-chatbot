@@ -94,3 +94,69 @@ class AnalysisHistoryResponse(BaseModel):
     teacher_id: str = Field(..., description="Teacher ID")
     total_analyses: int = Field(..., description="Total number of analyses")
     analyses: List[AnalysisResult] = Field(..., description="List of analysis results")
+
+
+# ===========================
+# VIDEO ANALYSIS SCHEMAS
+# ===========================
+
+class FrameAnalysis(BaseModel):
+    """Analysis result for a single video frame."""
+    frame_number: int = Field(..., description="Frame sequence number")
+    frame_path: str = Field(..., description="Path to extracted frame image")
+    features: Dict[str, Any] = Field(..., description="Geometric features for this frame")
+    summary: str = Field(..., description="Summary of this frame's analysis")
+
+
+class AggregatedFeatures(BaseModel):
+    """Aggregated features across all video frames."""
+    avg_stroke_count: float = Field(..., description="Average stroke count across frames")
+    avg_line_straightness: float = Field(..., description="Average line straightness (0-1)")
+    avg_slant_angle: float = Field(..., description="Average slant angle in degrees")
+    avg_aspect_ratio: float = Field(..., description="Average aspect ratio")
+    stroke_count_range: List[int] = Field(..., description="[min, max] stroke counts")
+    most_common_continuity: str = Field(..., description="Most common stroke continuity type")
+    most_common_baseline: str = Field(..., description="Most common baseline alignment")
+
+
+class ProgressionAnalysis(BaseModel):
+    """Analysis of handwriting progression throughout video."""
+    progression_type: str = Field(..., description="Type: consistent, improving, declining, variable")
+    stroke_count_change: int = Field(..., description="Change from first to last frame")
+    straightness_change: float = Field(..., description="Change in line straightness")
+    consistency_score: float = Field(..., ge=0.0, le=1.0, description="How consistent the writing is (0-1)")
+
+
+class VideoAnalysisResult(BaseModel):
+    """Complete video analysis result."""
+    job_id: str = Field(..., description="Job ID")
+    thread_id: str = Field(..., description="Conversation thread ID")
+    status: AnalysisStatusEnum = Field(..., description="Analysis status")
+    video_path: Optional[str] = Field(None, description="Path to stored video")
+    total_frames_analyzed: int = Field(..., description="Number of frames analyzed")
+    frame_analyses: List[FrameAnalysis] = Field(..., description="Analysis for each frame")
+    aggregated_features: Optional[AggregatedFeatures] = Field(None, description="Aggregated stats")
+    progression_analysis: Optional[ProgressionAnalysis] = Field(None, description="Progression analysis")
+    feedback: Optional[str] = Field(None, description="LLM-generated feedback")
+    suggestions: Optional[List[str]] = Field(None, description="Improvement suggestions")
+    grade_level: Optional[str] = Field(None, description="Grade level context")
+    target_letter: Optional[str] = Field(None, description="Target letter/word")
+    analysis_summary: Optional[str] = Field(None, description="Human-readable summary")
+    error_message: Optional[str] = Field(None, description="Error message if analysis failed")
+    created_at: str = Field(..., description="Timestamp of job creation")
+    completed_at: Optional[str] = Field(None, description="Timestamp of job completion")
+
+
+class VideoAnalysisJobResponse(BaseModel):
+    """Immediate response after video upload."""
+    job_id: str = Field(..., description="Unique job ID for tracking analysis")
+    thread_id: str = Field(..., description="Conversation thread ID")
+    status: AnalysisStatusEnum = Field(..., description="Current job status")
+    message: str = Field(..., description="Status message")
+
+
+class VideoAnalysisJobStatusResponse(BaseModel):
+    """Response for video job status check."""
+    job_id: str = Field(..., description="Job ID")
+    status: AnalysisStatusEnum = Field(..., description="Current status")
+    result: Optional[VideoAnalysisResult] = Field(None, description="Video analysis result if completed")
