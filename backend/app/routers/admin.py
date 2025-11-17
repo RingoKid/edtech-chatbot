@@ -192,15 +192,38 @@ async def create_form(form_create: FormCreateRequest):
         form_id = str(uuid.uuid4())
         timestamp = datetime.utcnow().isoformat()
         
-        # Determine domain based on category
-        domain_mapping = {
+        # Handle both domain names (new) and category letters (legacy)
+        category_upper = form_create.category.upper()
+        
+        # Map domain names to default category letters
+        domain_to_category = {
+            'HANDWRITING': 'A',
+            'VOCABULARY': 'I',
+            'IDEAS': 'M',
+            'GENERAL': 'P'
+        }
+        
+        # Map category letters to domains (for backward compatibility)
+        category_to_domain = {
             'A': 'handwriting', 'B': 'handwriting', 'C': 'handwriting', 'D': 'handwriting',
             'E': 'handwriting', 'F': 'handwriting', 'G': 'handwriting', 'H': 'handwriting',
             'I': 'vocabulary', 'J': 'vocabulary', 'K': 'vocabulary', 'L': 'vocabulary',
             'M': 'ideas', 'N': 'ideas', 'O': 'ideas', 'P': 'general', 'Q': 'general'
         }
         
-        domain = domain_mapping.get(form_create.category.upper(), 'general')
+        # Determine domain and category
+        if category_upper in domain_to_category:
+            # New format: domain name provided
+            domain = category_upper.lower()
+            category = domain_to_category[category_upper]
+        elif category_upper in category_to_domain:
+            # Legacy format: category letter provided
+            domain = category_to_domain[category_upper]
+            category = category_upper
+        else:
+            # Default fallback
+            domain = 'general'
+            category = 'P'
         
         # Create the form item
         item = {
@@ -208,7 +231,7 @@ async def create_form(form_create: FormCreateRequest):
             'SK': 'METADATA',
             'type': 'Form',
             'form_id': form_id,
-            'category': form_create.category.upper(),
+            'category': category,
             'domain': domain,
             'title': form_create.title,
             'content': form_create.content,

@@ -14,6 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import CreateFormModal from '../components/CreateFormModal'
+import FormContentDisplay from '../components/FormDisplay'
 import { authenticatedFetch } from '../utils/api'
 
 const AdminPortal = () => {
@@ -32,7 +33,7 @@ const AdminPortal = () => {
   const domains = {
     handwriting: 'Handwriting & Spelling',
     vocabulary: 'Vocabulary & Syntax', 
-    ideas: 'Idea Generation',
+    ideas: 'Idea Organization and Generation',
     general: 'General'
   }
 
@@ -381,15 +382,11 @@ const AdminPortal = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          {selectedForm.title}
-                        </h3>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-                            {JSON.stringify(selectedForm.content, null, 2)}
-                          </pre>
-                        </div>
+                      <div className="bg-white rounded-lg p-6">
+                        <FormContentDisplay 
+                          key={selectedForm.form_id} 
+                          content={selectedForm.content} 
+                        />
                       </div>
                     </div>
                   )}

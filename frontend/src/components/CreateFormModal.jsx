@@ -11,23 +11,9 @@ const CreateFormModal = ({ isOpen, onClose, onSubmit }) => {
   const [error, setError] = useState('')
 
   const categories = [
-    { value: 'A', label: 'A - Handwriting' },
-    { value: 'B', label: 'B - Handwriting' },
-    { value: 'C', label: 'C - Handwriting' },
-    { value: 'D', label: 'D - Handwriting' },
-    { value: 'E', label: 'E - Handwriting' },
-    { value: 'F', label: 'F - Handwriting' },
-    { value: 'G', label: 'G - Handwriting' },
-    { value: 'H', label: 'H - Handwriting' },
-    { value: 'I', label: 'I - Vocabulary' },
-    { value: 'J', label: 'J - Vocabulary' },
-    { value: 'K', label: 'K - Vocabulary' },
-    { value: 'L', label: 'L - Vocabulary' },
-    { value: 'M', label: 'M - Ideas' },
-    { value: 'N', label: 'N - Ideas' },
-    { value: 'O', label: 'O - Ideas' },
-    { value: 'P', label: 'P - General' },
-    { value: 'Q', label: 'Q - General' }
+    { value: 'handwriting', label: 'Handwriting & Spelling' },
+    { value: 'vocabulary', label: 'Vocabulary & Syntax' },
+    { value: 'ideas', label: 'Idea Organization and Generation' }
   ]
 
   const handleSubmit = async (e) => {
