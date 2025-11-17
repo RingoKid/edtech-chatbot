@@ -167,7 +167,6 @@ def test_connection():
     """
     try:
         if dynamodb is None:
-            # Test file database connection
             return test_file_connection()
         else:
             table.load()
