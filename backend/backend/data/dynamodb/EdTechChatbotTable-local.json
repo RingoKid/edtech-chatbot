@@ -10,7 +10,7 @@
       "title": "Handwriting and Spelling Lesson Structure and Components",
       "content": {
         "form_b": {
-          "title": "Haaaaaandwriting and Spelling Lesson Structure and Components",
+          "title": "Handwriting and Spelling Lesson Structure and Components",
           "structure_overview": "This is FORM B - Structure of Major Part 1 Handwriting/Spelling",
           "major_sections": [
             "Standards",
@@ -104,7 +104,7 @@
       },
       "source_file": "Form-B.json",
       "created_at": "2025-10-23T22:57:24.175107",
-      "updated_at": "2025-11-01T00:51:33.376343"
+      "updated_at": "2025-11-16T15:57:53.428957"
     },
     "FORM#d2f30203-499a-40fb-8bbd-d1e4f48d0845#METADATA": {
       "PK": "FORM#d2f30203-499a-40fb-8bbd-d1e4f48d0845",
@@ -1789,117 +1789,22 @@
       "created_at": "2025-11-15T01:31:59.226333",
       "updated_at": "2025-11-15T01:31:59.226333",
       "type": "user"
+    },
+    "USER#26d9b20f-481b-42fa-96a1-214bddb2999e#PROFILE": {
+      "PK": "USER#26d9b20f-481b-42fa-96a1-214bddb2999e",
+      "SK": "PROFILE",
+      "user_id": "26d9b20f-481b-42fa-96a1-214bddb2999e",
+      "email": "language4composing@gmail.com",
+      "name": "Language4Composing",
+      "password_hash": "$2b$12$/46cYm/JywKXAF2HL/8ew.IDGaTddU8SzJ6yOA4kPU52Ebc0CRVJa",
+      "created_at": "2025-11-16T15:55:24.216368",
+      "updated_at": "2025-11-16T15:55:24.216368",
+      "type": "user"
     }
   },
   "indexes": {
     "TypeIndex": {
       "Form": [
-        {
-          "PK": "FORM#9ed78d08-7683-44b1-9e12-c91b081966b4",
-          "SK": "METADATA",
-          "type": "Form",
-          "form_id": "9ed78d08-7683-44b1-9e12-c91b081966b4",
-          "category": "B",
-          "domain": "handwriting",
-          "title": "Handwriting and Spelling Lesson Structure and Components",
-          "content": {
-            "form_b": {
-              "title": "Haaaaaandwriting and Spelling Lesson Structure and Components",
-              "structure_overview": "This is FORM B - Structure of Major Part 1 Handwriting/Spelling",
-              "major_sections": [
-                "Standards",
-                "Objectives",
-                "Materials",
-                "Scripted Lesson Plan for Handwriting & Spelling"
-              ],
-              "subsections_of_handwriting_spelling_lesson": {
-                "1_review_connect": {
-                  "name": "Review & Connect",
-                  "purpose": "The purpose of this part of the lesson is to start with a quick review of previously learned sounds. Do not use sounds that have not been directly taught. Do not use words that have sounds that have not been directly taught.",
-                  "order": 1
-                },
-                "2_model_explain_engage": {
-                  "name": "Model, Explain & Engage",
-                  "purpose": "The purpose of this part of the lesson is to connect a sound or sound patterns that you focused on during your reading block to writing its corresponding grapheme patterns. First, make sure children clearly can distinguish the targeted sound; then, hook that sound to the letter patterns through modeling and explaining the sequence of strokes for letters and correct order of letters.",
-                  "order": 2
-                },
-                "3_guided_practice": {
-                  "name": "Guided Practice",
-                  "purpose": "The purpose of this part of the lesson is to give children practice writing the letter while supporting proper pencil grip and correct sequence of stroke formation using handwriting lines.",
-                  "order": 3
-                },
-                "4_application": {
-                  "name": "Application",
-                  "purpose": "The purpose of this part of the lesson is to facilitate children's spelling of the letter or letter patterns when they hear the sound(s). This supports children's early coordination of matching sound to letter(s) for the purpose of spelling words.",
-                  "order": 4
-                },
-                "5_wrap_up": {
-                  "name": "Wrap-Up",
-                  "purpose": "The purpose of this part of the lesson is to remind students what they were focused on and provide praise for their accomplishments.",
-                  "order": 5
-                }
-              },
-              "components_of_scripted_lesson": {
-                "note": "All 5 Subsections of 'Section D Scripted Lesson Plan for Handwriting & Spelling' will have the following components:",
-                "explanation": {
-                  "definition": "AI explains the parts of the lesson",
-                  "formatting": "Set apart in brackets [ ]"
-                },
-                "teacher_script": {
-                  "definition": "Detailed example of what the teacher actually says as a rehearsal of the lesson",
-                  "formatting": "Set apart with #"
-                },
-                "level_indicators": {
-                  "definition": "Activities will be categorized as High, Middle, Low. For every activity indicate the child level ability",
-                  "formatting": "Set apart with +Level in italics",
-                  "levels": {
-                    "low": "an activity for children with low ability level",
-                    "middle": "an activity for children with middle ability level",
-                    "high": "an activity for children with high ability level"
-                  }
-                },
-                "child_response": {
-                  "definition": "Expected child response within the script",
-                  "formatting": "will be set off in parentheses ( )"
-                },
-                "teacher_does": {
-                  "definition": "What the teacher is doing within the script",
-                  "formatting": "will be set off in curly brackets { }, also called braces"
-                },
-                "gesture": {
-                  "definition": "a mnemonic device to support children's memory of a phoneme",
-                  "formatting": "Set apart with +",
-                  "requirement": "You will always provide a gesture for phoneme sounds that are the focus of the Handwriting & Spelling lesson",
-                  "reference": "Use FORM G"
-                },
-                "sequence_verbal_cues": {
-                  "definition": "verbal representations of the sequence of strokes for all letters in the alphabet",
-                  "formatting": "Set apart with ##Sequence Verbal Cues",
-                  "requirement": "You will always provide ##Sequence Verbal Cues for the handwriting of the target letter",
-                  "reference": "Use FORM F"
-                },
-                "adaptation": {
-                  "definition": "AI prompts teacher request for activity examples, modifications according to child ability level",
-                  "formatting": "Set apart with *",
-                  "adaptation_prompt": "*Adaptation: Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high).",
-                  "reference": "Use FORM H"
-                },
-                "modification": {
-                  "definition": "modified teacher script # in response to teacher request",
-                  "formatting": "Set apart with ^",
-                  "response_to": "teacher request",
-                  "options": [
-                    "Provide activity example",
-                    "Provide modification: low, middle, high"
-                  ]
-                }
-              }
-            }
-          },
-          "source_file": "Form-B.json",
-          "created_at": "2025-10-23T22:57:24.175107",
-          "updated_at": "2025-11-01T00:51:33.376343"
-        },
         {
           "PK": "FORM#d2f30203-499a-40fb-8bbd-d1e4f48d0845",
           "SK": "METADATA",
@@ -3572,24 +3477,7 @@
           "source_file": "FORM-P.json",
           "created_at": "2025-10-23T22:57:24.584453",
           "updated_at": "2025-10-23T22:57:24.584453"
-        }
-      ],
-      "user": [
-        {
-          "PK": "USER#ce1af263-c1ad-45d8-a2f1-8c1923d89241",
-          "SK": "PROFILE",
-          "user_id": "ce1af263-c1ad-45d8-a2f1-8c1923d89241",
-          "email": "l4c@gmail.com",
-          "name": "L4C",
-          "password_hash": "$2b$12$ouYuD/vU/WltHBpsbV1XsOSNzzbe80JajNz1bHhd4RLZTEa1SyoPy",
-          "created_at": "2025-11-15T01:31:59.226333",
-          "updated_at": "2025-11-15T01:31:59.226333",
-          "type": "user"
-        }
-      ]
-    },
-    "CategoryIndex": {
-      "B": [
+        },
         {
           "PK": "FORM#9ed78d08-7683-44b1-9e12-c91b081966b4",
           "SK": "METADATA",
@@ -3600,7 +3488,7 @@
           "title": "Handwriting and Spelling Lesson Structure and Components",
           "content": {
             "form_b": {
-              "title": "Haaaaaandwriting and Spelling Lesson Structure and Components",
+              "title": "Handwriting and Spelling Lesson Structure and Components",
               "structure_overview": "This is FORM B - Structure of Major Part 1 Handwriting/Spelling",
               "major_sections": [
                 "Standards",
@@ -3694,7 +3582,141 @@
           },
           "source_file": "Form-B.json",
           "created_at": "2025-10-23T22:57:24.175107",
-          "updated_at": "2025-11-01T00:51:33.376343"
+          "updated_at": "2025-11-16T15:57:53.428957"
+        }
+      ],
+      "user": [
+        {
+          "PK": "USER#ce1af263-c1ad-45d8-a2f1-8c1923d89241",
+          "SK": "PROFILE",
+          "user_id": "ce1af263-c1ad-45d8-a2f1-8c1923d89241",
+          "email": "l4c@gmail.com",
+          "name": "L4C",
+          "password_hash": "$2b$12$ouYuD/vU/WltHBpsbV1XsOSNzzbe80JajNz1bHhd4RLZTEa1SyoPy",
+          "created_at": "2025-11-15T01:31:59.226333",
+          "updated_at": "2025-11-15T01:31:59.226333",
+          "type": "user"
+        },
+        {
+          "PK": "USER#26d9b20f-481b-42fa-96a1-214bddb2999e",
+          "SK": "PROFILE",
+          "user_id": "26d9b20f-481b-42fa-96a1-214bddb2999e",
+          "email": "language4composing@gmail.com",
+          "name": "Language4Composing",
+          "password_hash": "$2b$12$/46cYm/JywKXAF2HL/8ew.IDGaTddU8SzJ6yOA4kPU52Ebc0CRVJa",
+          "created_at": "2025-11-16T15:55:24.216368",
+          "updated_at": "2025-11-16T15:55:24.216368",
+          "type": "user"
+        }
+      ]
+    },
+    "CategoryIndex": {
+      "B": [
+        {
+          "PK": "FORM#9ed78d08-7683-44b1-9e12-c91b081966b4",
+          "SK": "METADATA",
+          "type": "Form",
+          "form_id": "9ed78d08-7683-44b1-9e12-c91b081966b4",
+          "category": "B",
+          "domain": "handwriting",
+          "title": "Handwriting and Spelling Lesson Structure and Components",
+          "content": {
+            "form_b": {
+              "title": "Handwriting and Spelling Lesson Structure and Components",
+              "structure_overview": "This is FORM B - Structure of Major Part 1 Handwriting/Spelling",
+              "major_sections": [
+                "Standards",
+                "Objectives",
+                "Materials",
+                "Scripted Lesson Plan for Handwriting & Spelling"
+              ],
+              "subsections_of_handwriting_spelling_lesson": {
+                "1_review_connect": {
+                  "name": "Review & Connect",
+                  "purpose": "The purpose of this part of the lesson is to start with a quick review of previously learned sounds. Do not use sounds that have not been directly taught. Do not use words that have sounds that have not been directly taught.",
+                  "order": 1
+                },
+                "2_model_explain_engage": {
+                  "name": "Model, Explain & Engage",
+                  "purpose": "The purpose of this part of the lesson is to connect a sound or sound patterns that you focused on during your reading block to writing its corresponding grapheme patterns. First, make sure children clearly can distinguish the targeted sound; then, hook that sound to the letter patterns through modeling and explaining the sequence of strokes for letters and correct order of letters.",
+                  "order": 2
+                },
+                "3_guided_practice": {
+                  "name": "Guided Practice",
+                  "purpose": "The purpose of this part of the lesson is to give children practice writing the letter while supporting proper pencil grip and correct sequence of stroke formation using handwriting lines.",
+                  "order": 3
+                },
+                "4_application": {
+                  "name": "Application",
+                  "purpose": "The purpose of this part of the lesson is to facilitate children's spelling of the letter or letter patterns when they hear the sound(s). This supports children's early coordination of matching sound to letter(s) for the purpose of spelling words.",
+                  "order": 4
+                },
+                "5_wrap_up": {
+                  "name": "Wrap-Up",
+                  "purpose": "The purpose of this part of the lesson is to remind students what they were focused on and provide praise for their accomplishments.",
+                  "order": 5
+                }
+              },
+              "components_of_scripted_lesson": {
+                "note": "All 5 Subsections of 'Section D Scripted Lesson Plan for Handwriting & Spelling' will have the following components:",
+                "explanation": {
+                  "definition": "AI explains the parts of the lesson",
+                  "formatting": "Set apart in brackets [ ]"
+                },
+                "teacher_script": {
+                  "definition": "Detailed example of what the teacher actually says as a rehearsal of the lesson",
+                  "formatting": "Set apart with #"
+                },
+                "level_indicators": {
+                  "definition": "Activities will be categorized as High, Middle, Low. For every activity indicate the child level ability",
+                  "formatting": "Set apart with +Level in italics",
+                  "levels": {
+                    "low": "an activity for children with low ability level",
+                    "middle": "an activity for children with middle ability level",
+                    "high": "an activity for children with high ability level"
+                  }
+                },
+                "child_response": {
+                  "definition": "Expected child response within the script",
+                  "formatting": "will be set off in parentheses ( )"
+                },
+                "teacher_does": {
+                  "definition": "What the teacher is doing within the script",
+                  "formatting": "will be set off in curly brackets { }, also called braces"
+                },
+                "gesture": {
+                  "definition": "a mnemonic device to support children's memory of a phoneme",
+                  "formatting": "Set apart with +",
+                  "requirement": "You will always provide a gesture for phoneme sounds that are the focus of the Handwriting & Spelling lesson",
+                  "reference": "Use FORM G"
+                },
+                "sequence_verbal_cues": {
+                  "definition": "verbal representations of the sequence of strokes for all letters in the alphabet",
+                  "formatting": "Set apart with ##Sequence Verbal Cues",
+                  "requirement": "You will always provide ##Sequence Verbal Cues for the handwriting of the target letter",
+                  "reference": "Use FORM F"
+                },
+                "adaptation": {
+                  "definition": "AI prompts teacher request for activity examples, modifications according to child ability level",
+                  "formatting": "Set apart with *",
+                  "adaptation_prompt": "*Adaptation: Let me know if you would like activity examples, modifications of activities based on child ability level (low, middle, high).",
+                  "reference": "Use FORM H"
+                },
+                "modification": {
+                  "definition": "modified teacher script # in response to teacher request",
+                  "formatting": "Set apart with ^",
+                  "response_to": "teacher request",
+                  "options": [
+                    "Provide activity example",
+                    "Provide modification: low, middle, high"
+                  ]
+                }
+              }
+            }
+          },
+          "source_file": "Form-B.json",
+          "created_at": "2025-10-23T22:57:24.175107",
+          "updated_at": "2025-11-16T15:57:53.428957"
         }
       ],
       "C": [
@@ -5400,5 +5422,5 @@
       ]
     }
   },
-  "last_updated": "2025-11-15T01:31:59.226333"
+  "last_updated": "2025-11-16T15:57:53.428957"
 }

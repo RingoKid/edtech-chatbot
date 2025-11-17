@@ -62,6 +62,7 @@ def create_user(name: str, email: str, password: str) -> Dict[str, Any]:
 def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
     """
     Get a user by email address.
+    Uses TypeIndex to query only users (much faster than scanning all items).
     
     Args:
         email: User's email address
@@ -74,28 +75,56 @@ def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
     try:
         # Check if it's file database (has items attribute)
         if hasattr(db, 'items'):
-            # File database - iterate through items
-            for key, item in db.items.items():
-                if item.get("email") == email and item.get("type") == "user":
-                    return item
-        else:
-            # DynamoDB - use scan with filter
+            # File database - use TypeIndex to get only users, then filter by email
             try:
-                response = db.scan(
-                    FilterExpression="email = :email AND #type = :type",
-                    ExpressionAttributeNames={"#type": "type"},
-                    ExpressionAttributeValues={":email": email, ":type": "user"}
+                response = db.query(
+                    IndexName='TypeIndex',
+                    KeyConditionExpression='#type = :type_val',
+                    ExpressionAttributeNames={'#type': 'type'},
+                    ExpressionAttributeValues={':type_val': 'user'}
                 )
                 items = response.get('Items', [])
-                if items:
-                    return items[0]
-            except Exception:
-                # Fallback: scan all and filter manually
-                response = db.scan()
-                items = response.get('Items', [])
+                # Filter by email (should be very few users)
                 for item in items:
+                    if item.get("email") == email:
+                        return item
+            except Exception:
+                # Fallback: iterate through items (slower but works)
+                for key, item in db.items.items():
                     if item.get("email") == email and item.get("type") == "user":
                         return item
+        else:
+            # DynamoDB - use TypeIndex to query only users, then filter by email
+            try:
+                response = db.query(
+                    IndexName='TypeIndex',
+                    KeyConditionExpression='#type = :type_val',
+                    ExpressionAttributeNames={'#type': 'type'},
+                    ExpressionAttributeValues={':type_val': 'user'}
+                )
+                items = response.get('Items', [])
+                # Filter by email (should be very few users)
+                for item in items:
+                    if item.get("email") == email:
+                        return item
+            except Exception:
+                # Fallback: use scan with filter (slower but works)
+                try:
+                    response = db.scan(
+                        FilterExpression="email = :email AND #type = :type",
+                        ExpressionAttributeNames={"#type": "type"},
+                        ExpressionAttributeValues={":email": email, ":type": "user"}
+                    )
+                    items = response.get('Items', [])
+                    if items:
+                        return items[0]
+                except Exception:
+                    # Last resort: scan all and filter manually (very slow)
+                    response = db.scan()
+                    items = response.get('Items', [])
+                    for item in items:
+                        if item.get("email") == email and item.get("type") == "user":
+                            return item
     except Exception:
         pass
     
