@@ -117,6 +117,7 @@ const AdminPortal = () => {
 
   // Handle edit
   const handleEdit = (form) => {
+    // Always update selected form and editing state, even if already editing
     setSelectedForm(form)
     setEditingTitle(form.title)
     setEditingContent(JSON.stringify(form.content, null, 2))
@@ -265,7 +266,15 @@ const AdminPortal = () => {
                           ? 'bg-blue-50 border-blue-200'
                           : 'hover:bg-gray-50'
                       }`}
-                      onClick={() => setSelectedForm(form)}
+                      onClick={() => {
+                        // If editing a different form, exit edit mode first
+                        if (isEditing && selectedForm?.form_id !== form.form_id) {
+                          setIsEditing(false)
+                          setEditingContent('')
+                          setEditingTitle('')
+                        }
+                        setSelectedForm(form)
+                      }}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
