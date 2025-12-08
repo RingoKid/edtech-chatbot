@@ -12,6 +12,12 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.routers.chat import get_chat_service
 from app.services.chat_service import ChatService
+from app.dependencies.auth import get_current_user
+
+
+def get_test_user():
+    """Mock user for bypassing authentication in tests."""
+    return {"user_id": "test-user-123", "email": "test@example.com"}
 
 
 def get_test_chat_service() -> ChatService:
@@ -27,11 +33,13 @@ def client():
     """
     Pytest fixture that creates a TestClient instance for testing.
     Overrides the get_chat_service dependency to provide fresh instances per test.
+    Overrides get_current_user to bypass authentication.
 
     Returns:
         TestClient: A test client wrapping the FastAPI app
     """
     app.dependency_overrides[get_chat_service] = get_test_chat_service
+    app.dependency_overrides[get_current_user] = get_test_user
     client = TestClient(app)
     yield client
     app.dependency_overrides.clear()
