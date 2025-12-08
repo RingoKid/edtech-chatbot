@@ -1,4 +1,5 @@
 # docker-compose.override.yml
+# Local development overrides - automatically applied when running docker-compose
 services:
   backend:
     ports:
@@ -12,3 +13,9 @@ services:
     # Override the start command to launch both LangGraph Studio and FastAPI via the debugger
     command: >
       sh -c "cd /app && langgraph dev --host 0.0.0.0 --port 2024 & python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  dynamodb-local:
+    # Override for local development: use in-memory mode to avoid database file corruption
+    # This prevents "readonly database" errors during development
+    volumes: []  # Remove volume mount
+    command: [ "-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory" ]

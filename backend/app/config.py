@@ -62,7 +62,15 @@ class Settings(BaseSettings):
     
     # OpenAI API configuration
     openai_api_key: Optional[SecretStr] = Field(default=None, alias="OPENAI_API_KEY")
-    
+
+    # Authentication & JWT
+    secret_key: SecretStr = Field(..., alias="SECRET_KEY")
+    access_token_expire_minutes: int = Field(default=30, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    refresh_token_expire_days: int = Field(default=7, alias="REFRESH_TOKEN_EXPIRE_DAYS")
+
+    # CORS
+    frontend_url: str = Field(default="http://localhost:3000", alias="FRONTEND_URL")
+
     def initialize_langsmith(self) -> None:
         """Initialize LangSmith tracing if configured."""
         if self.langsmith_tracing and self.langsmith_api_key:
@@ -92,6 +100,17 @@ class Settings(BaseSettings):
         elif self.app_env == AppEnv.SANDBOX:
             return f"{base_name}-sandbox"
         else:  # PRODUCTION
+            return f"{base_name}-prod"
+
+    @property
+    def checkpoint_table_name(self) -> str:
+        """Generate checkpoint table name based on environment."""
+        base_name = "EdTechChatbotCheckpoints"
+        if self.app_env == AppEnv.LOCAL:
+            return f"{base_name}-local"
+        elif self.app_env == AppEnv.SANDBOX:
+            return f"{base_name}-sandbox"
+        else:
             return f"{base_name}-prod"
 
 settings = Settings()

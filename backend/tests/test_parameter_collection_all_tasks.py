@@ -11,7 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.routers.chat import get_chat_service
-from app.service.chat_service import ChatService
+from app.services.chat_service import ChatService
 
 
 def get_test_chat_service() -> ChatService:
