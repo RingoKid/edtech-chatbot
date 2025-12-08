@@ -1,0 +1,90 @@
+# Feature Specifications
+
+This directory contains all feature specifications, implementation reviews, incident resolutions, and architectural decisions for the EdTech Chatbot backend.
+
+## Structure
+
+Each feature is organized in its own numbered folder:
+
+```
+specs/
+├── 001-auth-jwt-system/
+│   ├── spec.md                    # Feature specification
+│   ├── reviews/                   # Implementation reviews
+│   │   └── 001-implementation.md
+│   ├── incidents/                 # Issues encountered and resolved
+│   │   └── 001-bcrypt-issue.md
+│   └── decisions/                 # Architecture decisions for this feature
+│
+├── 002-lesson-graph/
+│   ├── 001-greeting-main-router.md
+│   ├── 002-main-router-clarification-loop.md
+│   ├── 003-dynamic-parameter-collection.md
+│   ├── 004-expand-handwriting-parameters.md
+│   └── 005-expand-vocab-idea-gen-parameters.md
+│
+└── README.md (this file)
+```
+
+## Features
+
+### 001 - JWT Authentication System
+**Status:** Implemented
+**Spec:** [001-auth-jwt-system/spec.md](./001-auth-jwt-system/spec.md)
+**Description:** JWT-based authentication with refresh tokens, role-based access control, and session management using DynamoDB.
+
+**Reviews:**
+- [001-implementation.md](./001-auth-jwt-system/reviews/001-implementation.md) - Post-implementation review (Grade: A-, 9/10)
+
+**Incidents:**
+- [001-bcrypt-issue.md](./001-auth-jwt-system/incidents/001-bcrypt-issue.md) - Bcrypt compatibility issue with passlib
+
+**Decisions:**
+- _(None yet)_
+
+### 002 - Lesson Planning Graph
+**Status:** Implemented
+**Specs:** [002-lesson-graph/](./002-lesson-graph/)
+**Description:** LangGraph-based conversation flow for lesson planning with greeting, routing, and parameter collection.
+
+**Sub-specs:**
+- [001-greeting-main-router.md](./002-lesson-graph/001-greeting-main-router.md) - Initial greeting and task routing
+- [002-main-router-clarification-loop.md](./002-lesson-graph/002-main-router-clarification-loop.md) - Clarification loop for ambiguous input
+- [003-dynamic-parameter-collection.md](./002-lesson-graph/003-dynamic-parameter-collection.md) - Dynamic parameter collection system
+- [004-expand-handwriting-parameters.md](./002-lesson-graph/004-expand-handwriting-parameters.md) - Handwriting task parameters
+- [005-expand-vocab-idea-gen-parameters.md](./002-lesson-graph/005-expand-vocab-idea-gen-parameters.md) - Vocabulary and idea generation parameters
+
+---
+
+## How to Use This Structure
+
+### When Adding a New Feature:
+1. Create a new folder with the next number: `00X-feature-name/`
+2. Write the spec in `spec.md`
+3. Create empty subdirectories: `reviews/`, `incidents/`, `decisions/`
+4. Update this README with the new feature
+
+### When Documenting Issues:
+Add to the feature's `incidents/` folder with sequential numbering:
+- `001-issue-name.md`
+- `002-another-issue.md`
+
+### When Writing Reviews:
+Add to the feature's `reviews/` folder with sequential numbering:
+- `001-implementation.md` (post-implementation)
+- `002-security-audit.md` (later reviews)
+
+### When Making Architectural Decisions:
+Add to the feature's `decisions/` folder with sequential numbering:
+- `001-decision-name.md`
+- `002-another-decision.md`
+
+---
+
+## Rebuilding the Application
+
+To rebuild this application (even in a different language):
+1. Read specs in numerical order (001, 002, 003...)
+2. Check reviews for implementation notes and lessons learned
+3. Review incidents to avoid known pitfalls
+4. Consult decisions to understand the reasoning behind architectural choices
