@@ -16,11 +16,12 @@ specs/
 │   │   └── 001-bcrypt-issue.md
 │   └── decisions/                 # Architecture decisions for this feature
 │
-├── 002-next-feature/
-│   ├── spec.md
-│   ├── reviews/
-│   ├── incidents/
-│   └── decisions/
+├── 002-lesson-graph/
+│   ├── 001-greeting-main-router.md
+│   ├── 002-main-router-clarification-loop.md
+│   ├── 003-dynamic-parameter-collection.md
+│   ├── 004-expand-handwriting-parameters.md
+│   └── 005-expand-vocab-idea-gen-parameters.md
 │
 └── README.md (this file)
 ```
@@ -40,6 +41,18 @@ specs/
 
 **Decisions:**
 - _(None yet)_
+
+### 002 - Lesson Planning Graph
+**Status:** Implemented
+**Specs:** [002-lesson-graph/](./002-lesson-graph/)
+**Description:** LangGraph-based conversation flow for lesson planning with greeting, routing, and parameter collection.
+
+**Sub-specs:**
+- [001-greeting-main-router.md](./002-lesson-graph/001-greeting-main-router.md) - Initial greeting and task routing
+- [002-main-router-clarification-loop.md](./002-lesson-graph/002-main-router-clarification-loop.md) - Clarification loop for ambiguous input
+- [003-dynamic-parameter-collection.md](./002-lesson-graph/003-dynamic-parameter-collection.md) - Dynamic parameter collection system
+- [004-expand-handwriting-parameters.md](./002-lesson-graph/004-expand-handwriting-parameters.md) - Handwriting task parameters
+- [005-expand-vocab-idea-gen-parameters.md](./002-lesson-graph/005-expand-vocab-idea-gen-parameters.md) - Vocabulary and idea generation parameters
 
 ---
 
