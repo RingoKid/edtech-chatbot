@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 
-from app.service.chat_service import ChatService
+from app.services.chat_service import ChatService
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 
 

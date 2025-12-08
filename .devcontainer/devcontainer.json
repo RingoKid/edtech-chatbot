@@ -71,11 +71,15 @@
     }
   },
   "features": {
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest"
+    }
   },
   "mounts": [
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/root/.claude,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/claude,target=/root/.config/claude,type=bind,consistency=cached"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/claude,target=/root/.config/claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/root/.ssh-localhost,type=bind,consistency=cached,readonly"
   ],
   "forwardPorts": [3000, 8000, 2024, 8001],
   "portsAttributes": {
@@ -96,9 +100,10 @@
       "onAutoForward": "silent"
     }
   },
-  "postCreateCommand": "apt-get update && apt-get install -y curl && pip install -r /workspace/backend/requirements.txt && curl -fsSL https://claude.ai/install.sh | bash && echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> /root/.bashrc",
+  "postCreateCommand": "apt-get update && apt-get install -y curl openssh-client && pip install -r /workspace/backend/requirements.txt && curl -fsSL https://claude.ai/install.sh | bash && echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> /root/.bashrc && mkdir -p /root/.ssh && cp /root/.ssh-localhost/* /root/.ssh/ 2>/dev/null || true && chmod 700 /root/.ssh && chmod 600 /root/.ssh/id_* 2>/dev/null || true && chmod 644 /root/.ssh/*.pub 2>/dev/null || true",
   "remoteUser": "root",
   "remoteEnv": {
-    "PATH": "/root/.local/bin:${containerEnv:PATH}"
+    "PATH": "/root/.local/bin:${containerEnv:PATH}",
+    "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}"
   }
 }
