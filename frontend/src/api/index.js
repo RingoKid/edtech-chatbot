@@ -6,7 +6,7 @@ export const health = {
 };
 
 export const chat = {
-  status: () => client.apiGet("/chat"),
+  status: () => client.apiGet("/chat/"),
   // send(message, threadId?) -> POST /api/v1/chat/message
   send: (message, threadId) => {
     const body = threadId ? { message, thread_id: threadId } : { message };
@@ -15,11 +15,11 @@ export const chat = {
 };
 
 // WebSocket helper (uses environment-based configuration)
-import createWsClient from '../utils/wsClient';
-import { getWebSocketUrl } from '../config/env';
+import createWsClient from "../utils/wsClient";
+import { getWebSocketUrl } from "../config/env";
 
 export function createChatWsClient() {
-  const wsUrl = getWebSocketUrl('/api/v1/chat/ws/message');
+  const wsUrl = getWebSocketUrl("/api/v1/chat/ws/message");
   return createWsClient(wsUrl, { maxRetries: 10, baseDelay: 500 });
 }
 
