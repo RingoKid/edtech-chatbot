@@ -1,19 +1,50 @@
-// Lightweight fetch-based API client
-import { API_CONFIG } from '../config/env';
+import { API_CONFIG } from "../config/env";
 
 const API_BASE = API_CONFIG.BASE_URL;
+const defaultHeaders = { "Content-Type": "application/json" };
+let accessToken = null;
+
+export const setAccessToken = (token) => {
+  accessToken = token || null;
+};
+
+export const clearAccessToken = () => {
+  accessToken = null;
+};
+
+export const getAccessToken = () => accessToken;
 
 async function request(path, options = {}) {
   const url = API_BASE + path;
-  const opts = Object.assign({
-    headers: { 'Content-Type': 'application/json' }
-  }, options);
+  const { body, headers = {}, credentials, ...rest } = options;
+  const finalHeaders = { ...defaultHeaders, ...headers };
 
-  if (opts.body && typeof opts.body !== 'string') {
-    opts.body = JSON.stringify(opts.body);
+  if (accessToken) {
+    finalHeaders.Authorization = `Bearer ${accessToken}`;
   }
 
-  const res = await fetch(url, opts);
+  let resolvedBody = body;
+  const shouldJsonEncode =
+    resolvedBody !== undefined &&
+    resolvedBody !== null &&
+    typeof resolvedBody !== "string" &&
+    finalHeaders["Content-Type"]?.includes("application/json");
+  if (shouldJsonEncode) {
+    resolvedBody = JSON.stringify(resolvedBody);
+  }
+
+  const fetchOptions = {
+    ...rest,
+    method: rest.method || "GET",
+    headers: finalHeaders,
+    credentials: credentials ?? "include",
+  };
+
+  if (resolvedBody !== undefined && resolvedBody !== null) {
+    fetchOptions.body = resolvedBody;
+  }
+
+  const res = await fetch(url, fetchOptions);
   const text = await res.text();
   let data;
   try {
@@ -26,11 +57,15 @@ async function request(path, options = {}) {
     // Normalize various FastAPI error shapes into a readable message
     let errorMsg;
     if (data?.detail) {
-      if (typeof data.detail === 'string') {
+      if (typeof data.detail === "string") {
         errorMsg = data.detail;
       } else if (Array.isArray(data.detail)) {
-        errorMsg = data.detail.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join('; ');
-      } else if (typeof data.detail === 'object') {
+        errorMsg = data.detail
+          .map((item) =>
+            typeof item === "string" ? item : JSON.stringify(item)
+          )
+          .join("; ");
+      } else if (typeof data.detail === "object") {
         errorMsg = JSON.stringify(data.detail);
       } else {
         errorMsg = String(data.detail);
@@ -38,7 +73,7 @@ async function request(path, options = {}) {
     } else if (data?.message) {
       errorMsg = data.message;
     } else {
-      errorMsg = res.statusText || 'API Error';
+      errorMsg = res.statusText || "API Error";
     }
     const error = new Error(errorMsg);
     error.status = res.status;
@@ -49,9 +84,31 @@ async function request(path, options = {}) {
   return data;
 }
 
-export const apiGet = (path) => request(path, { method: 'GET' });
-export const apiPost = (path, body) => request(path, { method: 'POST', body });
-export const apiPut = (path, body) => request(path, { method: 'PUT', body });
-export const apiDelete = (path) => request(path, { method: 'DELETE' });
+export const apiGet = (path, options = {}) =>
+  request(path, { method: "GET", ...options });
+export const apiPost = (path, body, options = {}) =>
+  request(path, { method: "POST", body, ...options });
+export const apiPostForm = (path, body, options = {}) => {
+  const headers = {
+    "Content-Type": "application/x-www-form-urlencoded",
+    ...(options.headers || {}),
+  };
+  return request(path, { method: "POST", body, ...options, headers });
+};
+export const apiPut = (path, body, options = {}) =>
+  request(path, { method: "PUT", body, ...options });
+export const apiDelete = (path, options = {}) =>
+  request(path, { method: "DELETE", ...options });
 
-export default { API_BASE, request, apiGet, apiPost, apiPut, apiDelete };
+export default {
+  API_BASE,
+  request,
+  apiGet,
+  apiPost,
+  apiPostForm,
+  apiPut,
+  apiDelete,
+  setAccessToken,
+  clearAccessToken,
+  getAccessToken,
+};
