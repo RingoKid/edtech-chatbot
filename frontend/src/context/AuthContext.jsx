@@ -25,7 +25,7 @@ const getStoredToken = () => {
   return { token: null, storage: null };
 };
 
-export const AuthContext = createContext(undefined);
+export const authContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
   const [tokenState, setTokenState] = useState(() => getStoredToken());
@@ -184,5 +184,5 @@ export const AuthProvider = ({ children }) => {
     ]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <authContext.Provider value={value}>{children}</authContext.Provider>;
 };
