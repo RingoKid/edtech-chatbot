@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     # CORS
     frontend_url: str = Field(default="http://localhost:3000", alias="FRONTEND_URL")
 
+    # Speechmatics configuration for voice transcription
+    SPEECHMATICS_API_KEY: Optional[str] = Field(default=None, alias="SPEECHMATICS_API_KEY")
+    CONNECTION_URL: str = Field(default="wss://us2.rt.speechmatics.com/v2", alias="CONNECTION_URL")
+
     def initialize_langsmith(self) -> None:
         """Initialize LangSmith tracing if configured."""
         if self.langsmith_tracing and self.langsmith_api_key:
