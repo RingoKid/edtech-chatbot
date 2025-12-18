@@ -53,3 +53,33 @@ Notes
 - The `ApiStatus` component is only rendered in development (`import.meta.env.DEV`) to avoid exposing debug UI in production.
 - Authentication endpoints are not implemented in the backend yet; the frontend has a placeholder `auth.status()` helper that calls `/auth`.
 
+## WebSocket (streaming chat) integration
+
+The backend provides a WebSocket endpoint for real-time/streaming chat at `/api/v1/chat/ws/message`.
+
+- Set `VITE_WS_BASE_URL` to the WebSocket origin (example: `ws://localhost:8000` or `wss://your-domain.com`). The frontend will connect to `${VITE_WS_BASE_URL}/api/v1/chat/ws/message`.
+
+Quick test using `wscat` (npm package):
+
+```powershell
+# install wscat globally if you don't have it
+npm i -g wscat
+
+# connect
+wscat -c ws://localhost:8000/api/v1/chat/ws/message
+
+# then send JSON messages like:
+# {"message":"Hello","thread_id":null}
+```
+
+Browser console test (paste in DevTools console):
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/api/v1/chat/ws/message');
+ws.onopen = () => ws.send(JSON.stringify({ message: 'Hi there', thread_id: null }));
+ws.onmessage = (ev) => console.log('msg', JSON.parse(ev.data));
+```
+
+If WS fails, the frontend will fallback to the existing HTTP POST `/api/v1/message` endpoint.
+
+
