@@ -137,8 +137,9 @@ class ChatService:
 
     async def handle_websocket_connection(self, websocket: WebSocket):
         """
-        Handle WebSocket connection for real-time chat.
-        Uses the same logic as handle_message but sends the response over WebSocket.
+        Handle WebSocket connection for real-time chat with streaming.
+        Continuously receives JSON messages from the client, validates them,
+        and streams token chunks from the language model directly over the WebSocket.
 
         Args:
             websocket (WebSocket): The WebSocket connection instance from FastAPI
@@ -157,40 +158,39 @@ class ChatService:
                 # Use a default user_id for now (can be replaced with auth later)
                 user_id = "default_user"
 
-                # Process the message using the same logic as HTTP endpoint
-                try:
-                    result = await self.handle_message(
-                        user_message=request.message,
-                        user_id=user_id,
-                        thread_id=request.thread_id
-                    )
+                # Handle thread_id logic
+                thread_id = request.thread_id
+                if thread_id is None:
+                    thread_id = self.create_new_thread(user_id)
 
-                    # Send the complete response over WebSocket
-                    response = ChatMessageResponse(
-                        thread_id=result["thread_id"],
-                        reply=result["reply"]
-                    )
-                    
-                    # Send the response as JSON over the WebSocket
-                    await websocket.send_text(response.model_dump_json())
+                # Create config with thread_id for graph execution
+                config = {"configurable": {"thread_id": thread_id}}
 
-                except Exception as e:
-                    # Send error response
-                    error_response = {
-                        "error": f"Failed to process message: {str(e)}",
-                        "thread_id": request.thread_id
-                    }
-                    await websocket.send_text(json.dumps(error_response))
+                # Create the input state with the user's message
+                input_state = {
+                    "messages": [HumanMessage(content=request.message)]
+                }
 
-                finally:
-                    # Send done marker to indicate completion
-                    try:
-                        thread_id = result.get("thread_id") if 'result' in locals() else request.thread_id
-                        await websocket.send_text(json.dumps({"thread_id": thread_id, "done": True}))
-                        print(f"Sent done marker for thread {thread_id}")
-                    except Exception:
-                        # If the websocket is closed or send fails, ignore
-                        print(f"Failed to send done marker")
+                # Get the graph instance (lazy initialization)
+                graph = await self._get_graph()
+
+                # Stream events from the graph
+                async for event in graph.astream_events(input_state, config=config, version="v1"):
+                    # Filter for chat model stream events
+                    if event["event"] == "on_chat_model_stream":
+                        ## Extract the content chunk from the event
+                        chunk_content = event["data"]["chunk"].content
+
+                        # Only send non-empty chunks
+                        if chunk_content:
+                            # Construct a ChatMessageResponse with the chunk
+                            response = ChatMessageResponse(
+                                thread_id=thread_id,
+                                reply=chunk_content
+                            )
+
+                            # Send the chunk as JSON over the WebSocket
+                            await websocket.send_text(response.model_dump_json())
 
         except WebSocketDisconnect:
             print("WebSocket client disconnected")
