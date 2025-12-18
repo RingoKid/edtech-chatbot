@@ -24,12 +24,12 @@ python-multipart>=0.0.6
 email-validator>=2.0.0  # Required for pydantic EmailStr
 moto>=4.2.0
 # Image/Video Analysis dependencies
-opencv-python>=4.8.0
-opencv-python-headless>=4.8.0
-numpy>=1.24.0
-pillow>=10.0.0
+opencv-python>=4.10.0
+opencv-contrib-python>=4.10.0
+numpy>=1.26.0
+pillow>=10.4.0
 # Voice Transcription dependencies
-speechmatics>=1.0.0
+speechmatics-python
 cloudpickle==3.1.1
 cryptography==44.0.3
 debugpy==1.8.16
