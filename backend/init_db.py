@@ -54,11 +54,7 @@ def create_main_table(dynamodb_client, table_name):
                         {'AttributeName': 'GSI1PK', 'KeyType': 'HASH'},
                         {'AttributeName': 'GSI1SK', 'KeyType': 'RANGE'}
                     ],
-                    'Projection': {'ProjectionType': 'ALL'},
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
+                    'Projection': {'ProjectionType': 'ALL'}
                 }
             ],
             BillingMode='PAY_PER_REQUEST'
