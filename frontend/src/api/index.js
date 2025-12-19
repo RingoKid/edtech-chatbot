@@ -52,4 +52,47 @@ export const auth = {
     client.apiPost("/auth/logout-all", undefined, { credentials: "include" }),
 };
 
-export default { health, chat, users, auth };
+export const handwriting = {
+  analyzeImage: async (imageFile, message = null, gradeLevel = null, targetLetter = null) => {
+    const formData = new FormData()
+    formData.append('image', imageFile)
+    if (message) formData.append('message', message)
+    if (gradeLevel) formData.append('grade_level', gradeLevel)
+    if (targetLetter) formData.append('target_letter', targetLetter)
+
+    const response = await fetch(`${client.API_BASE}/handwriting/analyze-image`, {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || 'Failed to upload image')
+    }
+
+    return response.json()
+  },
+  analyzeVideo: async (videoFile, message = null, gradeLevel = null, targetLetter = null) => {
+    const formData = new FormData()
+    formData.append('video', videoFile)
+    if (message) formData.append('message', message)
+    if (gradeLevel) formData.append('grade_level', gradeLevel)
+    if (targetLetter) formData.append('target_letter', targetLetter)
+
+    const response = await fetch(`${client.API_BASE}/handwriting/analyze-video`, {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || 'Failed to upload video')
+    }
+
+    return response.json()
+  },
+  getAnalysisStatus: (jobId) => client.apiGet(`/handwriting/analysis/${jobId}`),
+  getVideoAnalysisStatus: (jobId) => client.apiGet(`/handwriting/video-analysis/${jobId}`)
+};
+
+export default { health, chat, users, auth, handwriting };

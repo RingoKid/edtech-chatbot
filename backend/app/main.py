@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
-from app.routers import health, chat, auth, users
+from app.routers import health, chat, auth, users, transcription, handwriting_analysis
 from app.config import settings
 from app.dependencies.auth import get_current_user
 
@@ -45,6 +45,8 @@ protected_router = APIRouter(
 # Include protected routers
 protected_router.include_router(chat.router)
 protected_router.include_router(users.router)
+protected_router.include_router(transcription.router)
+protected_router.include_router(handwriting_analysis.router)
 
 # Mount routers to app
 app.include_router(public_router)

@@ -8,6 +8,17 @@ ENV PYTHONUNBUFFERED=1 \
 # Set the working directory for the final application.
 WORKDIR /app
 
+# Install system dependencies required for OpenCV
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libgomp1 \
+    libgthread-2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install Python dependencies efficiently.
 COPY backend/requirements.txt .
 RUN pip install -r requirements.txt
