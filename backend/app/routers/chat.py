@@ -1,10 +1,13 @@
 """
 Chat router for the FastAPI application.
-Contains HTTP endpoints for chat functionality using LangGraph.
+Contains HTTP and WebSocket endpoints for chat functionality.
+Production logic is delegated to `ChatService`.
 """
 from functools import lru_cache
 from fastapi import APIRouter, HTTPException, Depends, WebSocket
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import Optional
 
 from app.services.chat_service import ChatService
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
@@ -23,6 +26,14 @@ def get_chat_service() -> ChatService:
     return ChatService()
 
 
+@router.get("/", tags=["Chat"])
+def get_chat_status():
+    """
+    Simple status endpoint for the chat router (returns at /api/v1/chat).
+    """
+    return {"router": "chat", "status": "active", "message": "Chat router is working"}
+
+
 @router.post("/message", response_model=ChatMessageResponse)
 async def send_message(
     request: ChatMessageRequest,
@@ -31,12 +42,7 @@ async def send_message(
     """
     Send a message to the chatbot and receive a response from the LangGraph.
 
-    Args:
-        request: ChatMessageRequest containing the message and optional thread_id
-        chat_service: Injected ChatService instance
-
-    Returns:
-        ChatMessageResponse: The AI's response and thread_id
+    This is the production endpoint backed by ChatService.
     """
     try:
         return await chat_service.process_chat_request(request)
@@ -55,51 +61,6 @@ async def websocket_info():
     Get information about the WebSocket endpoint for real-time chat.
 
     **WebSocket Endpoint:** `/api/v1/chat/ws/message`
-
-    **Protocol:** WebSocket (ws:// or wss://)
-
-    **Connection Example (JavaScript):**
-    ```javascript
-    const ws = new WebSocket('ws://localhost:8000/api/v1/chat/ws/message');
-
-    ws.onopen = () => {
-        ws.send(JSON.stringify({
-            message: "Hello!",
-            thread_id: "optional-thread-id"
-        }));
-    };
-
-    ws.onmessage = (event) => {
-        const response = JSON.parse(event.data);
-        console.log(response);
-    };
-    ```
-
-    **Message Format (Client → Server):**
-    ```json
-    {
-        "message": "Your message here",
-        "thread_id": "optional-thread-id-for-conversation-continuity"
-    }
-    ```
-
-    **Response Format (Server → Client):**
-    ```json
-    {
-        "response": "AI assistant response",
-        "thread_id": "conversation-thread-id"
-    }
-    ```
-
-    **Error Response:**
-    ```json
-    {
-        "error": "Error message description"
-    }
-    ```
-
-    Returns:
-        JSON object with WebSocket endpoint details and usage examples
     """
     return JSONResponse(content={
         "endpoint": "/api/v1/chat/ws/message",
@@ -133,12 +94,5 @@ async def websocket_message(
     """
     WebSocket endpoint for real-time chat communication.
     Accepts WebSocket connections and handles bidirectional chat messages.
-
-    **Note:** This endpoint uses WebSocket protocol and won't appear in Swagger UI.
-    Use the GET /ws/info endpoint above for connection details and examples.
-
-    Args:
-        websocket: The WebSocket connection instance
-        chat_service: Injected ChatService instance
     """
     await chat_service.handle_websocket_connection(websocket)

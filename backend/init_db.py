@@ -1,174 +1,234 @@
-#!/usr/bin/env python3
 """
-Database initialization script for DynamoDB Local.
-Creates the required DynamoDB table for LangGraph checkpoint storage.
-
-This script can be run manually or imported by tests to set up the database.
-It uses the existing configuration from app.config to ensure consistency.
+Initialize DynamoDB tables for the EdTech Chatbot application.
+Creates main application table and checkpoint table with proper indexes and TTL.
 """
-
 import sys
+import os
+
+# Add the current directory to the path so we can import app modules
+# Works both locally (backend/) and in Docker container (/app/)
+sys.path.insert(0, os.path.dirname(__file__))
+
 import boto3
+from botocore.exceptions import ClientError
 from app.config import settings, AppEnv
-from app.database import get_dynamodb_resource
 
 
-def create_checkpoint_table():
+def create_main_table(dynamodb_client, table_name):
     """
-    Create the DynamoDB table for LangGraph checkpoint storage.
+    Create the main EdTechChatbot table with GSI1 for email lookup.
 
-    The table uses the schema required by langgraph_dynamodb_checkpoint:
-    - Partition key (pk): String - stores the thread/namespace identifier
-    - Sort key (sk): String - stores the checkpoint identifier
-
-    Table name is generated based on APP_ENV from settings.table_name:
-    - LOCAL: EdTechChatbotTable-local
-    - SANDBOX: EdTechChatbotTable-sandbox
-    - PRODUCTION: EdTechChatbotTable-prod
-
-    Returns:
-        bool: True if table was created, False if it already exists
+    Args:
+        dynamodb_client: Boto3 DynamoDB client
+        table_name: Name of the table to create
     """
-    print("=" * 60)
-    print("DYNAMODB TABLE INITIALIZATION")
-    print("=" * 60)
-
-    # Get the table name from settings (environment-aware)
-    table_name = settings.table_name
-    print(f"Environment: {settings.app_env}")
-    print(f"Table name: {table_name}")
-
-    # Get DynamoDB resource using existing configuration
-    dynamodb = get_dynamodb_resource()
-    client = dynamodb.meta.client
-
-    # Check if table already exists by trying to describe it
+    # Check if table already exists
     try:
-        table_description = client.describe_table(TableName=table_name)
+        table_description = dynamodb_client.describe_table(TableName=table_name)
         table_status = table_description['Table']['TableStatus']
-        print(f"✓ Table '{table_name}' already exists")
-        print(f"  Status: {table_status}")
+        print(f"⚠️  Table {table_name} already exists (Status: {table_status})")
         return False
-    except client.exceptions.ResourceNotFoundException:
+    except ClientError as e:
+        if e.response['Error']['Code'] != 'ResourceNotFoundException':
+            print(f"❌ Error checking table existence: {e}")
+            raise
         # Table doesn't exist, continue to create it
-        pass
-    except Exception as e:
-        print(f"Warning: Could not check table existence: {e}")
-
-    # Create the table with LangGraph checkpoint schema
-    print(f"\nCreating table '{table_name}'...")
 
     try:
-        client.create_table(
+        dynamodb_client.create_table(
             TableName=table_name,
-            # LangGraph DynamoDB checkpoint schema
             KeySchema=[
-                {'AttributeName': 'pk', 'KeyType': 'HASH'},   # Partition key
-                {'AttributeName': 'sk', 'KeyType': 'RANGE'}   # Sort key
+                {'AttributeName': 'PK', 'KeyType': 'HASH'},
+                {'AttributeName': 'SK', 'KeyType': 'RANGE'}
             ],
             AttributeDefinitions=[
-                {'AttributeName': 'pk', 'AttributeType': 'S'},  # String
-                {'AttributeName': 'sk', 'AttributeType': 'S'}   # String
+                {'AttributeName': 'PK', 'AttributeType': 'S'},
+                {'AttributeName': 'SK', 'AttributeType': 'S'},
+                {'AttributeName': 'GSI1PK', 'AttributeType': 'S'},
+                {'AttributeName': 'GSI1SK', 'AttributeType': 'S'}
             ],
-            # Use on-demand billing for local development
+            GlobalSecondaryIndexes=[
+                {
+                    'IndexName': 'GSI1',
+                    'KeySchema': [
+                        {'AttributeName': 'GSI1PK', 'KeyType': 'HASH'},
+                        {'AttributeName': 'GSI1SK', 'KeyType': 'RANGE'}
+                    ],
+                    'Projection': {'ProjectionType': 'ALL'},
+                    'ProvisionedThroughput': {
+                        'ReadCapacityUnits': 5,
+                        'WriteCapacityUnits': 5
+                    }
+                }
+            ],
             BillingMode='PAY_PER_REQUEST'
         )
 
-        print(f"✓ Table '{table_name}' created successfully!")
+        # Wait for table to be created
+        print(f"⏳ Creating table {table_name}...")
+        waiter = dynamodb_client.get_waiter('table_exists')
+        waiter.wait(TableName=table_name)
 
-        # Wait for table to be active (important for local DynamoDB)
-        if settings.app_env == AppEnv.LOCAL:
-            print("Waiting for table to be active...")
-            waiter = client.get_waiter('table_exists')
-            waiter.wait(
-                TableName=table_name,
-                WaiterConfig={'Delay': 1, 'MaxAttempts': 10}
-            )
-            print("✓ Table is now active")
+        # Enable TTL for expires_at attribute (for refresh token auto-deletion)
+        dynamodb_client.update_time_to_live(
+            TableName=table_name,
+            TimeToLiveSpecification={
+                'Enabled': True,
+                'AttributeName': 'expires_at'
+            }
+        )
 
+        print(f"✅ Table {table_name} created successfully with GSI1 and TTL enabled")
         return True
 
-    except client.exceptions.ResourceInUseException:
-        print(f"✓ Table '{table_name}' already exists (created by another process)")
-        return False
-    except Exception as e:
-        print(f"✗ Error creating table: {e}")
+    except ClientError as e:
+        print(f"❌ Error creating table {table_name}: {e}")
         raise
 
 
-def delete_checkpoint_table():
+def create_checkpoint_table(dynamodb_client, table_name):
     """
-    Delete the DynamoDB checkpoint table.
-    Use with caution - this will delete all checkpoint data!
+    Create the LangGraph checkpoint table.
 
-    Returns:
-        bool: True if table was deleted, False if it didn't exist
+    Args:
+        dynamodb_client: Boto3 DynamoDB client
+        table_name: Name of the checkpoint table to create
     """
-    table_name = settings.table_name
-    print(f"\nDeleting table '{table_name}'...")
-
-    dynamodb = get_dynamodb_resource()
-    client = dynamodb.meta.client
+    # Check if table already exists
+    try:
+        table_description = dynamodb_client.describe_table(TableName=table_name)
+        table_status = table_description['Table']['TableStatus']
+        print(f"⚠️  Checkpoint table {table_name} already exists (Status: {table_status})")
+        return False
+    except ClientError as e:
+        if e.response['Error']['Code'] != 'ResourceNotFoundException':
+            print(f"❌ Error checking checkpoint table existence: {e}")
+            raise
+        # Table doesn't exist, continue to create it
 
     try:
-        client.delete_table(TableName=table_name)
-        print(f"✓ Table '{table_name}' deleted successfully!")
+        dynamodb_client.create_table(
+            TableName=table_name,
+            KeySchema=[
+                {'AttributeName': 'PK', 'KeyType': 'HASH'},
+                {'AttributeName': 'SK', 'KeyType': 'RANGE'}
+            ],
+            AttributeDefinitions=[
+                {'AttributeName': 'PK', 'AttributeType': 'S'},
+                {'AttributeName': 'SK', 'AttributeType': 'S'}
+            ],
+            BillingMode='PAY_PER_REQUEST'
+        )
+
+        # Wait for table to be created
+        print(f"⏳ Creating checkpoint table {table_name}...")
+        waiter = dynamodb_client.get_waiter('table_exists')
+        waiter.wait(TableName=table_name)
+
+        print(f"✅ Checkpoint table {table_name} created successfully")
         return True
-    except client.exceptions.ResourceNotFoundException:
-        print(f"✓ Table '{table_name}' does not exist")
-        return False
-    except Exception as e:
-        print(f"✗ Error deleting table: {e}")
+
+    except ClientError as e:
+        print(f"❌ Error creating checkpoint table {table_name}: {e}")
         raise
 
 
-def reset_checkpoint_table():
+def delete_table(dynamodb_client, table_name):
     """
-    Reset the checkpoint table by deleting and recreating it.
-    This is useful for testing or starting fresh.
+    Delete a DynamoDB table.
 
-    Returns:
-        bool: True if successful
+    Args:
+        dynamodb_client: Boto3 DynamoDB client
+        table_name: Name of the table to delete
     """
-    print("=" * 60)
-    print("RESETTING DYNAMODB TABLE")
-    print("=" * 60)
+    try:
+        dynamodb_client.delete_table(TableName=table_name)
+        print(f"⏳ Deleting table {table_name}...")
+        waiter = dynamodb_client.get_waiter('table_not_exists')
+        waiter.wait(TableName=table_name)
+        print(f"✅ Table {table_name} deleted successfully")
+        return True
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ResourceNotFoundException':
+            print(f"⚠️  Table {table_name} does not exist")
+            return False
+        print(f"❌ Error deleting table {table_name}: {e}")
+        raise
 
-    delete_checkpoint_table()
-    create_checkpoint_table()
 
-    print("\n" + "=" * 60)
-    print("RESET COMPLETE")
-    print("=" * 60)
-    return True
+def get_dynamodb_client():
+    """Get DynamoDB client based on environment."""
+    if settings.app_env == AppEnv.LOCAL:
+        return boto3.client(
+            'dynamodb',
+            endpoint_url=settings.dynamodb_endpoint_url,
+            region_name=settings.aws_region,
+            aws_access_key_id=settings.aws_access_key_id or "dummy",
+            aws_secret_access_key=settings.aws_secret_access_key or "dummy"
+        )
+    elif settings.app_env == AppEnv.SANDBOX:
+        return boto3.client(
+            'dynamodb',
+            region_name=settings.aws_region,
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key
+        )
+    else:  # PRODUCTION
+        return boto3.client(
+            'dynamodb',
+            region_name=settings.aws_region
+        )
 
 
 def main():
-    """
-    Main entry point for the script.
-    Supports command-line arguments for different operations.
-    """
+    """Initialize all DynamoDB tables."""
+    print(f"🚀 Initializing DynamoDB tables for environment: {settings.app_env}")
+
+    dynamodb_client = get_dynamodb_client()
+
+    # Handle command line arguments
     if len(sys.argv) > 1:
         command = sys.argv[1].lower()
 
-        if command == "create":
-            create_checkpoint_table()
+        if command == "reset":
+            print("=" * 60)
+            print("RESETTING DYNAMODB TABLES")
+            print("=" * 60)
+            # Delete tables first
+            delete_table(dynamodb_client, settings.table_name)
+            delete_table(dynamodb_client, settings.checkpoint_table_name)
+            # Then create them
+            create_main_table(dynamodb_client, settings.table_name)
+            create_checkpoint_table(dynamodb_client, settings.checkpoint_table_name)
+            print("\n" + "=" * 60)
+            print("RESET COMPLETE")
+            print("=" * 60)
+            return
+
         elif command == "delete":
-            delete_checkpoint_table()
-        elif command == "reset":
-            reset_checkpoint_table()
-        else:
+            delete_table(dynamodb_client, settings.table_name)
+            delete_table(dynamodb_client, settings.checkpoint_table_name)
+            return
+
+        elif command != "create":
             print(f"Unknown command: {command}")
             print("\nUsage:")
-            print("  python init_db.py create  - Create the checkpoint table")
-            print("  python init_db.py delete  - Delete the checkpoint table")
-            print("  python init_db.py reset   - Delete and recreate the table")
+            print("  python init_db.py          - Create tables (default)")
+            print("  python init_db.py create   - Create tables")
+            print("  python init_db.py delete   - Delete tables")
+            print("  python init_db.py reset    - Delete and recreate tables")
             sys.exit(1)
-    else:
-        # Default action: create table
-        create_checkpoint_table()
 
-    print("\n" + "=" * 60)
+    # Default: create tables
+    main_table_name = settings.table_name
+    create_main_table(dynamodb_client, main_table_name)
+
+    checkpoint_table_name = settings.checkpoint_table_name
+    create_checkpoint_table(dynamodb_client, checkpoint_table_name)
+
+    print("\n✨ Database initialization complete!")
+    print(f"📊 Main table: {main_table_name}")
+    print(f"📊 Checkpoint table: {checkpoint_table_name}")
 
 
 if __name__ == "__main__":

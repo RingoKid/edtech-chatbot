@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom'
 import Navigation from '../components/Navigation'
 import Footer from '../components/Footer'
 import ChatBubble from '../components/ChatBubble'
-import ApiStatus from '../components/ApiStatus'
 
 const MainLayout = () => {
   return (
@@ -14,7 +13,6 @@ const MainLayout = () => {
       </main>
       <Footer />
       <ChatBubble />
-      {import.meta.env.DEV && <ApiStatus />}
     </div>
   )
 }
