@@ -6,7 +6,11 @@ import {
   useState,
 } from "react";
 import { auth as authApi } from "../api";
-import { setAccessToken, clearAccessToken } from "../api/client";
+import {
+  setAccessToken,
+  clearAccessToken,
+  setOnTokenRefreshed,
+} from "../api/client";
 
 const TOKEN_KEY = "access_token";
 
@@ -72,6 +76,16 @@ export const AuthProvider = ({ children }) => {
       clearAccessToken();
     }
   }, [tokenState.token]);
+
+  // Register callback for automatic token refresh from API client
+  useEffect(() => {
+    setOnTokenRefreshed((newToken) => {
+      const storagePreference = tokenState.storage ?? "local";
+      persistToken(newToken, storagePreference);
+    });
+
+    return () => setOnTokenRefreshed(null);
+  }, [persistToken, tokenState.storage]);
 
   const fetchProfile = useCallback(async () => {
     const profile = await authApi.me();
