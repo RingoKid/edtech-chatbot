@@ -33,9 +33,10 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ./data/dynamodb:/home/dynamodblocal/data
+      - dynamodb_data:/home/dynamodblocal/data
     working_dir: /home/dynamodblocal
-    command: [ "-jar", "DynamoDBLocal.jar", "-sharedDb", "-optimizeDbBeforeStartup", "-dbPath", "./data" ]
+    user: root
+    command: ["-jar", "DynamoDBLocal.jar", "-dbPath", "./data", "-sharedDb"]
 
 volumes:
   node_modules:

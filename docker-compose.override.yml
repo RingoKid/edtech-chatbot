@@ -15,7 +15,8 @@ services:
       sh -c "cd /app && langgraph dev --host 0.0.0.0 --port 2024 & python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   dynamodb-local:
-    # Override for local development: use in-memory mode to avoid database file corruption
-    # This prevents "readonly database" errors during development
-    volumes: []  # Remove volume mount
-    command: [ "-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory" ]
+    # Persist data across restarts using a named volume
+    user: root
+    volumes:
+      - dynamodb_data:/home/dynamodblocal/data
+    command: ["-jar", "DynamoDBLocal.jar", "-dbPath", "./data", "-sharedDb"]
