@@ -49,6 +49,42 @@ class ChatService:
         thread_id = f"{user_id}_{uuid.uuid4().hex[:8]}"
         return thread_id
         
+    async def init_chat(self, user_id: str = "default_user") -> ChatMessageResponse:
+        """
+        Initialize a new chat session by invoking the graph to get the greeting message.
+        Creates a new thread and runs the greeting_node.
+
+        Args:
+            user_id (str): The user identifier
+
+        Returns:
+            ChatMessageResponse: The greeting message and new thread_id
+        """
+        # Get the graph instance
+        graph = await self._get_graph()
+
+        # Create a new thread
+        thread_id = self.create_new_thread(user_id)
+
+        # Create config with thread_id
+        config = {"configurable": {"thread_id": thread_id}}
+
+        # Invoke the graph with empty input to trigger greeting_node
+        # The graph will run greeting_node, output the welcome message, and interrupt
+        result = await graph.ainvoke({"messages": []}, config=config)
+
+        # Extract the greeting message
+        messages = result.get("messages", [])
+        if messages:
+            greeting = messages[-1].content
+        else:
+            greeting = "Welcome! How can I help you today?"
+
+        return ChatMessageResponse(
+            thread_id=thread_id,
+            reply=greeting
+        )
+
     async def process_chat_request(self, request: ChatMessageRequest) -> ChatMessageResponse:
         """
         Process a chat message request and return a response.

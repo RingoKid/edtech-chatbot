@@ -2,8 +2,8 @@
 const isDevelopment = Boolean(import.meta.env?.DEV);
 const isProduction = Boolean(import.meta.env?.PROD);
 
-const FALLBACK_API_BASE_URL = "http://127.0.0.1:8000/api/v1";
-const FALLBACK_WS_BASE_URL = "ws://127.0.0.1:8000";
+const FALLBACK_API_BASE_URL = "http://localhost:8000/api/v1";
+const FALLBACK_WS_BASE_URL = "ws://localhost:8000";
 
 const readRuntimeValue = (key) =>
   typeof window !== "undefined" ? window.__APP_CONFIG?.[key] : undefined;

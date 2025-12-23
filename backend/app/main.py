@@ -45,12 +45,17 @@ protected_router = APIRouter(
 # Include protected routers
 protected_router.include_router(chat.router)
 protected_router.include_router(users.router)
-protected_router.include_router(transcription.router)
 protected_router.include_router(handwriting_analysis.router)
+
+# --- WebSocket Routes (auth handled at endpoint level via query param) ---
+# WebSocket endpoints can't use OAuth2PasswordBearer, so they handle auth separately
+websocket_router = APIRouter(prefix=API_PREFIX)
+websocket_router.include_router(transcription.router)
 
 # Mount routers to app
 app.include_router(public_router)
 app.include_router(protected_router)
+app.include_router(websocket_router)
 
 # Root health check endpoint (public, no prefix)
 @app.get("/health")

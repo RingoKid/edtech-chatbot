@@ -1,24 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Download, Mic, MicOff, Image, Camera, Plus, X } from 'lucide-react'
+import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Mic, MicOff, Image, Camera, Plus, X } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat2, handwriting } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
-import jsPDF from 'jspdf'
 import useAudioRecorder from '../hooks/useAudioRecorder'
 import TranscriptionWebSocket from '../api/transcriptionWebSocket'
 import CameraModal from './CameraModal'
 
 
 const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      type: 'bot',
-      content: "Hello there! How can I assist you with your literacy questions today? I can help with handwriting, vocabulary, creative writing, and literacy strategies. Looking forward to supporting you!",
-      timestamp: new Date()
-    }
-  ])
+  const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
@@ -39,6 +31,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const wsConnectedRef = useRef(false) // Track if WebSocket was successfully connected
   const accumulatedTranscriptRef = useRef('') // Accumulate all transcripts during recording session
   const fileInputRef = useRef(null) // Reference for file input
+  const textareaRef = useRef(null) // Reference for textarea to restore focus
 
   // Initialize audio recorder hook
   const { isRecording, error: recorderError, startRecording, stopRecording, clearError } = useAudioRecorder()
@@ -50,6 +43,45 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
         transcriptionWsRef.current.disconnect()
       }
     }
+  }, [])
+
+  // Restore focus to textarea when typing indicator disappears
+  useEffect(() => {
+    if (!isTyping && !isRecording && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [isTyping, isRecording])
+
+  // Initialize chat session on mount
+  useEffect(() => {
+    const initChat = async () => {
+      setIsTyping(true)
+      try {
+        const res = await chat2.init()
+        if (res?.thread_id) {
+          setThreadId(res.thread_id)
+        }
+        setMessages([{
+          id: Date.now(),
+          type: 'bot',
+          content: res?.reply || "Hello! How can I help you today?",
+          timestamp: new Date()
+        }])
+      } catch (err) {
+        console.error('Failed to initialize chat:', err)
+        // Fallback message on error
+        setMessages([{
+          id: Date.now(),
+          type: 'bot',
+          content: "Hello! How can I help you today?",
+          timestamp: new Date()
+        }])
+      } finally {
+        setIsTyping(false)
+      }
+    }
+
+    initChat()
   }, [])
 
 
@@ -445,15 +477,34 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }
   }
 
-  const clearChat = () => {
-    setMessages([{
-      id: 1,
-      type: 'bot',
-      content: "Hello! I'm your second AI Teaching Assistant. I'm here to provide additional support and perspectives. How can I help you today?",
-      timestamp: new Date()
-    }])
-    // Reset thread_id to start a new conversation
+  const clearChat = async () => {
+    // Reset messages and start a new chat session
+    setMessages([])
     setThreadId(null)
+    setIsTyping(true)
+
+    try {
+      const res = await chat2.init()
+      if (res?.thread_id) {
+        setThreadId(res.thread_id)
+      }
+      setMessages([{
+        id: Date.now(),
+        type: 'bot',
+        content: res?.reply || "Hello! How can I help you today?",
+        timestamp: new Date()
+      }])
+    } catch (err) {
+      console.error('Failed to initialize chat:', err)
+      setMessages([{
+        id: Date.now(),
+        type: 'bot',
+        content: "Hello! How can I help you today?",
+        timestamp: new Date()
+      }])
+    } finally {
+      setIsTyping(false)
+    }
   }
 
   // Handle file selection (image or video)
@@ -725,111 +776,6 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }
   }
 
-  const handleDownloadPDF = async () => {
-    if (!threadId) return
-
-    try {
-      // Fetch chat history from API
-      const history = await chat2.getHistory(threadId)
-
-      // Create new PDF document
-      const doc = new jsPDF()
-      const pageWidth = doc.internal.pageSize.getWidth()
-      const pageHeight = doc.internal.pageSize.getHeight()
-      const margin = 20
-      const maxWidth = pageWidth - 2 * margin
-      let yPosition = margin
-
-      // Helper function to add new page if needed
-      const checkAndAddPage = (requiredSpace) => {
-        if (yPosition + requiredSpace > pageHeight - margin) {
-          doc.addPage()
-          yPosition = margin
-          return true
-        }
-        return false
-      }
-
-      // Helper function to wrap text
-      const wrapText = (text, maxWidth) => {
-        return doc.splitTextToSize(text, maxWidth)
-      }
-
-      // Add title
-      doc.setFontSize(18)
-      doc.setFont(undefined, 'bold')
-      doc.text('Chat History', margin, yPosition)
-      yPosition += 10
-
-      // Add metadata
-      doc.setFontSize(10)
-      doc.setFont(undefined, 'normal')
-      doc.setTextColor(100, 100, 100)
-
-      const date = new Date(history.created_at)
-      doc.text(`Date: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, margin, yPosition)
-      yPosition += 10
-
-      // Add separator line
-      doc.setDrawColor(200, 200, 200)
-      doc.line(margin, yPosition, pageWidth - margin, yPosition)
-      yPosition += 10
-
-      // Add messages
-      doc.setTextColor(0, 0, 0)
-
-      if (history.messages && history.messages.length > 0) {
-        history.messages.forEach((message, index) => {
-          // Determine role label
-          const roleLabel = message.role === 'user' ? 'User' : 'Assistant'
-          const timestamp = new Date(message.timestamp)
-          const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-
-          // Check if we need a new page for the message header
-          checkAndAddPage(20)
-
-          // Add role and timestamp
-          doc.setFontSize(11)
-          doc.setFont(undefined, 'bold')
-          doc.text(`${roleLabel} (${timeString}):`, margin, yPosition)
-          yPosition += 7
-
-          // Add message content
-          doc.setFontSize(10)
-          doc.setFont(undefined, 'normal')
-          const wrappedContent = wrapText(message.content, maxWidth)
-
-          wrappedContent.forEach((line) => {
-            checkAndAddPage(7)
-            doc.text(line, margin, yPosition)
-            yPosition += 5
-          })
-
-          // Add spacing between messages
-          yPosition += 8
-
-          // Add separator line between messages (except for last message)
-          if (index < history.messages.length - 1) {
-            checkAndAddPage(5)
-            doc.setDrawColor(230, 230, 230)
-            doc.line(margin, yPosition, pageWidth - margin, yPosition)
-            yPosition += 8
-          }
-        })
-      }
-
-      // Generate filename with thread_id
-      const filename = `chat-${threadId}.pdf`
-
-      // Save the PDF
-      doc.save(filename)
-    } catch (error) {
-      console.error('Error downloading PDF:', error)
-      alert('Failed to download chat history. Please try again.')
-    }
-  }
-
-
   return (
     <div className={cn(
       "flex flex-col h-full bg-white",
@@ -842,31 +788,15 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
               <Bot className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="font-semibold">AI Teaching Assistant 2</h3>
-              <div className="text-xs text-white/80 flex items-center">
-                <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                Online
-              </div>
-            </div>
+            <h3 className="font-semibold">AI Teaching Assistant</h3>
           </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleDownloadPDF}
-              disabled={!threadId}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title={threadId ? "Download chat as PDF" : "Start a conversation to download"}
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            <button
-              onClick={clearChat}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              title="Clear conversation"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            onClick={clearChat}
+            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            title="Clear conversation"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -1075,6 +1005,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
 
           <div className="flex-1">
             <textarea
+              ref={textareaRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
