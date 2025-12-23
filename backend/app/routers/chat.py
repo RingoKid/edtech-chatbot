@@ -34,6 +34,25 @@ def get_chat_status():
     return {"router": "chat", "status": "active", "message": "Chat router is working"}
 
 
+@router.get("/init", response_model=ChatMessageResponse)
+async def init_chat(
+    chat_service: ChatService = Depends(get_chat_service)
+):
+    """
+    Initialize a new chat session and get the greeting message.
+    Creates a new thread and returns the initial welcome message from the LangGraph.
+    """
+    try:
+        return await chat_service.init_chat()
+
+    except Exception as e:
+        print(f"Error initializing chat: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to initialize chat: {str(e)}"
+        )
+
+
 @router.post("/message", response_model=ChatMessageResponse)
 async def send_message(
     request: ChatMessageRequest,

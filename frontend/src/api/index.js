@@ -14,6 +14,22 @@ export const chat = {
   },
 };
 
+// chat2 is an alias for chat with additional methods for Chatbot2 component
+export const chat2 = {
+  ...chat,
+  // init - Initialize a new chat session and get the greeting message
+  init: () => client.apiGet("/chat/init"),
+  // getHistory - placeholder until backend endpoint is implemented
+  getHistory: (threadId) => {
+    console.warn('chat2.getHistory: No backend endpoint available yet');
+    return Promise.resolve({
+      thread_id: threadId,
+      messages: [],
+      created_at: new Date().toISOString()
+    });
+  },
+};
+
 // WebSocket helper (uses environment-based configuration)
 import createWsClient from "../utils/wsClient";
 import { getWebSocketUrl } from "../config/env";
@@ -95,4 +111,4 @@ export const handwriting = {
   getVideoAnalysisStatus: (jobId) => client.apiGet(`/handwriting/video-analysis/${jobId}`)
 };
 
-export default { health, chat, users, auth, handwriting };
+export default { health, chat, chat2, users, auth, handwriting };
