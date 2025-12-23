@@ -3,12 +3,16 @@
  * Streams audio chunks to backend and receives live transcript updates
  */
 
+import { getAccessToken } from './client'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
 
-// Convert HTTP URL to WebSocket URL
+// Convert HTTP URL to WebSocket URL with auth token
 const getWebSocketUrl = () => {
   const wsBase = API_BASE_URL.replace(/^http/, 'ws')
-  return `${wsBase}/transcribe`
+  const token = getAccessToken()
+  const baseUrl = `${wsBase}/transcribe`
+  return token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl
 }
 
 class TranscriptionWebSocket {

@@ -6,8 +6,10 @@ Frontend sends audio chunks, backend transcribes and sends back text.
 import asyncio
 import logging
 from typing import Optional
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.services.speechmatics_service import SpeechmaticsService
+from app.dependencies.auth import get_websocket_user
+from app.schemas.auth import UserInDB
 import json
 import io
 
@@ -93,12 +95,16 @@ class AudioStreamBuffer:
 
 
 @router.websocket("/transcribe")
-async def websocket_transcription(websocket: WebSocket):
+async def websocket_transcription(
+    websocket: WebSocket,
+    user: Optional[UserInDB] = Depends(get_websocket_user)
+):
     """
     WebSocket endpoint for real-time audio transcription.
 
     Protocol:
-    - Client connects and sends audio chunks as binary data
+    - Client connects with token query param: ws://...?token=<jwt>
+    - Client sends audio chunks as binary data
     - Server transcribes and sends back JSON messages:
       - {"type": "partial", "text": "..."}  - Partial transcripts
       - {"type": "final", "text": "..."}    - Final transcripts
@@ -106,8 +112,14 @@ async def websocket_transcription(websocket: WebSocket):
     - Client can send special control messages as JSON:
       - {"type": "stop"} - Stop transcription
     """
+    # Validate authentication
+    if not user:
+        await websocket.close(code=4001, reason="Unauthorized")
+        logger.warning("WebSocket connection rejected: no valid token")
+        return
+
     await websocket.accept()
-    logger.info("WebSocket connection accepted for transcription")
+    logger.info(f"WebSocket connection accepted for transcription (user: {user.user_id})")
 
     # Create audio stream buffer
     audio_buffer = AudioStreamBuffer()

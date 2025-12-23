@@ -2,9 +2,9 @@
 FastAPI authentication dependencies.
 """
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, WebSocket, Query
 from fastapi.security import OAuth2PasswordBearer
-from typing import Callable
+from typing import Callable, Optional
 from app.core.security import decode_token
 from app.services.auth_service import AuthService
 from app.schemas.auth import UserInDB
@@ -105,3 +105,50 @@ def require_role(required_role: str) -> Callable:
 
 # Convenience dependency for admin-only routes
 require_admin = require_role("ADMIN")
+
+
+async def get_websocket_user(token: Optional[str] = Query(None)) -> Optional[UserInDB]:
+    """
+    Authenticate WebSocket connections via query parameter token.
+
+    WebSocket connections can't use OAuth2PasswordBearer (no HTTP headers),
+    so we extract the token from the URL query string instead.
+
+    Usage:
+        @router.websocket("/ws")
+        async def websocket_endpoint(
+            websocket: WebSocket,
+            user: UserInDB = Depends(get_websocket_user)
+        ):
+            if not user:
+                await websocket.close(code=4001, reason="Unauthorized")
+                return
+            ...
+
+    Args:
+        token: JWT access token from query parameter
+
+    Returns:
+        UserInDB if valid token, None otherwise
+    """
+    if not token:
+        return None
+
+    # Decode token
+    payload = decode_token(token)
+    if payload is None:
+        return None
+
+    # Verify token type
+    if payload.get("type") != "access":
+        return None
+
+    user_id: str = payload.get("sub")
+    if user_id is None:
+        return None
+
+    # Get user from database
+    auth_service = AuthService()
+    user = auth_service.get_user_by_id(user_id)
+
+    return user
