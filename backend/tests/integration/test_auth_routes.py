@@ -5,85 +5,14 @@ Uses DynamoDB Local container for testing.
 
 import pytest
 from fastapi.testclient import TestClient
-import boto3
-from botocore.exceptions import ClientError
-from app.config import settings
 from app.main import app
+from tests.conftest import unique_email
 
 
 @pytest.fixture(scope="module")
-def dynamodb_table():
-    """Setup DynamoDB table in DynamoDB Local container for testing."""
-    # Connect to DynamoDB Local
-    dynamodb = boto3.resource(
-        'dynamodb',
-        endpoint_url=settings.dynamodb_endpoint_url,
-        region_name=settings.aws_region,
-        aws_access_key_id='dummy',
-        aws_secret_access_key='dummy'
-    )
-
-    table_name = settings.table_name
-
-    # Try to delete table if it exists from previous test run
-    try:
-        table = dynamodb.Table(table_name)
-        table.delete()
-        table.wait_until_not_exists()
-    except ClientError:
-        pass  # Table doesn't exist, which is fine
-
-    # Create fresh table
-    table = dynamodb.create_table(
-        TableName=table_name,
-        KeySchema=[
-            {'AttributeName': 'PK', 'KeyType': 'HASH'},
-            {'AttributeName': 'SK', 'KeyType': 'RANGE'}
-        ],
-        AttributeDefinitions=[
-            {'AttributeName': 'PK', 'AttributeType': 'S'},
-            {'AttributeName': 'SK', 'AttributeType': 'S'},
-            {'AttributeName': 'GSI1PK', 'AttributeType': 'S'},
-            {'AttributeName': 'GSI1SK', 'AttributeType': 'S'}
-        ],
-        GlobalSecondaryIndexes=[
-            {
-                'IndexName': 'GSI1',
-                'KeySchema': [
-                    {'AttributeName': 'GSI1PK', 'KeyType': 'HASH'},
-                    {'AttributeName': 'GSI1SK', 'KeyType': 'RANGE'}
-                ],
-                'Projection': {'ProjectionType': 'ALL'},
-                'ProvisionedThroughput': {
-                    'ReadCapacityUnits': 5,
-                    'WriteCapacityUnits': 5
-                }
-            }
-        ],
-        BillingMode='PROVISIONED',
-        ProvisionedThroughput={
-            'ReadCapacityUnits': 5,
-            'WriteCapacityUnits': 5
-        }
-    )
-
-    # Wait for table to be ready
-    table.wait_until_exists()
-
-    yield table
-
-    # Cleanup after all tests
-    try:
-        table.delete()
-    except ClientError:
-        pass
-
-
-@pytest.fixture(scope="module")
-def client(dynamodb_table):
-    """Create test client with DynamoDB table."""
-    test_client = TestClient(app)
-    yield test_client
+def client():
+    """Create test client. DynamoDB tables are managed by session-scoped fixture in conftest.py."""
+    return TestClient(app)
 
 
 def test_signup_success(client):
@@ -92,10 +21,11 @@ def test_signup_success(client):
     When: POST /api/v1/auth/signup
     Then: Returns 201 with user profile
     """
+    email = unique_email("newuser")
     response = client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "newuser@example.com",
+            "email": email,
             "password": "password123",
             "full_name": "New User",
             "role": "USER"
@@ -104,7 +34,7 @@ def test_signup_success(client):
 
     assert response.status_code == 201
     data = response.json()
-    assert data["email"] == "newuser@example.com"
+    assert data["email"] == email
     assert data["full_name"] == "New User"
     assert data["role"] == "USER"
     assert "user_id" in data
@@ -117,11 +47,13 @@ def test_signup_duplicate_email(client):
     When: POST /api/v1/auth/signup with same email
     Then: Returns 409 Conflict
     """
+    email = unique_email("duplicate")
+
     # First signup
     client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "duplicate@example.com",
+            "email": email,
             "password": "password123",
             "full_name": "First User"
         }
@@ -131,7 +63,7 @@ def test_signup_duplicate_email(client):
     response = client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "duplicate@example.com",
+            "email": email,
             "password": "password456",
             "full_name": "Second User"
         }
@@ -147,11 +79,13 @@ def test_login_success(client):
     When: POST /api/v1/auth/login
     Then: Returns 200 with access_token and sets refresh_token cookie
     """
+    email = unique_email("loginuser")
+
     # Create user first
     client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "loginuser@example.com",
+            "email": email,
             "password": "password123",
             "full_name": "Login User"
         }
@@ -161,7 +95,7 @@ def test_login_success(client):
     response = client.post(
         "/api/v1/auth/login",
         data={  # OAuth2 uses form data, not JSON
-            "username": "loginuser@example.com",
+            "username": email,
             "password": "password123"
         }
     )
@@ -181,11 +115,13 @@ def test_login_wrong_password(client):
     When: POST /api/v1/auth/login with wrong password
     Then: Returns 401 Unauthorized
     """
+    email = unique_email("testuser")
+
     # Create user
     client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "testuser@example.com",
+            "email": email,
             "password": "password123",
             "full_name": "Test User"
         }
@@ -195,7 +131,7 @@ def test_login_wrong_password(client):
     response = client.post(
         "/api/v1/auth/login",
         data={
-            "username": "testuser@example.com",
+            "username": email,
             "password": "wrongpassword"
         }
     )
@@ -221,11 +157,13 @@ def test_protected_route_with_valid_token(client):
     When: GET /api/v1/auth/me
     Then: Returns 200 with user info
     """
+    email = unique_email("authuser")
+
     # Signup and login
     client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "authuser@example.com",
+            "email": email,
             "password": "password123",
             "full_name": "Auth User"
         }
@@ -234,7 +172,7 @@ def test_protected_route_with_valid_token(client):
     login_response = client.post(
         "/api/v1/auth/login",
         data={
-            "username": "authuser@example.com",
+            "username": email,
             "password": "password123"
         }
     )
@@ -248,7 +186,7 @@ def test_protected_route_with_valid_token(client):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "authuser@example.com"
+    assert data["email"] == email
     assert data["full_name"] == "Auth User"
 
 
@@ -258,11 +196,13 @@ def test_token_refresh(client):
     When: POST /api/v1/auth/refresh
     Then: Returns 200 with new access_token and new refresh_token cookie
     """
+    email = unique_email("refreshuser")
+
     # Signup and login
     client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "refreshuser@example.com",
+            "email": email,
             "password": "password123",
             "full_name": "Refresh User"
         }
@@ -271,7 +211,7 @@ def test_token_refresh(client):
     login_response = client.post(
         "/api/v1/auth/login",
         data={
-            "username": "refreshuser@example.com",
+            "username": email,
             "password": "password123"
         }
     )
@@ -295,11 +235,13 @@ def test_logout(client):
     Then: Returns 200 and clears refresh_token cookie
     And: Refresh token is revoked in database
     """
+    email = unique_email("logoutuser")
+
     # Signup and login
     client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "logoutuser@example.com",
+            "email": email,
             "password": "password123",
             "full_name": "Logout User"
         }
@@ -308,7 +250,7 @@ def test_logout(client):
     login_response = client.post(
         "/api/v1/auth/login",
         data={
-            "username": "logoutuser@example.com",
+            "username": email,
             "password": "password123"
         }
     )

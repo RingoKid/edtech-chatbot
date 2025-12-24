@@ -5,72 +5,13 @@ Tests GET /chat/history and GET /chat/{thread_id}/messages endpoints.
 
 import pytest
 from fastapi.testclient import TestClient
-import boto3
-from botocore.exceptions import ClientError
-from app.config import settings
 from app.main import app
-from app.db_schema import MAIN_TABLE_SCHEMA, CHECKPOINT_TABLE_SCHEMA
+from tests.conftest import unique_email
 
 
 @pytest.fixture(scope="module")
-def dynamodb_tables():
-    """Setup both main and checkpoint tables in DynamoDB Local."""
-    dynamodb = boto3.resource(
-        'dynamodb',
-        endpoint_url=settings.dynamodb_endpoint_url,
-        region_name=settings.aws_region,
-        aws_access_key_id='dummy',
-        aws_secret_access_key='dummy'
-    )
-
-    # Create main table
-    main_table_name = settings.table_name
-    try:
-        table = dynamodb.Table(main_table_name)
-        table.delete()
-        table.wait_until_not_exists()
-    except ClientError:
-        pass
-
-    main_table = dynamodb.create_table(
-        TableName=main_table_name,
-        BillingMode='PAY_PER_REQUEST',
-        **MAIN_TABLE_SCHEMA
-    )
-    main_table.wait_until_exists()
-
-    # Create checkpoint table
-    checkpoint_table_name = settings.checkpoint_table_name
-    try:
-        table = dynamodb.Table(checkpoint_table_name)
-        table.delete()
-        table.wait_until_not_exists()
-    except ClientError:
-        pass
-
-    checkpoint_table = dynamodb.create_table(
-        TableName=checkpoint_table_name,
-        BillingMode='PAY_PER_REQUEST',
-        **CHECKPOINT_TABLE_SCHEMA
-    )
-    checkpoint_table.wait_until_exists()
-
-    yield {"main": main_table, "checkpoint": checkpoint_table}
-
-    # Cleanup
-    try:
-        main_table.delete()
-    except ClientError:
-        pass
-    try:
-        checkpoint_table.delete()
-    except ClientError:
-        pass
-
-
-@pytest.fixture(scope="module")
-def client(dynamodb_tables):
-    """Create test client with DynamoDB tables."""
+def client():
+    """Create test client. DynamoDB tables are managed by session-scoped fixture in conftest.py."""
     return TestClient(app)
 
 
@@ -80,11 +21,13 @@ def auth_headers(client):
     Create a test user and get auth headers.
     Returns auth headers for authenticated requests.
     """
+    email = unique_email("chathistory")
+
     # Create test user
     signup_response = client.post(
         "/api/v1/auth/signup",
         json={
-            "email": "chathistory@example.com",
+            "email": email,
             "password": "testpassword123",
             "full_name": "Chat History User"
         }
@@ -95,7 +38,7 @@ def auth_headers(client):
     login_response = client.post(
         "/api/v1/auth/login",
         data={
-            "username": "chathistory@example.com",
+            "username": email,
             "password": "testpassword123"
         }
     )
@@ -117,17 +60,19 @@ class TestGetHistory:
         response = client.get("/api/v1/chat/history")
         assert response.status_code == 401
 
-    def test_returns_empty_list_for_new_user(self, client, dynamodb_tables):
+    def test_returns_empty_list_for_new_user(self, client):
         """
         Given: A new user with no conversations
         When: GET /api/v1/chat/history
         Then: Returns empty conversation list
         """
+        email = unique_email("newuser_history")
+
         # Create new user
         client.post(
             "/api/v1/auth/signup",
             json={
-                "email": "newuser_history@example.com",
+                "email": email,
                 "password": "password123",
                 "full_name": "New User"
             }
@@ -136,7 +81,7 @@ class TestGetHistory:
         login_response = client.post(
             "/api/v1/auth/login",
             data={
-                "username": "newuser_history@example.com",
+                "username": email,
                 "password": "password123"
             }
         )
@@ -183,7 +128,7 @@ class TestGetHistory:
             assert "created_at" in conv
             assert "updated_at" in conv
 
-    def test_does_not_return_other_users_conversations(self, client, auth_headers, dynamodb_tables):
+    def test_does_not_return_other_users_conversations(self, client, auth_headers):
         """
         Given: Multiple users with conversations
         When: GET /api/v1/chat/history
@@ -194,10 +139,11 @@ class TestGetHistory:
         first_user_thread = init_response.json()["thread_id"]
 
         # Create second user
+        other_email = unique_email("otheruser_history")
         client.post(
             "/api/v1/auth/signup",
             json={
-                "email": "otheruser_history@example.com",
+                "email": other_email,
                 "password": "password123",
                 "full_name": "Other User"
             }
@@ -206,7 +152,7 @@ class TestGetHistory:
         login_response = client.post(
             "/api/v1/auth/login",
             data={
-                "username": "otheruser_history@example.com",
+                "username": other_email,
                 "password": "password123"
             }
         )
@@ -279,7 +225,7 @@ class TestGetMessages:
             assert "content" in msg
             assert msg["role"] in ["user", "assistant"]
 
-    def test_returns_403_for_other_users_thread(self, client, auth_headers, dynamodb_tables):
+    def test_returns_403_for_other_users_thread(self, client, auth_headers):
         """
         Given: User tries to access another user's thread
         When: GET /api/v1/chat/{thread_id}/messages
@@ -290,10 +236,11 @@ class TestGetMessages:
         first_user_thread = init_response.json()["thread_id"]
 
         # Create second user
+        other_email = unique_email("otheruser_messages")
         client.post(
             "/api/v1/auth/signup",
             json={
-                "email": "otheruser_messages@example.com",
+                "email": other_email,
                 "password": "password123",
                 "full_name": "Other User"
             }
@@ -302,7 +249,7 @@ class TestGetMessages:
         login_response = client.post(
             "/api/v1/auth/login",
             data={
-                "username": "otheruser_messages@example.com",
+                "username": other_email,
                 "password": "password123"
             }
         )
