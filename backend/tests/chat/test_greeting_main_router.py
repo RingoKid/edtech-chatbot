@@ -20,22 +20,19 @@ async def test_greeting_node_presents_welcome_message():
     # Start a new conversation
     config = {"configurable": {"thread_id": "test-greeting-1"}}
 
-    try:
-        # Invoke the graph (should stop after greeting_node due to interrupt_after)
-        result = await graph.ainvoke(
-            {"messages": []},
-            config=config
-        )
+    # Invoke the graph (should stop after greeting_node due to interrupt_after)
+    result = await graph.ainvoke(
+        {"messages": []},
+        config=config
+    )
 
-        # Check that we got a welcome message
-        assert len(result["messages"]) > 0
-        last_message = result["messages"][-1]
-        assert "Welcome!" in last_message.content
-        assert "Handwriting" in last_message.content
-        assert "Vocabulary" in last_message.content
-        assert "Idea Generation" in last_message.content
-    finally:
-        await graph.checkpointer.conn.close()
+    # Check that we got a welcome message
+    assert len(result["messages"]) > 0
+    last_message = result["messages"][-1]
+    assert "Welcome!" in last_message.content
+    assert "Handwriting" in last_message.content
+    assert "Vocabulary" in last_message.content
+    assert "Idea Generation" in last_message.content
 
 
 @pytest.mark.asyncio
@@ -45,30 +42,27 @@ async def test_main_router_classifies_handwriting():
 
     config = {"configurable": {"thread_id": "test-handwriting-1"}}
 
-    try:
-        # First invocation - greeting (will be interrupted after greeting_node)
-        await graph.ainvoke({"messages": []}, config=config)
+    # First invocation - greeting (will be interrupted after greeting_node)
+    await graph.ainvoke({"messages": []}, config=config)
 
-        # Update state to add user input
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="I want to do handwriting")]}
-        )
+    # Update state to add user input
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="I want to do handwriting")]}
+    )
 
-        # Resume the graph to continue processing
-        result = await graph.ainvoke(None, config=config)
+    # Resume the graph to continue processing
+    result = await graph.ainvoke(None, config=config)
 
-        # Check that task_name was set correctly
-        assert result.get("task_name") == "Handwriting"
+    # Check that task_name was set correctly
+    assert result.get("task_name") == "Handwriting"
 
-        # Check that we got the parameter collection question
-        last_message = result["messages"][-1]
-        assert "target grade level" in last_message.content.lower()
-        assert "Pre-K" in last_message.content
-        assert "Kindergarten" in last_message.content
-        assert "First Grade" in last_message.content
-    finally:
-        await graph.checkpointer.conn.close()
+    # Check that we got the parameter collection question
+    last_message = result["messages"][-1]
+    assert "target grade level" in last_message.content.lower()
+    assert "Pre-K" in last_message.content
+    assert "Kindergarten" in last_message.content
+    assert "First Grade" in last_message.content
 
 
 @pytest.mark.asyncio
@@ -78,30 +72,27 @@ async def test_main_router_classifies_vocabulary():
 
     config = {"configurable": {"thread_id": "test-vocabulary-1"}}
 
-    try:
-        # First invocation - greeting
-        await graph.ainvoke({"messages": []}, config=config)
+    # First invocation - greeting
+    await graph.ainvoke({"messages": []}, config=config)
 
-        # Update state to add user input
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="Let's work on vocabulary")]}
-        )
+    # Update state to add user input
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="Let's work on vocabulary")]}
+    )
 
-        # Resume to continue processing
-        result = await graph.ainvoke(None, config=config)
+    # Resume to continue processing
+    result = await graph.ainvoke(None, config=config)
 
-        # Check that task_name was set correctly
-        assert result.get("task_name") == "Vocabulary"
+    # Check that task_name was set correctly
+    assert result.get("task_name") == "Vocabulary"
 
-        # Check that we got the parameter collection question
-        last_message = result["messages"][-1]
-        assert "target grade level" in last_message.content.lower()
-        assert "Pre-K" in last_message.content
-        assert "Kindergarten" in last_message.content
-        assert "First Grade" in last_message.content
-    finally:
-        await graph.checkpointer.conn.close()
+    # Check that we got the parameter collection question
+    last_message = result["messages"][-1]
+    assert "target grade level" in last_message.content.lower()
+    assert "Pre-K" in last_message.content
+    assert "Kindergarten" in last_message.content
+    assert "First Grade" in last_message.content
 
 
 @pytest.mark.asyncio
@@ -111,30 +102,27 @@ async def test_main_router_classifies_idea_generation():
 
     config = {"configurable": {"thread_id": "test-idea-gen-1"}}
 
-    try:
-        # First invocation - greeting
-        await graph.ainvoke({"messages": []}, config=config)
+    # First invocation - greeting
+    await graph.ainvoke({"messages": []}, config=config)
 
-        # Update state to add user input
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="Idea Generation please")]}
-        )
+    # Update state to add user input
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="Idea Generation please")]}
+    )
 
-        # Resume to continue processing
-        result = await graph.ainvoke(None, config=config)
+    # Resume to continue processing
+    result = await graph.ainvoke(None, config=config)
 
-        # Check that task_name was set correctly
-        assert result.get("task_name") == "Idea Generation"
+    # Check that task_name was set correctly
+    assert result.get("task_name") == "Idea Generation"
 
-        # Check that we got the parameter collection question
-        last_message = result["messages"][-1]
-        assert "target grade level" in last_message.content.lower()
-        assert "Pre-K" in last_message.content
-        assert "Kindergarten" in last_message.content
-        assert "First Grade" in last_message.content
-    finally:
-        await graph.checkpointer.conn.close()
+    # Check that we got the parameter collection question
+    last_message = result["messages"][-1]
+    assert "target grade level" in last_message.content.lower()
+    assert "Pre-K" in last_message.content
+    assert "Kindergarten" in last_message.content
+    assert "First Grade" in last_message.content
 
 
 # @pytest.mark.asyncio
@@ -186,25 +174,22 @@ async def test_graph_pauses_after_greeting():
 
     config = {"configurable": {"thread_id": "test-pause-1"}}
 
-    try:
-        # First invocation should stop after greeting_node
-        result = await graph.ainvoke({"messages": []}, config=config)
+    # First invocation should stop after greeting_node
+    result = await graph.ainvoke({"messages": []}, config=config)
 
-        # We should have at least one message (the greeting)
-        assert len(result["messages"]) >= 1
+    # We should have at least one message (the greeting)
+    assert len(result["messages"]) >= 1
 
-        # Update state to add user input
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="handwriting")]}
-        )
+    # Update state to add user input
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="handwriting")]}
+    )
 
-        # Resume to continue processing
-        result2 = await graph.ainvoke(None, config=config)
+    # Resume to continue processing
+    result2 = await graph.ainvoke(None, config=config)
 
-        # After user input, we should have routed to handwriting
-        assert result2.get("task_name") == "Handwriting"
-    finally:
-        await graph.checkpointer.conn.close()
+    # After user input, we should have routed to handwriting
+    assert result2.get("task_name") == "Handwriting"
 
 

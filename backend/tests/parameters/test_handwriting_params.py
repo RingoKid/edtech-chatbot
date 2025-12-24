@@ -14,11 +14,7 @@ from app.main import app
 from app.routers.chat import get_chat_service
 from app.services.chat_service import ChatService
 from app.dependencies.auth import get_current_user
-
-
-def get_test_user():
-    """Mock user for bypassing authentication in tests."""
-    return {"user_id": "test-user-123", "email": "test@example.com"}
+from tests.conftest import get_test_user
 
 
 def get_test_chat_service() -> ChatService:

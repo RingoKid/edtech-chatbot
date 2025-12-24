@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import boto3
 from botocore.exceptions import ClientError
 from app.config import settings, AppEnv
+from app.db_schema import MAIN_TABLE_SCHEMA, CHECKPOINT_TABLE_SCHEMA, MAIN_TABLE_TTL_CONFIG
 
 
 def create_main_table(dynamodb_client, table_name):
@@ -36,31 +37,8 @@ def create_main_table(dynamodb_client, table_name):
     try:
         dynamodb_client.create_table(
             TableName=table_name,
-            KeySchema=[
-                {'AttributeName': 'PK', 'KeyType': 'HASH'},
-                {'AttributeName': 'SK', 'KeyType': 'RANGE'}
-            ],
-            AttributeDefinitions=[
-                {'AttributeName': 'PK', 'AttributeType': 'S'},
-                {'AttributeName': 'SK', 'AttributeType': 'S'},
-                {'AttributeName': 'GSI1PK', 'AttributeType': 'S'},
-                {'AttributeName': 'GSI1SK', 'AttributeType': 'S'}
-            ],
-            GlobalSecondaryIndexes=[
-                {
-                    'IndexName': 'GSI1',
-                    'KeySchema': [
-                        {'AttributeName': 'GSI1PK', 'KeyType': 'HASH'},
-                        {'AttributeName': 'GSI1SK', 'KeyType': 'RANGE'}
-                    ],
-                    'Projection': {'ProjectionType': 'ALL'},
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
-                }
-            ],
-            BillingMode='PAY_PER_REQUEST'
+            BillingMode='PAY_PER_REQUEST',
+            **MAIN_TABLE_SCHEMA
         )
 
         # Wait for table to be created
@@ -71,10 +49,7 @@ def create_main_table(dynamodb_client, table_name):
         # Enable TTL for expires_at attribute (for refresh token auto-deletion)
         dynamodb_client.update_time_to_live(
             TableName=table_name,
-            TimeToLiveSpecification={
-                'Enabled': True,
-                'AttributeName': 'expires_at'
-            }
+            TimeToLiveSpecification=MAIN_TABLE_TTL_CONFIG
         )
 
         print(f"✅ Table {table_name} created successfully with GSI1 and TTL enabled")
@@ -108,15 +83,8 @@ def create_checkpoint_table(dynamodb_client, table_name):
     try:
         dynamodb_client.create_table(
             TableName=table_name,
-            KeySchema=[
-                {'AttributeName': 'PK', 'KeyType': 'HASH'},
-                {'AttributeName': 'SK', 'KeyType': 'RANGE'}
-            ],
-            AttributeDefinitions=[
-                {'AttributeName': 'PK', 'AttributeType': 'S'},
-                {'AttributeName': 'SK', 'AttributeType': 'S'}
-            ],
-            BillingMode='PAY_PER_REQUEST'
+            BillingMode='PAY_PER_REQUEST',
+            **CHECKPOINT_TABLE_SCHEMA
         )
 
         # Wait for table to be created

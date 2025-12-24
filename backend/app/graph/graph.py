@@ -1,6 +1,8 @@
+import os
+
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-import aiosqlite
+from langgraph_checkpoint_aws import DynamoDBSaver
+
 from app.graph.state import GraphState
 from app.graph.nodes import (
     greeting_node,
@@ -15,6 +17,13 @@ from app.graph.nodes import (
     route_from_main_router,
     route_parameter_collection
 )
+from app.config import settings
+
+# Configure boto3 to use DynamoDB Local endpoint (for langgraph-checkpoint-aws)
+# This must be set before DynamoDBSaver is instantiated
+if settings.dynamodb_endpoint_url:
+    os.environ['AWS_ENDPOINT_URL_DYNAMODB'] = settings.dynamodb_endpoint_url
+    os.environ['AWS_DEFAULT_REGION'] = settings.aws_region
 
 
 async def create_graph():
@@ -25,11 +34,12 @@ async def create_graph():
     Returns:
         CompiledStateGraph: The compiled LangGraph agent
     """
-    # Use AsyncSqliteSaver for persistent checkpointing across runs
-    # This stores conversation state in a SQLite database file
-    conn = await aiosqlite.connect("checkpointer.sqlite")
-    checkpointer = AsyncSqliteSaver(conn)
-    await checkpointer.setup()
+    # Use DynamoDBSaver for persistent checkpointing
+    # This stores conversation state in DynamoDB (Local or AWS based on environment)
+    checkpointer = DynamoDBSaver(
+        table_name=settings.checkpoint_table_name,
+        region_name=settings.aws_region
+    )
 
     # Create the state graph
     graph = StateGraph(GraphState)

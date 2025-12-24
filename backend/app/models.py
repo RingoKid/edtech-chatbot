@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Literal
+from typing import Literal, Optional
 
 
 class User(BaseModel):
@@ -13,12 +13,17 @@ class User(BaseModel):
 
 
 class Conversation(BaseModel):
+    """
+    User-thread mapping stored in EdTechChatbotTable.
+    PK: USER#{user_id}, SK: THREAD#{thread_id}
+    """
     pk: str = Field(alias='PK')
     sk: str = Field(alias='SK')
     type: Literal["Conversation"]
-    conversation_id: str
+    thread_id: str
     user_id: str
-    title: str
+    title: str = "New Conversation"
+    last_message_preview: Optional[str] = None
     created_at: str
     updated_at: str
 

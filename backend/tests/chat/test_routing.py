@@ -13,11 +13,7 @@ from app.main import app
 from app.routers.chat import get_chat_service
 from app.services.chat_service import ChatService
 from app.dependencies.auth import get_current_user
-
-
-def get_test_user():
-    """Mock user for bypassing authentication in tests."""
-    return {"user_id": "test-user-123", "email": "test@example.com"}
+from tests.conftest import get_test_user
 
 
 def get_test_chat_service() -> ChatService:
@@ -293,25 +289,21 @@ async def test_routing_uses_pydantic_tools():
     graph = await create_graph()
     config = {"configurable": {"thread_id": "test-routing-tools"}}
 
-    try:
-        # Start conversation (will interrupt after greeting)
-        await graph.ainvoke({"messages": []}, config=config)
+    # Start conversation (will interrupt after greeting)
+    await graph.ainvoke({"messages": []}, config=config)
 
-        # Update state with a clear task choice
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="handwriting")]}
-        )
+    # Update state with a clear task choice
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="handwriting")]}
+    )
 
-        # Resume - should route through main_router using Pydantic tool
-        result = await graph.ainvoke(None, config=config)
+    # Resume - should route through main_router using Pydantic tool
+    result = await graph.ainvoke(None, config=config)
 
-        # Verify that task_name was set (indicating successful Pydantic tool use)
-        assert "task_name" in result
-        assert result["task_name"] in ["Handwriting", "Vocabulary", "Idea Generation"]
-    finally:
-        # Close the SQLite connection to prevent hanging
-        await graph.checkpointer.conn.close()
+    # Verify that task_name was set (indicating successful Pydantic tool use)
+    assert "task_name" in result
+    assert result["task_name"] in ["Handwriting", "Vocabulary", "Idea Generation"]
 
 
 @pytest.mark.asyncio
@@ -451,26 +443,22 @@ async def test_clarification_sets_correct_state():
     graph = await create_graph()
     config = {"configurable": {"thread_id": "test-clarify-state"}}
     
-    try:
-        # Start conversation (will interrupt after greeting)
-        await graph.ainvoke({"messages": []}, config=config)
-        
-        # Update state with ambiguous input
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="something unclear")]}
-        )
-        
-        # Resume - should trigger clarification
-        result = await graph.ainvoke(None, config=config)
-        
-        # Verify task_name is __CLARIFY__
-        assert result.get("task_name") == "__CLARIFY__"
-        
-        # Verify the last AI message is the clarification prompt
-        last_message = result["messages"][-1]
-        assert "Sorry" in last_message.content or "didn't quite catch" in last_message.content
-    finally:
-        # Close the SQLite connection to prevent hanging
-        await graph.checkpointer.conn.close()
+    # Start conversation (will interrupt after greeting)
+    await graph.ainvoke({"messages": []}, config=config)
+
+    # Update state with ambiguous input
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="something unclear")]}
+    )
+
+    # Resume - should trigger clarification
+    result = await graph.ainvoke(None, config=config)
+
+    # Verify task_name is __CLARIFY__
+    assert result.get("task_name") == "__CLARIFY__"
+
+    # Verify the last AI message is the clarification prompt
+    last_message = result["messages"][-1]
+    assert "Sorry" in last_message.content or "didn't quite catch" in last_message.content
 

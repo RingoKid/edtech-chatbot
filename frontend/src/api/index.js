@@ -19,15 +19,10 @@ export const chat2 = {
   ...chat,
   // init - Initialize a new chat session and get the greeting message
   init: () => client.apiGet("/chat/init"),
-  // getHistory - placeholder until backend endpoint is implemented
-  getHistory: (threadId) => {
-    console.warn('chat2.getHistory: No backend endpoint available yet');
-    return Promise.resolve({
-      thread_id: threadId,
-      messages: [],
-      created_at: new Date().toISOString()
-    });
-  },
+  // getHistory - Get list of all conversations for the user
+  getHistory: () => client.apiGet("/chat/history"),
+  // getMessages - Get all messages for a specific conversation
+  getMessages: (threadId) => client.apiGet(`/chat/${threadId}/messages`),
 };
 
 // WebSocket helper (uses environment-based configuration)
