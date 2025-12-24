@@ -50,7 +50,7 @@ class ChatService:
     async def init_chat(self, user_id: str) -> ChatMessageResponse:
         """
         Initialize a new chat session.
-        Returns greeting without invoking graph (no checkpoint created yet).
+        Invokes the graph to create a checkpoint at greeting_node interrupt.
 
         Args:
             user_id (str): The user identifier
@@ -65,10 +65,22 @@ class ChatService:
         chat_history_service = get_chat_history_service()
         await chat_history_service.create_conversation(user_id, thread_id)
 
-        # Return static greeting (no graph invoke)
+        # Invoke the graph to create a checkpoint at greeting_node
+        # This ensures the graph state exists when user sends first message
+        graph = await self._get_graph()
+        config = {"configurable": {"thread_id": thread_id}}
+        result = await graph.ainvoke({"messages": []}, config=config)
+
+        # Extract greeting from graph result
+        messages = result.get("messages", [])
+        if messages:
+            reply = messages[-1].content
+        else:
+            reply = GREETING_WELCOME_MESSAGE
+
         return ChatMessageResponse(
             thread_id=thread_id,
-            reply=GREETING_WELCOME_MESSAGE
+            reply=reply
         )
 
     async def process_chat_request(

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Mic, MicOff, Image, Camera, Plus, X } from 'lucide-react'
+import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Mic, MicOff, Image, Camera, Plus, X, Menu, MessageSquare } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat2, handwriting } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
@@ -25,6 +25,9 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [fileType, setFileType] = useState(null) // Track if selected file is 'image' or 'video'
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false) // Show/hide attachment menu
   const [showCameraModal, setShowCameraModal] = useState(false) // Show/hide camera modal
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Sidebar visibility
+  const [conversations, setConversations] = useState([]) // List of past conversations
+  const [loadingHistory, setLoadingHistory] = useState(false) // Loading state for history
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
   const transcriptionWsRef = useRef(null)
@@ -482,6 +485,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     setMessages([])
     setThreadId(null)
     setIsTyping(true)
+    setSidebarOpen(false)
 
     try {
       const res = await chat2.init()
@@ -494,6 +498,8 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
         content: res?.reply || "Hello! How can I help you today?",
         timestamp: new Date()
       }])
+      // Refresh conversation list
+      fetchConversations()
     } catch (err) {
       console.error('Failed to initialize chat:', err)
       setMessages([{
@@ -505,6 +511,57 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     } finally {
       setIsTyping(false)
     }
+  }
+
+  // Fetch list of past conversations
+  const fetchConversations = async () => {
+    setLoadingHistory(true)
+    try {
+      const res = await chat2.getHistory()
+      setConversations(res?.conversations || [])
+    } catch (err) {
+      console.error('Failed to fetch conversations:', err)
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
+
+  // Load a specific conversation
+  const loadConversation = async (selectedThreadId) => {
+    if (selectedThreadId === threadId) {
+      setSidebarOpen(false)
+      return
+    }
+
+    setIsTyping(true)
+    setSidebarOpen(false)
+
+    try {
+      const res = await chat2.getMessages(selectedThreadId)
+      setThreadId(selectedThreadId)
+
+      // Transform messages to UI format
+      const loadedMessages = (res?.messages || []).map((msg, index) => ({
+        id: Date.now() + index,
+        type: msg.role === 'user' ? 'user' : 'bot',
+        content: msg.content,
+        timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+      }))
+
+      setMessages(loadedMessages)
+    } catch (err) {
+      console.error('Failed to load conversation:', err)
+    } finally {
+      setIsTyping(false)
+    }
+  }
+
+  // Toggle sidebar and fetch conversations if opening
+  const toggleSidebar = () => {
+    if (!sidebarOpen) {
+      fetchConversations()
+    }
+    setSidebarOpen(!sidebarOpen)
   }
 
   // Handle file selection (image or video)
@@ -778,13 +835,20 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
 
   return (
     <div className={cn(
-      "flex flex-col h-full bg-white",
+      "flex flex-col h-full bg-white relative",
       hideHeader ? "border-0 shadow-none rounded-none" : "border border-gray-200 rounded-xl shadow-lg overflow-hidden"
     )}>
       {/* Header */}
       {!hideHeader && (
         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
           <div className="flex items-center">
+            <button
+              onClick={toggleSidebar}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors mr-2"
+              title="View conversations"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
               <Bot className="w-5 h-5" />
             </div>
@@ -793,12 +857,103 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           <button
             onClick={clearChat}
             className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            title="Clear conversation"
+            title="New conversation"
           >
-            <RotateCcw className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
           </button>
         </div>
       )}
+
+      {/* Sidebar Overlay */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/30 z-20"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="absolute top-0 left-0 h-full w-72 bg-white shadow-xl z-30 flex flex-col"
+          >
+            {/* Sidebar Header */}
+            <div className="p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-between">
+              <h3 className="font-semibold">Conversations</h3>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* New Chat Button */}
+            <button
+              onClick={clearChat}
+              className="m-3 p-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Conversation
+            </button>
+
+            {/* Conversation List */}
+            <div className="flex-1 overflow-y-auto">
+              {loadingHistory ? (
+                <div className="flex items-center justify-center p-4">
+                  <Loader className="w-5 h-5 animate-spin text-purple-500" />
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No conversations yet
+                </div>
+              ) : (
+                <div className="space-y-1 p-2">
+                  {conversations.map((conv) => (
+                    <button
+                      key={conv.thread_id}
+                      onClick={() => loadConversation(conv.thread_id)}
+                      className={cn(
+                        "w-full p-3 rounded-lg text-left transition-colors",
+                        conv.thread_id === threadId
+                          ? "bg-purple-100 border-l-4 border-purple-500"
+                          : "hover:bg-gray-100"
+                      )}
+                    >
+                      <div className="flex items-start gap-2">
+                        <MessageSquare className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm text-gray-900 truncate">
+                            {conv.title || 'New Conversation'}
+                          </div>
+                          {conv.last_message_preview && (
+                            <div className="text-xs text-gray-500 truncate mt-0.5">
+                              {conv.last_message_preview}
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(conv.updated_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Messages */}
       <div
