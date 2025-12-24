@@ -3,14 +3,17 @@ Chat service module containing the core chatbot logic.
 This service encapsulates LangGraph integration and message handling.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 import uuid
 import json
 
 from fastapi import WebSocket, WebSocketDisconnect
 from app.graph.graph import create_graph
+from app.graph.prompts import GREETING_WELCOME_MESSAGE
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
+from app.schemas.chat_history import MessageItem
+from app.services.chat_history_service import get_chat_history_service
 
 
 class ChatService:
@@ -18,7 +21,7 @@ class ChatService:
     Service class that encapsulates the core chatbot logic using LangGraph.
     This service will be dependency-injected into the API router.
     """
-    
+
     def __init__(self):
         """
         Initialize the ChatService with LangGraph.
@@ -35,24 +38,19 @@ class ChatService:
             self._graph = await create_graph()
         return self._graph
 
-    def create_new_thread(self, user_id: str) -> str:
+    def create_new_thread(self) -> str:
         """
-        Create a new thread ID for a user conversation.
-        
-        Args: 
-            user_id (str): The user identifier
-            
+        Create a new thread ID.
+
         Returns:
-            str: A new thread ID
+            str: A new UUID-based thread ID
         """
-        # Generate a new thread ID combining user_id and UUID
-        thread_id = f"{user_id}_{uuid.uuid4().hex[:8]}"
-        return thread_id
-        
-    async def init_chat(self, user_id: str = "default_user") -> ChatMessageResponse:
+        return str(uuid.uuid4())
+
+    async def init_chat(self, user_id: str) -> ChatMessageResponse:
         """
-        Initialize a new chat session by invoking the graph to get the greeting message.
-        Creates a new thread and runs the greeting_node.
+        Initialize a new chat session.
+        Returns greeting without invoking graph (no checkpoint created yet).
 
         Args:
             user_id (str): The user identifier
@@ -60,38 +58,31 @@ class ChatService:
         Returns:
             ChatMessageResponse: The greeting message and new thread_id
         """
-        # Get the graph instance
-        graph = await self._get_graph()
+        # Create a new thread (plain UUID)
+        thread_id = self.create_new_thread()
 
-        # Create a new thread
-        thread_id = self.create_new_thread(user_id)
+        # Create conversation record in DynamoDB
+        chat_history_service = get_chat_history_service()
+        await chat_history_service.create_conversation(user_id, thread_id)
 
-        # Create config with thread_id
-        config = {"configurable": {"thread_id": thread_id}}
-
-        # Invoke the graph with empty input to trigger greeting_node
-        # The graph will run greeting_node, output the welcome message, and interrupt
-        result = await graph.ainvoke({"messages": []}, config=config)
-
-        # Extract the greeting message
-        messages = result.get("messages", [])
-        if messages:
-            greeting = messages[-1].content
-        else:
-            greeting = "Welcome! How can I help you today?"
-
+        # Return static greeting (no graph invoke)
         return ChatMessageResponse(
             thread_id=thread_id,
-            reply=greeting
+            reply=GREETING_WELCOME_MESSAGE
         )
 
-    async def process_chat_request(self, request: ChatMessageRequest) -> ChatMessageResponse:
+    async def process_chat_request(
+        self,
+        request: ChatMessageRequest,
+        user_id: str
+    ) -> ChatMessageResponse:
         """
         Process a chat message request and return a response.
         This method encapsulates all business logic for handling chat requests.
 
         Args:
             request (ChatMessageRequest): The chat message request
+            user_id (str): The authenticated user's ID
 
         Returns:
             ChatMessageResponse: The AI's response and thread_id
@@ -99,9 +90,6 @@ class ChatService:
         Raises:
             Exception: If there's an error processing the message
         """
-        # Use a default user_id for now (can be replaced with auth later)
-        user_id = "default_user"
-
         # Handle the message using the chat service
         result = await self.handle_message(
             user_message=request.message,
@@ -114,7 +102,12 @@ class ChatService:
             reply=result["reply"]
         )
 
-    async def handle_message(self, user_message: str, user_id: str, thread_id: str | None = None) -> Dict[str, Any]:
+    async def handle_message(
+        self,
+        user_message: str,
+        user_id: str,
+        thread_id: str | None = None
+    ) -> Dict[str, Any]:
         """
         Main async method to handle incoming messages and generate responses using the graph.
 
@@ -122,18 +115,21 @@ class ChatService:
             user_message (str): The message received from the user
             user_id (str): The user identifier
             thread_id (str | None): Optional unique identifier for the conversation thread
-            
+
         Returns:
             Dict[str, Any]: Dictionary containing the chatbot's response and thread_id
         """
         # Get the graph instance (lazy initialization)
         graph = await self._get_graph()
+        chat_history_service = get_chat_history_service()
 
         # Handle thread_id logic
         is_new_thread = thread_id is None
         if is_new_thread:
-            thread_id = self.create_new_thread(user_id)
-        
+            thread_id = self.create_new_thread()
+            # Create conversation record for new thread
+            await chat_history_service.create_conversation(user_id, thread_id)
+
         # Create config with thread_id for graph execution
         config = {"configurable": {"thread_id": thread_id}}
 
@@ -164,12 +160,65 @@ class ChatService:
         else:
             reply = "I'm sorry, I couldn't generate a response."
 
+        # Update conversation metadata
+        # Update title if task_name was set
+        task_name = result.get("task_name")
+        if task_name and task_name != "__CLARIFY__":
+            await chat_history_service.update_title(user_id, thread_id, task_name)
+
+        # Update last_message_preview with the AI's response
+        await chat_history_service.update_preview(user_id, thread_id, reply)
+
         response = {
             "reply": reply,
             "thread_id": thread_id
         }
-        
+
         return response
+
+    async def get_conversation_messages(
+        self,
+        thread_id: str
+    ) -> List[MessageItem]:
+        """
+        Get all messages for a conversation from the checkpointer.
+
+        Args:
+            thread_id: The thread identifier
+
+        Returns:
+            List of MessageItem objects
+        """
+        graph = await self._get_graph()
+        config = {"configurable": {"thread_id": thread_id}}
+
+        state = await graph.aget_state(config)
+
+        if state is None or not state.values:
+            return []
+
+        messages = state.values.get("messages", [])
+        result = []
+
+        for msg in messages:
+            # Determine role based on message type
+            if hasattr(msg, 'type'):
+                if msg.type == 'human':
+                    role = 'user'
+                elif msg.type == 'ai':
+                    role = 'assistant'
+                else:
+                    role = msg.type
+            else:
+                role = 'unknown'
+
+            result.append(MessageItem(
+                role=role,
+                content=msg.content if hasattr(msg, 'content') else str(msg),
+                timestamp=None  # Checkpointer doesn't store timestamps per message
+            ))
+
+        return result
 
     async def handle_websocket_connection(self, websocket: WebSocket):
         """
