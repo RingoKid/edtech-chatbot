@@ -14,11 +14,7 @@ from app.main import app
 from app.routers.chat import get_chat_service
 from app.services.chat_service import ChatService
 from app.dependencies.auth import get_current_user
-
-
-def get_test_user():
-    """Mock user for bypassing authentication in tests."""
-    return {"user_id": "test-user-123", "email": "test@example.com"}
+from tests.conftest import get_test_user
 
 
 def get_test_chat_service() -> ChatService:
@@ -306,88 +302,84 @@ async def test_parameter_collection_state():
     graph = await create_graph()
     config = {"configurable": {"thread_id": "test-param-state"}}
     
-    try:
-        # Start conversation (will interrupt after greeting)
-        await graph.ainvoke({"messages": []}, config=config)
-        
-        # Select handwriting task
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="Handwriting")]}
-        )
-        
-        # Resume - should go through main_router -> setup_handwriting -> collect_parameters
-        await graph.ainvoke(None, config=config)
-        
-        # Get state after setup
-        state = await graph.aget_state(config)
-        result = state.values
-        
-        # Verify state after setup
-        assert result.get("parameter_schema_name") == "HandwritingParams"
-        assert result.get("required_parameters") == ["target_grade", "query_type", "target_letters"]
-        assert result.get("collected_parameters") == {}
-        
-        # Provide valid grade
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="Kindergarten")]}
-        )
-        
-        # Resume - should extract and validate
-        await graph.ainvoke(None, config=config)
-        
-        # Get state after first parameter
-        state = await graph.aget_state(config)
-        result = state.values
-        
-        # Verify state after first parameter
-        assert result.get("required_parameters") == ["query_type", "target_letters"]
-        assert result.get("collected_parameters") == {"target_grade": "Kindergarten"}
-        
-        # Provide valid query type
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="letter formation")]}
-        )
-        
-        # Resume
-        await graph.ainvoke(None, config=config)
-        
-        # Get state after second parameter
-        state = await graph.aget_state(config)
-        result = state.values
-        
-        # Verify state after second parameter
-        assert result.get("required_parameters") == ["target_letters"]
-        assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter formation"}
-        
-        # Provide target letters
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="a, b")]}
-        )
-        
-        # Resume
-        await graph.ainvoke(None, config=config)
-        
-        # Get state after all parameters collected
-        state = await graph.aget_state(config)
-        result = state.values
-        
-        # Verify state after collection
-        assert result.get("required_parameters") == []
-        assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter formation", "target_letters": "a, b"}
-        
-        # Verify final message is stub generation
-        last_message = result["messages"][-1]
-        assert "Lesson generation coming soon" in last_message.content
-        assert "Kindergarten" in last_message.content
-        assert "letter formation" in last_message.content
-        assert "a, b" in last_message.content
-    finally:
-        # Close the SQLite connection to prevent hanging
-        await graph.checkpointer.conn.close()
+    # Start conversation (will interrupt after greeting)
+    await graph.ainvoke({"messages": []}, config=config)
+
+    # Select handwriting task
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="Handwriting")]}
+    )
+
+    # Resume - should go through main_router -> setup_handwriting -> collect_parameters
+    await graph.ainvoke(None, config=config)
+
+    # Get state after setup
+    state = await graph.aget_state(config)
+    result = state.values
+
+    # Verify state after setup
+    assert result.get("parameter_schema_name") == "HandwritingParams"
+    assert result.get("required_parameters") == ["target_grade", "query_type", "target_letters"]
+    assert result.get("collected_parameters") == {}
+
+    # Provide valid grade
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="Kindergarten")]}
+    )
+
+    # Resume - should extract and validate
+    await graph.ainvoke(None, config=config)
+
+    # Get state after first parameter
+    state = await graph.aget_state(config)
+    result = state.values
+
+    # Verify state after first parameter
+    assert result.get("required_parameters") == ["query_type", "target_letters"]
+    assert result.get("collected_parameters") == {"target_grade": "Kindergarten"}
+
+    # Provide valid query type
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="letter formation")]}
+    )
+
+    # Resume
+    await graph.ainvoke(None, config=config)
+
+    # Get state after second parameter
+    state = await graph.aget_state(config)
+    result = state.values
+
+    # Verify state after second parameter
+    assert result.get("required_parameters") == ["target_letters"]
+    assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter formation"}
+
+    # Provide target letters
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="a, b")]}
+    )
+
+    # Resume
+    await graph.ainvoke(None, config=config)
+
+    # Get state after all parameters collected
+    state = await graph.aget_state(config)
+    result = state.values
+
+    # Verify state after collection
+    assert result.get("required_parameters") == []
+    assert result.get("collected_parameters") == {"target_grade": "Kindergarten", "query_type": "letter formation", "target_letters": "a, b"}
+
+    # Verify final message is stub generation
+    last_message = result["messages"][-1]
+    assert "Lesson generation coming soon" in last_message.content
+    assert "Kindergarten" in last_message.content
+    assert "letter formation" in last_message.content
+    assert "a, b" in last_message.content
 
 
 @pytest.mark.asyncio
@@ -402,37 +394,33 @@ async def test_parameter_collection_uses_dynamic_schema():
     graph = await create_graph()
     config = {"configurable": {"thread_id": "test-dynamic-schema"}}
     
-    try:
-        # Start and select vocabulary task
-        await graph.ainvoke({"messages": []}, config=config)
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="Vocabulary")]}
-        )
-        await graph.ainvoke(None, config=config)
-        
-        # Get state to verify question is asked
-        state = await graph.aget_state(config)
-        result = state.values
-        last_message = result["messages"][-1]
-        assert "target grade level" in last_message.content.lower()
-        
-        # Provide invalid choice - should be caught by dynamic schema validation
-        await graph.aupdate_state(
-            config,
-            {"messages": [HumanMessage(content="High School")]}
-        )
-        await graph.ainvoke(None, config=config)
-        
-        # Get state to verify error handling
-        state = await graph.aget_state(config)
-        result = state.values
-        last_message = result["messages"][-1]
-        assert "Sorry" in last_message.content
-        
-        # State should not have collected the invalid value
-        assert result.get("collected_parameters") == {}
-        assert result.get("required_parameters") == ["target_grade", "query_type", "target_vocabulary", "target_genre"]
-    finally:
-        # Close the SQLite connection to prevent hanging
-        await graph.checkpointer.conn.close()
+    # Start and select vocabulary task
+    await graph.ainvoke({"messages": []}, config=config)
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="Vocabulary")]}
+    )
+    await graph.ainvoke(None, config=config)
+
+    # Get state to verify question is asked
+    state = await graph.aget_state(config)
+    result = state.values
+    last_message = result["messages"][-1]
+    assert "target grade level" in last_message.content.lower()
+
+    # Provide invalid choice - should be caught by dynamic schema validation
+    await graph.aupdate_state(
+        config,
+        {"messages": [HumanMessage(content="High School")]}
+    )
+    await graph.ainvoke(None, config=config)
+
+    # Get state to verify error handling
+    state = await graph.aget_state(config)
+    result = state.values
+    last_message = result["messages"][-1]
+    assert "Sorry" in last_message.content
+
+    # State should not have collected the invalid value
+    assert result.get("collected_parameters") == {}
+    assert result.get("required_parameters") == ["target_grade", "query_type", "target_vocabulary", "target_genre"]
