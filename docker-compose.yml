@@ -38,6 +38,34 @@ services:
     user: root
     command: ["-jar", "DynamoDBLocal.jar", "-dbPath", "./data", "-sharedDb"]
 
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+
+  promptfoo:
+    image: ghcr.io/promptfoo/promptfoo:latest
+    ports:
+      - "15500:15500"
+    volumes:
+      - promptfoo_data:/home/promptfoo/.promptfoo
+      - ./backend/evals:/app/evals
+    environment:
+      - PROMPTFOO_CONFIG_DIR=/home/promptfoo/.promptfoo
+    env_file:
+      - ./backend/.env
+    command: ["view", "--port", "15500", "--host", "0.0.0.0"]
+
 volumes:
   node_modules:
   dynamodb_data:
+  n8n_data:
+  promptfoo_data:
