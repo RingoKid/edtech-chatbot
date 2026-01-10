@@ -51,21 +51,7 @@ services:
       - N8N_PROTOCOL=http
       - WEBHOOK_URL=http://localhost:5678/
 
-  promptfoo:
-    image: ghcr.io/promptfoo/promptfoo:latest
-    ports:
-      - "15500:15500"
-    volumes:
-      - promptfoo_data:/home/promptfoo/.promptfoo
-      - ./backend/evals:/app/evals
-    environment:
-      - PROMPTFOO_CONFIG_DIR=/home/promptfoo/.promptfoo
-    env_file:
-      - ./backend/.env
-    command: ["view", "--port", "15500", "--host", "0.0.0.0"]
-
 volumes:
   node_modules:
   dynamodb_data:
   n8n_data:
-  promptfoo_data:
