@@ -54,6 +54,21 @@ specs/
 - [004-expand-handwriting-parameters.md](./002-lesson-graph/004-expand-handwriting-parameters.md) - Handwriting task parameters
 - [005-expand-vocab-idea-gen-parameters.md](./002-lesson-graph/005-expand-vocab-idea-gen-parameters.md) - Vocabulary and idea generation parameters
 
+### 006 - Chat History System
+**Status:** Implemented
+**Spec:** [006-chat-history-system/spec.md](./006-chat-history-system/spec.md)
+**Description:** DynamoDB-based chat history with conversation persistence and retrieval APIs.
+
+### 007 - n8n Lesson Generator Workflow
+**Status:** Draft
+**Spec:** [007-n8n-lesson-generator/spec.md](./007-n8n-lesson-generator/spec.md)
+**Description:** n8n workflow for generating handwriting & spelling lesson plans. Used for prompt engineering experiments before Langfuse integration.
+
+**Related Files:**
+- `n8n/workflows/` - Exported workflow JSON files
+- `n8n/experiments/changelog.md` - Experiment tracking
+- `n8n/outputs/` - Sample lesson outputs
+
 ---
 
 ## How to Use This Structure
