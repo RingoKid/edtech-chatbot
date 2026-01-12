@@ -22,50 +22,42 @@ This creates the DynamoDB tables in the local container. Without this, API reque
 
 n8n workflows are managed via REST API. Workflow JSON files are stored in `n8n/workflows/`.
 
-**API Base:** `http://localhost:5678/api/v1`
-**Auth Header:** `X-N8N-API-KEY: <key>` (get from n8n UI → Settings → API)
+**IMPORTANT:** Always use the wrapper script for API calls (handles auth automatically):
+
+```bash
+./n8n/api.sh <endpoint> [curl-args...]
+```
 
 #### API Operations
 
 ```bash
 # List workflows
-curl -s http://localhost:5678/api/v1/workflows -H "X-N8N-API-KEY: $N8N_API_KEY"
+./n8n/api.sh workflows
 
-# Export (get workflow JSON)
-curl -s http://localhost:5678/api/v1/workflows/{id} -H "X-N8N-API-KEY: $N8N_API_KEY" > workflow.json
+# Get single workflow
+./n8n/api.sh workflows/{id}
 
-# Import (create new workflow)
-curl -s -X POST http://localhost:5678/api/v1/workflows \
-  -H "X-N8N-API-KEY: $N8N_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d @workflow.json
+# Create workflow
+./n8n/api.sh workflows -X POST -H "Content-Type: application/json" -d @workflow.json
 
-# Update workflow (requires: name, nodes, connections, settings)
-curl -s -X PUT http://localhost:5678/api/v1/workflows/{id} \
-  -H "X-N8N-API-KEY: $N8N_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "...", "nodes": [...], "connections": {...}, "settings": {}}'
+# Update workflow
+./n8n/api.sh workflows/{id} -X PUT -H "Content-Type: application/json" -d @workflow.json
 
-# Activate workflow
-curl -s -X POST http://localhost:5678/api/v1/workflows/{id}/activate \
-  -H "X-N8N-API-KEY: $N8N_API_KEY"
-
-# Deactivate workflow
-curl -s -X POST http://localhost:5678/api/v1/workflows/{id}/deactivate \
-  -H "X-N8N-API-KEY: $N8N_API_KEY"
+# Activate/Deactivate workflow
+./n8n/api.sh workflows/{id}/activate -X POST
+./n8n/api.sh workflows/{id}/deactivate -X POST
 
 # Delete workflow
-curl -s -X DELETE http://localhost:5678/api/v1/workflows/{id} \
-  -H "X-N8N-API-KEY: $N8N_API_KEY"
+./n8n/api.sh workflows/{id} -X DELETE
 ```
 
 #### Workflow Iteration Loop
 
 1. Edit JSON in `n8n/workflows/`
-2. Update: `curl -X PUT .../workflows/{id}` with workflow JSON
-3. Activate: `curl -X POST .../workflows/{id}/activate`
+2. Update: `./n8n/api.sh workflows/{id} -X PUT -d @n8n/workflows/file.json`
+3. Activate: `./n8n/api.sh workflows/{id}/activate -X POST`
 4. Test: `curl -X POST http://localhost:5678/webhook/<path> -d '{...}'`
-5. Export: `curl -s .../workflows/{id} > n8n/workflows/<file>.json`
+5. Export: `./n8n/api.sh workflows/{id} > n8n/workflows/<file>.json`
 
 #### OpenAI Integration Note
 

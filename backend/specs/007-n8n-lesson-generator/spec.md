@@ -436,27 +436,22 @@ The n8n CLI is limited for iterative development. Use the REST API for full cont
 
 ### API Examples
 
-```bash
-# Set API key
-N8N_API_KEY="your-api-key"
+Use the wrapper script at `n8n/api.sh` (handles auth automatically):
 
+```bash
 # List workflows
-curl -s http://localhost:5678/api/v1/workflows \
-  -H "X-N8N-API-KEY: $N8N_API_KEY"
+./n8n/api.sh workflows
 
 # Update workflow
-curl -s -X PUT http://localhost:5678/api/v1/workflows/{id} \
-  -H "X-N8N-API-KEY: $N8N_API_KEY" \
+./n8n/api.sh workflows/{id} -X PUT \
   -H "Content-Type: application/json" \
-  -d '{"name": "...", "nodes": [...], "connections": {...}, "settings": {}}'
+  -d @n8n/workflows/lesson-generator-v01.json
 
 # Activate workflow
-curl -s -X POST http://localhost:5678/api/v1/workflows/{id}/activate \
-  -H "X-N8N-API-KEY: $N8N_API_KEY"
+./n8n/api.sh workflows/{id}/activate -X POST
 
 # Delete workflow
-curl -s -X DELETE http://localhost:5678/api/v1/workflows/{id} \
-  -H "X-N8N-API-KEY: $N8N_API_KEY"
+./n8n/api.sh workflows/{id} -X DELETE
 ```
 
 ### Expression Syntax
