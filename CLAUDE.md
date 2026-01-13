@@ -69,3 +69,24 @@ Use `n8n-nodes-base.httpRequest` for OpenAI calls instead of the native OpenAI n
 - **State:** Single `GraphState` TypedDict in `app/graph/state.py`
 - **Routing:** Use Pydantic tools bound to LLM (never `if/elif` on raw user text)
 - **Pausing:** Only use `interrupt_after` in graph's `compile()` method
+
+## Spec Best Practices
+
+Specs live in `backend/specs/`. See `backend/specs/README.md` for structure.
+
+### Required Sections (add after implementation)
+
+Every implemented spec should have:
+
+1. **Implementation Status** — Table showing ✅ Done / 🔲 Planned for each component
+2. **Implementation Files** — Table linking to actual code files
+3. **Verification** — Testable commands (curl, pytest) with expected output
+4. **Spec Revisions** — Version history table
+
+### Key Principles
+
+- **Testable > descriptive** — "Run this curl, expect this output" beats "the system should work"
+- **Link to code** — Reference actual file paths, not abstract descriptions
+- **Keep status in sync** — Update `backend/specs/README.md` when implementation status changes
+- **Record decisions** — Use ADRs in `decisions/` folder for significant architectural choices
+- **Single source of truth** — Avoid duplicating info across multiple docs

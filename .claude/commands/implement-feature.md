@@ -59,15 +59,86 @@ If tests fail:
 
 ### 6. Spec Sync (MANDATORY FINAL STEP)
 
-Once all tests pass, you **MUST** propose changes to sync the spec file with the final working code.
+Once all tests pass, you **MUST** sync the spec and related docs with the final working code.
 
 Tell the user:
-> "All tests pass. I'll now propose spec-sync changes to update `[spec file]` to match the final implementation."
+> "All tests pass. I'll now sync the spec and docs with the final implementation."
 
-Then:
-- Identify any discrepancies between the spec and actual code
-- Propose specific edits to the spec file
-- Wait for user approval before making changes
+#### 6.1 Update the Spec File
+
+Ensure the spec includes these sections (add if missing):
+
+**Implementation Status table:**
+```markdown
+## Implementation Status
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Feature X | ✅ Done | `path/to/file.py` |
+| Feature Y | 🔲 Planned | Next iteration |
+```
+
+**Implementation Files section:**
+```markdown
+## Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `app/feature/main.py` | Core logic |
+| `tests/test_feature.py` | Unit tests |
+```
+
+**Verification section (testable acceptance criteria):**
+```markdown
+## Verification
+
+### Manual Test
+```bash
+curl -X POST http://localhost:8000/api/endpoint -d '{"key": "value"}'
+```
+
+### Expected Output
+- [ ] Returns 200 with `{"success": true}`
+- [ ] Database record created
+```
+
+**Spec Revisions section:**
+```markdown
+## Spec Revisions
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 0.1 | YYYY-MM-DD | Initial implementation |
+```
+
+#### 6.2 Update the Specs Index
+
+Update `backend/specs/README.md`:
+- Set correct status (Draft → Implemented)
+- Add any new related files
+- Link to reviews/incidents if applicable
+
+#### 6.3 Record Key Decisions (if any)
+
+If you made significant architectural decisions during implementation, create an ADR:
+
+```markdown
+# ADR-001: Decision Title
+
+## Status
+Accepted
+
+## Context
+What problem were we solving?
+
+## Decision
+What did we decide to do?
+
+## Consequences
+What are the trade-offs?
+```
+
+Save to: `backend/specs/XXX-feature/decisions/001-decision-name.md`
 
 ## Checklist
 
@@ -79,11 +150,17 @@ Use this checklist to track progress:
 - [ ] Initialize database
 - [ ] Run tests
 - [ ] All tests passing
-- [ ] Propose spec-sync changes
-- [ ] Spec updated (after user approval)
+- [ ] Spec has Implementation Status table
+- [ ] Spec has Implementation Files section
+- [ ] Spec has Verification section with test commands
+- [ ] Spec has Revisions section
+- [ ] README.md status updated
+- [ ] ADRs created for key decisions (if any)
 
 ## Important Reminders
 
 - **Never skip the rebuild step** - code changes won't take effect without it
 - **Always run tests inside Docker** - never run pytest directly on host
 - **Spec sync is mandatory** - the spec must reflect the final implementation
+- **Specs are for future you** - write them like you'll forget everything in 6 months
+- **Testable > descriptive** - "run this curl, expect this output" beats "the system should work"

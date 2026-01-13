@@ -60,7 +60,7 @@ specs/
 **Description:** DynamoDB-based chat history with conversation persistence and retrieval APIs.
 
 ### 007 - n8n Lesson Generator Workflow
-**Status:** Draft
+**Status:** Implemented (v0.1)
 **Spec:** [007-n8n-lesson-generator/spec.md](./007-n8n-lesson-generator/spec.md)
 **Description:** n8n workflow for generating handwriting & spelling lesson plans. Used for prompt engineering experiments before Langfuse integration.
 

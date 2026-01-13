@@ -6,8 +6,39 @@
 | ------------ | ----------------------------------- |
 | Project      | Language for Composing AI (L4C)     |
 | Component    | Lesson Generation Evaluation System |
-| Version      | 0.2 (Revised Architecture)          |
-| Last Updated | 2026-01-10                          |
+| Version      | 0.3 (Post v0.1 Implementation)      |
+| Last Updated | 2026-01-12                          |
+
+---
+
+## Implementation Status
+
+> **Current State:** v0.1 baseline implemented. Langfuse and evals are next.
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| n8n lesson generator workflow | ✅ Implemented | `n8n/workflows/lesson-generator-v01.json` |
+| Webhook trigger + validation | ✅ Implemented | `POST /webhook/generate` |
+| OpenAI integration (HTTP Request) | ✅ Implemented | GPT-4o via direct API call |
+| Form content (B, C, D, F) | ✅ Implemented | Hardcoded in Code node |
+| n8n API wrapper script | ✅ Implemented | `n8n/api.sh` (secure credential handling) |
+| Langfuse tracing | 🔲 Not started | Next priority |
+| Langfuse scoring/evals | 🔲 Not started | After tracing |
+| LLM-as-Judge | 🔲 Not started | After basic evals |
+| Compositional prompt assembly | 🔲 Not started | Future iteration |
+| Multi-model comparison | 🔲 Not started | Future iteration |
+| eval.py CLI | 🔲 Not started | After Langfuse integration |
+
+### Iteration Path
+
+| Version | Focus | Status |
+|---------|-------|--------|
+| **v0.1** | Baseline single-shot generation | ✅ Done |
+| **v0.2** | Add Langfuse tracing | 🔲 Next |
+| **v0.3** | Add deterministic evals (Tier 1) | 🔲 Planned |
+| **v0.4** | Add LLM-as-Judge evals (Tier 2) | 🔲 Planned |
+| **v0.5** | Compositional prompt assembly | 🔲 Planned |
+| **v0.6** | Multi-model comparison | 🔲 Planned |
 
 ---
 
@@ -51,16 +82,18 @@ The L4C project generates scripted lesson plans for PreK-1st grade teachers. We 
 
 ### 2.1 Technology Stack
 
-| Layer                    | Tool                   | Rationale                                                                |
-| ------------------------ | ---------------------- | ------------------------------------------------------------------------ |
-| **Prototyping**          | n8n (self-hosted)      | Visual workflow builder, fast iteration, prompt assembly from components |
-| **Evaluation & Tracing** | Langfuse (self-hosted) | Open-source, offline + online eval, LLM-as-Judge, experiment tracking    |
-| **Production**           | LangGraph              | Production-ready, proper state management, Python ecosystem              |
-| **Vector Store**         | Pinecone / Chroma      | RAG retrieval experiments                                                |
-| **CLI Automation**       | Python eval.py         | Triggers n8n workflow, logs to Langfuse, prints results (no UI clicks)   |
-| **LLM Providers**        | OpenAI, Anthropic      | GPT-4o, GPT-4o-mini, Claude Sonnet                                       |
+| Layer                    | Tool                   | Status | Rationale                                                                |
+| ------------------------ | ---------------------- | ------ | ------------------------------------------------------------------------ |
+| **Prototyping**          | n8n (self-hosted)      | ✅ In use | Visual workflow builder, fast iteration |
+| **Evaluation & Tracing** | Langfuse (self-hosted) | 🔲 Next | Open-source, offline + online eval, LLM-as-Judge, experiment tracking    |
+| **Production**           | LangGraph              | 🔲 Future | Production-ready, proper state management, Python ecosystem              |
+| **Vector Store**         | Pinecone / Chroma      | 🔲 Future | RAG retrieval experiments                                                |
+| **CLI Automation**       | Python eval.py         | 🔲 Planned | Triggers n8n workflow, logs to Langfuse, prints results (no UI clicks)   |
+| **LLM Providers**        | OpenAI                 | ✅ In use | GPT-4o via HTTP Request node |
+| **LLM Providers**        | Anthropic              | 🔲 Planned | Claude Sonnet for model comparison |
+| **API Access**           | n8n/api.sh wrapper     | ✅ In use | Secure credential handling for n8n REST API |
 
-> **Design Philosophy:** Compositional prompt engineering — prompts are assembled from reusable components (system roles, techniques, examples, formats), not edited as monolithic strings. Experiments are defined as YAML configs specifying which components to combine.
+> **Design Philosophy (Target State):** Compositional prompt engineering — prompts assembled from reusable components. **Current State (v0.1):** Monolithic prompt with all forms hardcoded in Code node. Compositional assembly is a future iteration.
 
 ### 2.2 Key Decisions
 
@@ -104,7 +137,43 @@ The L4C project generates scripted lesson plans for PreK-1st grade teachers. We 
 
 ## 3. System Architecture
 
-### 3.1 High-Level Architecture
+### 3.0 Current Architecture (v0.1 — Implemented)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     v0.1 LESSON GENERATOR (BASELINE)                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐          │
+│  │ Webhook  │───►│    IF    │───►│   Code   │───►│   HTTP   │          │
+│  │ Trigger  │    │ Validate │    │  Prompt  │    │ Request  │          │
+│  │  POST    │    │ grade &  │    │ (Forms   │    │ (OpenAI) │          │
+│  │/generate │    │ letter   │    │ hardcoded│    │  GPT-4o  │          │
+│  └──────────┘    └────┬─────┘    └──────────┘    └────┬─────┘          │
+│                       │                               │                 │
+│                       ▼ (missing fields)              ▼                 │
+│                 ┌──────────┐                   ┌──────────┐             │
+│                 │ Respond  │                   │ Respond  │             │
+│                 │  Error   │                   │ Success  │             │
+│                 └──────────┘                   │ (lesson) │             │
+│                                                └──────────┘             │
+│                                                                         │
+│  Files: n8n/workflows/lesson-generator-v01.json                         │
+│  Test:  curl -X POST http://localhost:5678/webhook/generate             │
+│         -d '{"grade": "PreK", "letter": "z"}'                           │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**What v0.1 does NOT have:**
+- No Langfuse tracing
+- No evaluation/scoring
+- No compositional prompt assembly
+- No multi-model comparison
+- Single hardcoded prompt with all forms embedded
+
+---
+
+### 3.1 Target Architecture (Full Vision)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -287,66 +356,66 @@ test_case                3. Assemble Prompt                    │
 
 ### 5.2 Directory Structure
 
+#### Current Structure (v0.1 — Implemented)
+
 ```
-lesson-bot/
-├── docker/
-│   ├── docker-compose.yml      # n8n + Langfuse + Postgres
-│   └── .env                    # API keys, Langfuse secrets (gitignored)
+edtech-chatbot/
+├── docker-compose.yml              # All services (backend, n8n, dynamodb, frontend)
+├── CLAUDE.md                       # Project instructions for Claude Code
 │
-├── prompt-components/          # REUSABLE PARTS (edited by Claude Code)
-│   ├── system/                 # Role definitions
-│   │   ├── v1-basic.txt        # "You are a lesson plan generator..."
-│   │   ├── v2-expert.txt       # "You are a curriculum design expert..."
-│   │   └── v3-friendly.txt     # "You are a helpful teaching assistant..."
-│   ├── techniques/             # Prompt engineering techniques
-│   │   ├── chain-of-thought.txt
-│   │   ├── step-by-step.txt
-│   │   └── reflection.txt
-│   ├── examples/               # Few-shot examples
-│   │   ├── zero-shot.txt       # (empty or just instructions)
-│   │   ├── few-shot-2.txt      # 2 example lessons
-│   │   └── few-shot-5.txt      # 5 example lessons
-│   ├── format/                 # Output format specifications
-│   │   ├── markdown.txt
-│   │   ├── json-schema.txt
-│   │   └── structured.txt
-│   └── context/                # Reference materials (Form B, C, D, F, H)
-│       ├── form_b.txt          # Structure rules
-│       ├── form_c.txt          # Gold standard example
-│       ├── form_d.txt          # Scaffolded activities
-│       ├── form_f.txt          # Verbal cues lookup
-│       └── form_h.txt          # Modification patterns
-│
-├── configs/                    # EXPERIMENT DEFINITIONS (YAML)
-│   ├── experiment-a.yaml       # system-v2 + cot + few-shot-2
-│   ├── experiment-b.yaml       # system-v1 + no-cot + zero-shot
-│   ├── experiment-c.yaml       # system-v3 + rag + few-shot-5
-│   └── baseline.yaml           # Minimal config for comparison
-│
-├── tests/
-│   └── golden-dataset.yaml     # Test cases with criteria
-│       # - TC001: PreK, letter z (matches Form C)
-│       # - TC002: Kindergarten, digraph sh
-│       # - TC003: First grade, blend str
-│
-├── rubrics/                    # LLM-AS-JUDGE CRITERIA
-│   ├── structure.txt           # "Has all required sections?"
-│   ├── verbatim.txt            # "Contains exact Form B phrases?"
-│   ├── pedagogical.txt         # "Follows structured literacy?"
-│   └── age-appropriate.txt     # "Language matches grade level?"
+├── backend/
+│   ├── .env.local                  # API keys (gitignored)
+│   ├── specs/
+│   │   └── 007-n8n-lesson-generator/
+│   │       └── spec.md             # v0.1 implementation spec
+│   └── prompt/
+│       ├── Evaluation Pipeline Design.md    # This document
+│       └── Handwriting & Spelling (Transcription) AI Codes/
+│           ├── FORM B-Codes for Lesson Parts Handwriting & Spelling.txt
+│           ├── FORM C_ Example Handwriting & Spelling Lesson for Output .txt
+│           └── Supplementary Forms/
+│               ├── FORM D Scaffolded Activities .txt
+│               └── Form F_ Sequence Verbal Cues.txt
 │
 ├── n8n/
-│   └── workflows/
-│       └── prompt-assembler.json   # Exported n8n workflow
+│   ├── api.sh                      # ✅ API wrapper script (secure credential handling)
+│   ├── workflows/
+│   │   └── lesson-generator-v01.json   # ✅ Exported n8n workflow
+│   ├── experiments/
+│   │   └── changelog.md            # Experiment tracking
+│   └── outputs/
+│       └── v01-prek-z.md           # Sample output
 │
-├── eval.py                     # CLI AUTOMATION SCRIPT
-│   # python eval.py --config experiment-a.yaml
-│   # → Triggers n8n → Logs to Langfuse → Prints scores
-│
-└── README.md
+└── .claude/
+    └── settings.local.json         # Claude Code permissions (blocks .env.local)
 ```
 
-> **Key insight:** Components are edited as simple text files. Experiments are defined as YAML configs. Claude Code can edit both rapidly without navigating UIs.
+#### Target Structure (Future — Not Yet Implemented)
+
+```
+edtech-chatbot/
+├── ... (current structure) ...
+│
+├── prompt-components/              # 🔲 PLANNED: Reusable prompt parts
+│   ├── system/                     # Role definitions (v1-basic, v2-expert)
+│   ├── techniques/                 # CoT, step-by-step, reflection
+│   ├── examples/                   # Few-shot examples
+│   └── context/                    # Cleaned form content
+│
+├── configs/                        # 🔲 PLANNED: Experiment configs (YAML)
+│   └── experiment-a.yaml           # Component combinations
+│
+├── rubrics/                        # 🔲 PLANNED: LLM-as-Judge criteria
+│   ├── structure.txt
+│   └── pedagogical.txt
+│
+├── tests/
+│   └── golden-dataset.yaml         # 🔲 PLANNED: Test cases
+│
+└── eval.py                         # 🔲 PLANNED: CLI automation
+```
+
+> **Current State:** Forms are hardcoded in n8n Code node. Future iterations will externalize them into `prompt-components/` for compositional assembly.
 
 ### 5.3 Step 1: Docker Environment Setup
 
@@ -612,9 +681,49 @@ Use these markers for interactions:
 - + Gesture: for physical gestures
 ```
 
-### 5.7 Step 5: Build n8n Workflow (Prompt Assembler)
+### 5.7 Step 5: n8n Workflow
 
-**5.7.1 Node 1: Webhook Trigger**
+#### 5.7.0 Current Workflow (v0.1 — Implemented)
+
+**File:** `n8n/workflows/lesson-generator-v01.json`
+**Webhook:** `POST http://localhost:5678/webhook/generate`
+
+```
+Webhook Trigger → IF Validate → Build Prompt → HTTP Request (OpenAI) → Respond
+                       ↓
+                 Respond Error
+```
+
+| Node | Type | Purpose |
+|------|------|---------|
+| Webhook Trigger | `n8n-nodes-base.webhook` | POST /webhook/generate |
+| IF Validate | `n8n-nodes-base.if` | Check grade & letter exist |
+| Build Prompt | `n8n-nodes-base.code` | Assemble prompt with hardcoded forms |
+| HTTP Request | `n8n-nodes-base.httpRequest` | Call OpenAI API (GPT-4o) |
+| Respond Success | `n8n-nodes-base.respondToWebhook` | Return lesson JSON |
+| Respond Error | `n8n-nodes-base.respondToWebhook` | Return validation error |
+
+**Test:**
+```bash
+curl -X POST http://localhost:5678/webhook/generate \
+  -H "Content-Type: application/json" \
+  -d '{"grade": "PreK", "letter": "z"}'
+```
+
+**API Management:**
+```bash
+# List workflows
+./n8n/api.sh workflows
+
+# Activate workflow
+./n8n/api.sh workflows/{id}/activate -X POST
+```
+
+---
+
+#### 5.7.1 Target Workflow (Full Vision — Not Implemented)
+
+**5.7.1.1 Node 1: Webhook Trigger**
 
 - Method: POST
 - Path: `/assemble-and-eval`
@@ -981,26 +1090,51 @@ Lowercase:
 
 ## 10. Revision History
 
-| Version | Date       | Changes                                                                                                                                                                                                                                                   |
-| ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.1     | 2025-01-05 | Initial draft with Promptfoo architecture                                                                                                                                                                                                                 |
-| 0.2     | 2026-01-10 | **Major revision:** Replaced Promptfoo with Langfuse; Added compositional prompt engineering design; Updated architecture for component-based assembly; Added experiment configs (YAML); Added CLI automation (eval.py); Updated LangGraph migration path |
+| Version | Date       | Changes |
+| ------- | ---------- | ------- |
+| 0.1     | 2025-01-05 | Initial draft with Promptfoo architecture |
+| 0.2     | 2026-01-10 | Major revision: Replaced Promptfoo with Langfuse; Added compositional prompt engineering design |
+| 0.3     | 2026-01-12 | **Post-implementation update:** Added Implementation Status section; Documented v0.1 baseline; Updated architecture diagrams to show current vs target state; Updated directory structure to match actual project; Added API wrapper script documentation |
+
+### Key Changes in v0.3
+
+1. **Implementation Status Added**
+   - Clear tracking of what's implemented vs planned
+   - Iteration path with version milestones
+
+2. **Architecture Documentation Updated**
+   - Added Section 3.0: Current Architecture (v0.1)
+   - Renamed Section 3.1 to "Target Architecture"
+   - Clear distinction between implemented and planned
+
+3. **Directory Structure Updated**
+   - Reflects actual project structure
+   - Shows current files vs planned directories
+   - Documents `n8n/api.sh` wrapper script
+
+4. **n8n Workflow Section Updated**
+   - Added Section 5.7.0: Current Workflow (v0.1)
+   - Documents actual nodes and test commands
+   - Shows API management commands
+
+5. **What's Actually Implemented (v0.1)**
+   - Simple webhook → validate → prompt → OpenAI → respond
+   - Forms hardcoded in Code node
+   - Single model (GPT-4o)
+   - API wrapper script for secure credential handling
 
 ### Key Changes in v0.2
 
 1. **Evaluation Engine:** Promptfoo → Langfuse (self-hosted)
-
    - Rationale: Single tool for offline + online evaluation
    - Benefit: Continuous history from dev to production
 
 2. **Prompt Architecture:** Monolithic → Compositional
-
    - Prompts assembled from reusable components
    - Experiments defined as YAML configs
    - Enables systematic A/B testing of prompt strategies
 
 3. **Workflow:** Manual iteration → CLI automation
-
    - eval.py script triggers full pipeline
    - Results printed to terminal + logged to Langfuse
    - Fast iteration without UI clicking
