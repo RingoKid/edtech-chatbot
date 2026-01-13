@@ -1,19 +1,6 @@
 # docker-compose.override.yml
 # Local development overrides - automatically applied when running docker-compose
 services:
-  backend:
-    ports:
-      # Expose the debugger port 5678 to your local machine
-      - "5678:5678"
-
-    env_file:
-      - ./backend/.env
-      - ./backend/.env.local
-
-    # Override the start command to launch both LangGraph Studio and FastAPI via the debugger
-    command: >
-      sh -c "cd /app && langgraph dev --host 0.0.0.0 --port 2024 & python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
-
   dynamodb-local:
     # Persist data across restarts using a named volume
     user: root
