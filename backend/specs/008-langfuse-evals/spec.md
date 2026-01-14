@@ -445,7 +445,7 @@ curl -X POST http://localhost:8000/api/v1/evals/compare \
 | structure_complete evaluator | ✅ Done | Rule-based section/marker checker |
 | Langfuse tracing | ✅ Done | Uses v2 context manager API |
 | Retry logic | ✅ Done | tenacity with exponential backoff |
-| n8n workflow | 🔲 Planned | Next iteration |
+| n8n workflow v02 | ✅ Done | Uses /api/v1/evals/compare endpoint |
 
 ---
 
@@ -465,6 +465,7 @@ curl -X POST http://localhost:8000/api/v1/evals/compare \
 | `app/langfuse/service.py` | `compare_models()`, dataset functions |
 | `app/langfuse/router.py` | FastAPI endpoints |
 | `app/main.py` | Router wiring (line 9, 39) |
+| `n8n/workflows/lesson-generator-v02.json` | n8n workflow with Langfuse integration |
 
 ---
 
@@ -500,6 +501,22 @@ curl -X POST "http://localhost:8000/api/v1/evals/compare" \
 ```
 Expected: Returns result with `dataset_item_id` populated
 
+**n8n Workflow v02 (after deployment)**
+```bash
+# 1. Deploy workflow to n8n
+./n8n/api.sh workflows -X POST -H "Content-Type: application/json" \
+  -d @n8n/workflows/lesson-generator-v02.json
+
+# 2. Activate workflow (replace {id} with returned workflow ID)
+./n8n/api.sh workflows/{id}/activate -X POST
+
+# 3. Test webhook endpoint
+curl -X POST http://localhost:5678/webhook/generate-v2 \
+  -H "Content-Type: application/json" \
+  -d '{"grade": "PreK", "letter": "A"}'
+```
+Expected: Returns JSON with `comparison_id`, `results` array (scores per model), `langfuse_url`
+
 ### Verification Checklist
 
 - [x] `GET /evals/models` returns registry
@@ -510,6 +527,8 @@ Expected: Returns result with `dataset_item_id` populated
 - [x] Traces visible in Langfuse Cloud (via trace_id)
 - [ ] Costs calculated automatically by Langfuse (visible in Langfuse UI, not returned in API yet)
 - [x] Partial results returned on model failure
+- [x] n8n workflow v02 deployed and activated
+- [x] n8n webhook /generate-v2 returns comparison results
 
 ---
 
@@ -518,6 +537,7 @@ Expected: Returns result with `dataset_item_id` populated
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1 | 2026-01-13 | Initial implementation - compare endpoint, structure_complete evaluator, Langfuse v2 API integration |
+| 0.1.1 | 2026-01-14 | Added n8n workflow v02 with Langfuse integration |
 
 ---
 
