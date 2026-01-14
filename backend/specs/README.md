@@ -69,6 +69,21 @@ specs/
 - `n8n/experiments/changelog.md` - Experiment tracking
 - `n8n/outputs/` - Sample lesson outputs
 
+### 008 - Langfuse Evaluation System
+**Status:** Implemented (v0.1)
+**Spec:** [008-langfuse-evals/spec.md](./008-langfuse-evals/spec.md)
+**Description:** Backend APIs for running prompts against multiple models and evaluating outputs. Uses Langfuse Cloud for experiment tracking and cost calculation.
+
+**Features:**
+- Multi-model comparison (OpenAI GPT + Google Gemini)
+- Rule-based evaluation criteria (structure_complete)
+- Langfuse tracing and scoring
+- Dataset management for experiment tracking
+
+**Related Files:**
+- `app/llm/` - Shared LLM infrastructure
+- `app/langfuse/` - Evaluation module
+
 ---
 
 ## How to Use This Structure

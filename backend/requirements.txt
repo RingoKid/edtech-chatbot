@@ -30,6 +30,9 @@ numpy>=1.26.0
 pillow>=10.4.0
 # Voice Transcription dependencies
 speechmatics-python>=5.0.0
+# Langfuse evaluation dependencies
+langfuse>=2.0.0
+langchain-google-genai>=2.0.0
 cloudpickle==3.1.1
 cryptography==44.0.3
 debugpy==1.8.16
