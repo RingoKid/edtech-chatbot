@@ -55,6 +55,43 @@ After each workflow change:
 
 ---
 
+## v02 - 2026-01-14 - Langfuse Eval Integration
+
+**Hypothesis:** Routing through backend eval API enables automated quality scoring and multi-model comparison without changing prompt logic
+
+**Changes from v01:**
+- Replaced direct OpenAI HTTP call with backend `/api/v1/evals/compare` endpoint
+- Added multi-model support (configurable via request body)
+- Added automatic dataset saving to Langfuse
+- Changed webhook path from `/generate` to `/generate-v2`
+- Increased timeout to 120s (for parallel model runs)
+
+**Configuration:**
+- Models: GPT-4o, GPT-4o-mini (default, configurable)
+- Temperature: 0.7 (inherited from backend)
+- Forms included: B, C, D, F (same as v01)
+- Eval criteria: `structure_complete`
+- Dataset: `handwriting-lessons`
+
+**Observations:**
+- [x] Both models produce complete lessons
+- [x] structure_complete scores: GPT-4o (0.93), GPT-4o-mini (1.0)
+- [x] Traces visible in Langfuse Cloud
+- [x] Dataset items created with prompt/output pairs
+- [x] Latency: ~28s (GPT-4o), ~44s (GPT-4o-mini)
+- [x] Total request time: ~46s (parallel execution)
+
+**Comparison to v01:**
+- Better: Automated scoring, multi-model comparison, traceability
+- Worse: Higher latency (multiple models + eval overhead)
+- Same: Output quality, prompt structure
+
+**Sample Output:** See Langfuse traces (comparison_id: `cmp-a72cafb0a759`)
+
+**Decision:** Keep — provides foundation for iterating on prompts with measurable quality metrics
+
+---
+
 <!-- Template for future versions
 
 ## v0X - YYYY-MM-DD - [Brief Description]
