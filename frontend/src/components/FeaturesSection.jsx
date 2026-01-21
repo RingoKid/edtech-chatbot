@@ -1,36 +1,36 @@
 import React from 'react'
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
-import { Palette, Users, Heart } from 'lucide-react'
+import { Users, Video, BookOpen } from 'lucide-react'
 
 const FeaturesSection = () => {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
 
-  const features = [
-    {
-      icon: Palette,
-      title: "Enhances Creativity",
-      subtitle: "Creative Expression Builder",
-      description: "Unlock unlimited creative potential with tools designed to inspire imagination and artistic expression in young learners through structured writing activities.",
-      color: "from-purple-500 to-pink-500",
-      bgColor: "from-purple-50 to-pink-50"
-    },
+  const hubs = [
     {
       icon: Users,
-      title: "Collaborative Learning",
-      subtitle: "Community Learning Hub",
-      description: "Foster collaborative learning environments where teachers and students can share, learn, and grow together in supportive educational communities.",
+      title: "Community Learning Hub",
+      subtitle: "Connect & Share",
+      description: "Teachers, families, and researchers come together to share questions, insights, and classroom experiences. This space supports responsive instruction by helping educators learn from one another and from research on how children use language in real writing contexts.",
       color: "from-green-500 to-emerald-500",
       bgColor: "from-green-50 to-emerald-50"
     },
     {
-      icon: Heart,
-      title: "Nurturing Development",
-      subtitle: "Child-Centered Approach",
-      description: "Support the whole child through developmentally appropriate practices that nurture both academic growth and social-emotional learning.",
-      color: "from-orange-500 to-red-500",
-      bgColor: "from-orange-50 to-red-50"
+      icon: Video,
+      title: "Knowledge Builder Hub",
+      subtitle: "Learn & Grow",
+      description: "Short videos for teachers to deepen their understanding of the language skills and processes involved in early writing development.",
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "from-blue-50 to-cyan-50"
+    },
+    {
+      icon: BookOpen,
+      title: "Resource Hub",
+      subtitle: "Explore & Discover",
+      description: "A curated collection of trusted resources to help teachers explore research and practical strategies for supporting language, writing, and learning in the classroom.",
+      color: "from-purple-500 to-pink-500",
+      bgColor: "from-purple-50 to-pink-50"
     }
   ]
 
@@ -73,63 +73,46 @@ const FeaturesSection = () => {
           >
             <span className="text-gray-900">Educational</span>
             <br />
-            <span className="text-primary-600">Enhancement Features</span>
+            <span className="text-primary-600">Enhancement</span>
           </motion.h2>
-          
+
           <motion.p
             variants={itemVariants}
             className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
           >
-            Discover how Language for Composing transforms early childhood education through innovative approaches to writing and language development.
+            L4C supports teachers by making language learning visible, connected, and meaningful—both in and beyond the classroom.
           </motion.p>
         </motion.div>
 
         {/* Features Grid */}
         <div className="grid lg:grid-cols-3 gap-8 mb-16">
-          {features.map((feature, index) => (
+          {hubs.map((hub, index) => (
             <motion.div
               key={index}
-              className={`p-8 rounded-3xl bg-gradient-to-br ${feature.bgColor} border border-primary-200 shadow-xl hover:shadow-2xl transition-all duration-300`}
+              className={`p-8 rounded-3xl bg-gradient-to-br ${hub.bgColor} border border-primary-200 shadow-xl hover:shadow-2xl transition-all duration-300`}
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
               transition={{ duration: 0.8, delay: index * 0.2 }}
               whileHover={{ y: -10 }}
             >
-              <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-white shadow-lg mb-6`}>
-                <feature.icon className="w-10 h-10" />
+              <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${hub.color} flex items-center justify-center text-white shadow-lg mb-6`}>
+                <hub.icon className="w-10 h-10" />
               </div>
-              
+
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                {feature.title}
+                {hub.title}
               </h3>
-              
+
               <p className="text-sm text-primary-600 font-medium mb-4">
-                {feature.subtitle}
+                {hub.subtitle}
               </p>
-              
+
               <p className="text-gray-600 leading-relaxed">
-                {feature.description}
+                {hub.description}
               </p>
             </motion.div>
           ))}
         </div>
-
-        {/* Educational Philosophy */}
-        <motion.div
-          className="text-center bg-white rounded-3xl p-12 shadow-xl"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          <h3 className="text-3xl font-bold text-gray-900 mb-6">
-            Our Educational Philosophy
-          </h3>
-          <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
-            We believe that every child is a natural storyteller. Through structured yet flexible approaches to early writing, 
-            we help teachers create environments where children feel confident to express their thoughts, share their experiences, 
-            and develop essential literacy skills that will serve them throughout their educational journey.
-          </p>
-        </motion.div>
       </div>
     </section>
   )
