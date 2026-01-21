@@ -185,6 +185,92 @@ See `backend/specs/008-langfuse-evals/spec.md` for eval implementation details.
 
 ---
 
+## Implementation Roadmap
+
+Incremental approach — each phase is a separate spec with its own evals.
+
+### Phase 1: Eval Infrastructure
+
+**Goal:** Add dataset-driven evals so we can test routing before building it.
+
+- Add `routing_accuracy` criterion to Langfuse evals
+- Create endpoint to run evals against a dataset (not just single prompts)
+- Build initial routing test dataset (20-30 cases)
+
+**Eval:** Can run dataset and get accuracy score in Langfuse.
+
+**Spec:** `010-dataset-evals`
+
+---
+
+### Phase 2: Routing Layer
+
+**Goal:** Replace current structured output routing with something that can handle ambiguity better.
+
+- Decide: semantic router vs structured output (keep simple for now)
+- Routing returns task type + extracted info from user message
+- Wire into existing graph as replacement for current router
+
+**Eval:** `routing_accuracy` ≥ 95% on test dataset.
+
+**Spec:** `011-v2-routing`
+
+---
+
+### Phase 3: Handwriting Agent
+
+**Goal:** Replace fixed parameter nodes with a conversational agent for handwriting.
+
+- Agent collects grade, letter, student level through conversation
+- Can extract multiple params from one message
+- Hands off to generation when all required params collected
+
+**Eval:** `param_extraction_accuracy` on handwriting test cases.
+
+**Spec:** `012-handwriting-agent`
+
+---
+
+### Phase 4: Handwriting Generator
+
+**Goal:** Deterministic generation node that takes params and produces lesson.
+
+- Takes collected params as input
+- Uses existing Forms B, C, D, F prompts from n8n workflow
+- Returns structured lesson output
+
+**Eval:** `structure_complete` (existing), add `verbatim_check` for form content.
+
+**Spec:** `013-handwriting-generator`
+
+---
+
+### Phase 5: Vocabulary & Idea Agents
+
+**Goal:** Repeat Phase 3-4 pattern for remaining task types.
+
+- Vocabulary agent + generator
+- Idea generation agent + generator
+
+**Eval:** Same pattern — param extraction + structure checks.
+
+**Spec:** `014-vocab-agent`, `015-idea-agent`
+
+---
+
+### Phase 6: Quality Evals
+
+**Goal:** Add LLM-as-judge evals for lesson quality.
+
+- `activity_appropriate` — activities match grade level
+- `objective_alignment` — lesson meets stated objectives
+
+**Eval:** Track scores over time in Langfuse.
+
+**Spec:** `016-quality-evals`
+
+---
+
 ## Open Questions
 
 1. Should routing agent have access to conversation history across sessions?
