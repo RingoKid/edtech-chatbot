@@ -15,13 +15,13 @@ const BestPractices = () => {
       icon: BookOpen,
       title: "Vocabulary and Syntax",
       description: "Children use the words they know (vocabulary) to build sentences (syntax). This helps them express their thoughts clearly, using their foundational oral language skills.",
-      videoLink: "/videos/vocabulary"
+      videoLink: "/vocabulary-syntax"
     },
     {
       icon: Lightbulb,
       title: "Idea Organization and Generation",
       description: "Children pull ideas from what they know and have experienced (memory retrieval). They learn to organize those ideas to respond to a writing prompt or task.",
-      videoLink: "/videos/idea-generation"
+      videoLink: "/idea-generation"
     }
   ]
 
