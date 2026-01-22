@@ -1,8 +1,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Play, ArrowLeft, VideoOff } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { transcriptionVideos, categoryInfo } from '../data/videoData'
+import VideoCard from '../components/VideoCard'
 
 const HandwritingSpelling = () => {
   const category = categoryInfo.transcription
@@ -54,50 +55,13 @@ const HandwritingSpelling = () => {
       <section className="section-padding pt-0 pb-20">
         <div className="container">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {transcriptionVideos.map((item, index) => (
-              <motion.div
-                key={item.id}
-                className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-              >
-                {/* Video Thumbnail */}
-                <div className="relative aspect-video bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden">
-                  {item.noVideoYet ? (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      <VideoOff className="w-10 h-10" />
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                        <Play className="w-8 h-8 text-primary-600 ml-1" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
-                    {item.title}
-                  </h3>
-
-                  <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                    {item.description}
-                  </p>
-
-                  {/* Watch Video Button */}
-                  <Link
-                    to={`/handwriting-spelling/${item.id}`}
-                    className="inline-flex items-center justify-center w-full px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors duration-200"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    {item.noVideoYet ? 'View Practice' : 'Watch Video'}
-                  </Link>
-                </div>
-              </motion.div>
+            {transcriptionVideos.map((video, index) => (
+              <VideoCard
+                key={video.id}
+                video={video}
+                basePath="/handwriting-spelling"
+                index={index}
+              />
             ))}
           </div>
         </div>
