@@ -1,53 +1,11 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Play, ArrowLeft } from 'lucide-react'
+import { Play, ArrowLeft, VideoOff } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { languageConstructionVideos, categoryInfo } from '../data/videoData'
 
 const VocabularySyntax = () => {
-  const videoItems = [
-    {
-      id: 1,
-      title: "Multiple Vocabulary Opportunities",
-      description: "Provide multiple opportunities for children to use vocabulary words from their unit or theme during sentence generation tasks",
-      thumbnail: "/src/assets/images/vocab1.png",
-      videoUrl: "https://example.com/vocab-video1"
-    },
-    {
-      id: 2,
-      title: "Systematic Language Structure Focus",
-      description: "Explicitly and systematically focus on one language structure at a time–like subject-verb clauses or prepositional phrases–to build sentence awareness",
-      thumbnail: "/src/assets/images/sstructure.png",
-      videoUrl: "https://example.com/vocab-video2"
-    },
-    {
-      id: 3,
-      title: "Guided Vocabulary Prompting",
-      description: "Prompt children to use specific vocabulary and sentence structures while they compose.",
-      thumbnail: "/src/assets/images/cuevocab.png",
-      videoUrl: "https://example.com/vocab-video3"
-    },
-    {
-      id: 4,
-      title: "Word Play and Connections",
-      description: "Encourage children to play with words by making connections, grouping them into categories, and exploring how they relate to the writing topic or unit theme",
-      thumbnail: "/src/assets/images/vocab2.png",
-      videoUrl: "https://example.com/vocab-video4"
-    },
-    {
-      id: 5,
-      title: "Sentence Development Support",
-      description: "Support children's sentence development by having them build, rearrange, combine, and expand sentences related to the writing topic or unit theme.",
-      thumbnail: "/src/assets/images/sentencecompletion.png",
-      videoUrl: "https://example.com/vocab-video5"
-    },
-    {
-      id: 6,
-      title: "Phonological Knowledge Application",
-      description: "Encourage children to use what they've learned about sounds, spelling patterns, and word parts to try spelling new words. Promotes application of phonological knowledge through invented spelling, strengthening",
-      thumbnail: "/src/assets/images/vocab1.png",
-      videoUrl: "https://example.com/vocab-video6"
-    }
-  ]
+  const category = categoryInfo['language-construction']
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
@@ -59,7 +17,7 @@ const VocabularySyntax = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Link 
+            <Link
               to="/best-practices"
               className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium mb-8 transition-colors"
             >
@@ -80,12 +38,12 @@ const VocabularySyntax = () => {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display mb-8 text-gray-900">
-              Vocabulary & Sentence Structure
+              {category.title}
             </h1>
-            
+
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
               <p className="text-lg text-gray-700 leading-relaxed">
-                These vocabulary and sentence structure practices strengthen the brain's coordination of motor, visual, and phonological processes—making it easier for children to store, retrieve, and apply letter-sound knowledge when writing.
+                {category.description}
               </p>
             </div>
           </motion.div>
@@ -96,7 +54,7 @@ const VocabularySyntax = () => {
       <section className="section-padding pt-0 pb-20">
         <div className="container">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {videoItems.map((item, index) => (
+            {languageConstructionVideos.map((item, index) => (
               <motion.div
                 key={item.id}
                 className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300"
@@ -107,26 +65,17 @@ const VocabularySyntax = () => {
               >
                 {/* Video Thumbnail */}
                 <div className="relative aspect-video bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden">
-                  <img 
-                    src={item.thumbnail}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      e.target.style.display = 'none'
-                      e.target.nextSibling.style.display = 'flex'
-                    }}
-                  />
-                  {/* Fallback placeholder */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-primary-600 font-medium text-sm hidden">
-                    Video Thumbnail
-                  </div>
-                  
-                  {/* Play Button Overlay */}
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                      <Play className="w-8 h-8 text-primary-600 ml-1" />
+                  {item.noVideoYet ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                      <VideoOff className="w-10 h-10" />
                     </div>
-                  </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                        <Play className="w-8 h-8 text-primary-600 ml-1" />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -134,21 +83,19 @@ const VocabularySyntax = () => {
                   <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
                     {item.title}
                   </h3>
-                  
+
                   <p className="text-sm text-gray-600 leading-relaxed mb-4">
                     {item.description}
                   </p>
-                  
+
                   {/* Watch Video Button */}
-                  <a
-                    href={item.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    to={`/vocabulary-syntax/${item.id}`}
                     className="inline-flex items-center justify-center w-full px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors duration-200"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    Watch Video
-                  </a>
+                    {item.noVideoYet ? 'View Practice' : 'Watch Video'}
+                  </Link>
                 </div>
               </motion.div>
             ))}
