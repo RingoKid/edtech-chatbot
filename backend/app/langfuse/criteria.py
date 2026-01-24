@@ -18,6 +18,14 @@ CRITERIA_REGISTRY: dict[str, dict] = {
         "type": "rule-based",
         "description": "Checks if lesson has all required sections and markers",
     },
+    "routing_accuracy": {
+        "type": "rule-based",
+        "description": "Checks if agent routed to the correct task type",
+    },
+    "turn_efficiency": {
+        "type": "rule-based",
+        "description": "Measures how many turns to complete routing (lower is better)",
+    },
 }
 
 
@@ -96,18 +104,91 @@ def evaluate_structure_complete(output: str) -> EvalResult:
     )
 
 
-def run_criterion(criterion_name: str, output: str) -> EvalResult | None:
+def evaluate_routing_accuracy(
+    actual_task_type: str | None,
+    expected_task_type: str | None,
+) -> EvalResult:
+    """
+    Evaluate if routing was correct.
+
+    Args:
+        actual_task_type: The task type the agent routed to
+        expected_task_type: The expected task type
+
+    Returns:
+        EvalResult with score 1.0 if correct, 0.0 if incorrect
+    """
+    is_correct = actual_task_type == expected_task_type
+    return EvalResult(
+        name="routing_accuracy",
+        score=1.0 if is_correct else 0.0,
+        details={
+            "actual": actual_task_type,
+            "expected": expected_task_type,
+            "correct": is_correct,
+        },
+    )
+
+
+def evaluate_turn_efficiency(
+    actual_turns: int,
+    expected_max_turns: int,
+) -> EvalResult:
+    """
+    Evaluate turn efficiency.
+
+    Score is 1.0 if within expected turns, scaled down if over.
+
+    Args:
+        actual_turns: Number of turns taken
+        expected_max_turns: Maximum expected turns
+
+    Returns:
+        EvalResult with efficiency score
+    """
+    if actual_turns <= expected_max_turns:
+        score = 1.0
+    else:
+        # Penalize for extra turns (0.2 penalty per extra turn)
+        extra_turns = actual_turns - expected_max_turns
+        score = max(0.0, 1.0 - (extra_turns * 0.2))
+
+    return EvalResult(
+        name="turn_efficiency",
+        score=score,
+        details={
+            "actual_turns": actual_turns,
+            "expected_max_turns": expected_max_turns,
+            "within_limit": actual_turns <= expected_max_turns,
+        },
+    )
+
+
+def run_criterion(criterion_name: str, output: str = "", **kwargs) -> EvalResult | None:
     """
     Run a single evaluation criterion on the output.
 
     Args:
         criterion_name: Name of the criterion (from CRITERIA_REGISTRY)
-        output: Model output text to evaluate
+        output: Model output text to evaluate (for text-based criteria)
+        **kwargs: Additional arguments for specific criteria
 
     Returns:
         EvalResult or None if criterion not found
     """
     if criterion_name == "structure_complete":
         return evaluate_structure_complete(output)
+
+    if criterion_name == "routing_accuracy":
+        return evaluate_routing_accuracy(
+            actual_task_type=kwargs.get("actual_task_type"),
+            expected_task_type=kwargs.get("expected_task_type"),
+        )
+
+    if criterion_name == "turn_efficiency":
+        return evaluate_turn_efficiency(
+            actual_turns=kwargs.get("actual_turns", 0),
+            expected_max_turns=kwargs.get("expected_max_turns", 1),
+        )
 
     return None

@@ -1,10 +1,10 @@
-# Architecture v2: Hybrid Agent-Based Lesson Generator
+# Architecture v2: Agent-Based Lesson Generator
 
 ## Overview
 
-Proposed architecture combining ReAct agents for conversational flexibility with deterministic nodes for consistent lesson generation.
+Agent-based architecture using LangGraph's `create_react_agent` for conversational flexibility with deterministic nodes for consistent lesson generation.
 
-**Status:** Proposal
+**Status:** In Progress
 **Current Implementation:** LangGraph state machine (see `backend/specs/002-lesson-graph/`)
 
 ---
@@ -13,36 +13,43 @@ Proposed architecture combining ReAct agents for conversational flexibility with
 
 | Aspect | Current (v1) | Proposed (v2) |
 |--------|--------------|---------------|
-| Routing | LLM structured output → fixed paths | Semantic router or ReAct agent |
+| Routing | LLM structured output → fixed paths | ReAct agent with routing tools |
 | Param collection | Explicit nodes per parameter | Task-specific ReAct agents |
 | Generation | Not implemented yet | Deterministic nodes with explicit prompts |
+| Prompts | Hardcoded in codebase | Stored in Langfuse, fetched at runtime |
 | Flexibility | Low — predefined paths | High — agents adapt to conversation |
 
 ---
 
-## Proposed Architecture
+## Architecture
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
 │                     ROUTING LAYER                                  │
 │                                                                    │
-│  ┌──────────────────┐                                              │
-│  │  Semantic Router │  ← Fast, embedding-based                     │
-│  │   or ReAct Agent │  ← Or LLM-based for complex routing          │
-│  └────────┬─────────┘                                              │
-│           │                                                        │
-└───────────┼────────────────────────────────────────────────────────┘
-            │ handoff (task_type + conversation_summary)
-            ▼
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │              Greeting & Routing Agent                         │  │
+│  │                                                               │  │
+│  │  - create_react_agent (langgraph.prebuilt)                   │  │
+│  │  - Model: gpt-4o-mini (cost-optimized)                       │  │
+│  │  - Prompt: Fetched from Langfuse                             │  │
+│  │  - Tools: route_to_handwriting, route_to_vocabulary,         │  │
+│  │           route_to_idea_generation (no params)               │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ Tool call (task_type only)
+                              ▼
 ┌────────────────────────────────────────────────────────────────────┐
-│                 PARAMETER COLLECTION LAYER                         │
+│                 TASK AGENTS LAYER                                  │
 │                    (ReAct Agents)                                  │
 │                                                                    │
 │  ┌──────────────┬───────────────┬───────────────┐                  │
 │  │ Handwriting  │  Vocabulary   │     Idea      │                  │
 │  │    Agent     │    Agent      │    Agent      │                  │
 │  │              │               │               │                  │
-│  │ Collects:    │ Collects:     │ Collects:     │                  │
+│  │ Extracts:    │ Extracts:     │ Extracts:     │                  │
 │  │ - grade      │ - grade       │ - grade       │                  │
 │  │ - letter     │ - topic       │ - theme       │                  │
 │  │ - level      │ - word_count  │ - constraints │                  │
@@ -58,24 +65,39 @@ Proposed architecture combining ReAct agents for conversational flexibility with
 │  ┌──────────────┬───────────────┬───────────────┐                  │
 │  │ Handwriting  │  Vocabulary   │     Idea      │                  │
 │  │  Generator   │  Generator    │   Generator   │                  │
-│  │              │               │               │                  │
-│  │ Forms B,C,   │ Vocab-        │ Idea-         │                  │
-│  │ D,F prompts  │ specific      │ specific      │                  │
 │  └──────────────┴───────────────┴───────────────┘                  │
 │                                                                    │
 └────────────────────────────────────────────────────────────────────┘
-          │
-          ▼
-┌────────────────────────────────────────────────────────────────────┐
-│                     EVALUATION LAYER                               │
-│                                                                    │
-│  ┌─────────────────────────────────────────────────────────────┐   │
-│  │ Rule-based: structure_complete, verbatim_check              │   │
-│  │ LLM-as-judge: activity_appropriate, objective_alignment     │   │
-│  └─────────────────────────────────────────────────────────────┘   │
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Key Design Decisions
+
+### Routing Agent
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Framework | `create_react_agent` | Prebuilt, handles agent loop |
+| Model | `gpt-4o-mini` | Cost-effective for routing (~20x cheaper than gpt-4o) |
+| Tool params | None | Task agents extract params, not routing agent |
+| Prompts | Langfuse | Change without deploy, track versions, A/B test |
+
+### Evals
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Dataset storage | Local file → sync to Langfuse | Version-controlled, viewable in dashboard |
+| Per-layer evals | Yes | Test each layer independently |
+| Checkpointer for evals | Not required | Pass message history directly |
+
+### Infrastructure
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Model selection | Existing registry (`app/llm/client.py`) | Centralized configuration |
+| Checkpointer | Existing DynamoDB setup | Plug-and-play when wiring to chat API |
+| Interrupts | Not needed | ReAct agent naturally returns after response/tool call |
 
 ---
 
@@ -83,105 +105,49 @@ Proposed architecture combining ReAct agents for conversational flexibility with
 
 ### Handwriting
 
-| Parameter | Type | Required | Notes |
-|-----------|------|----------|-------|
-| grade | `Literal["PreK", "K", "1st"]` | Yes | Grade level |
-| letter | `str` | Yes | Target letter (a-z) |
-| student_level | `Literal["struggling", "on-level", "advanced"]` | No | Defaults to on-level |
-
-**Generation inputs:** Forms B, C, D, F (see `n8n/workflows/lesson-generator-v02.json`)
+| Parameter | Type | Required |
+|-----------|------|----------|
+| grade | `Literal["PreK", "K", "1st"]` | Yes |
+| letter | `str` | Yes |
+| student_level | `Literal["struggling", "on-level", "advanced"]` | No |
 
 ### Vocabulary
 
-| Parameter | Type | Required | Notes |
-|-----------|------|----------|-------|
-| grade | `Literal["PreK", "K", "1st"]` | Yes | Grade level |
-| topic | `str` | Yes | Vocabulary topic |
-| word_count | `int` | No | Number of words to include |
-
-**Generation inputs:** TBD
+| Parameter | Type | Required |
+|-----------|------|----------|
+| grade | `Literal["PreK", "K", "1st"]` | Yes |
+| topic | `str` | Yes |
+| word_count | `int` | No |
 
 ### Idea Generation
 
-| Parameter | Type | Required | Notes |
-|-----------|------|----------|-------|
-| grade | `Literal["PreK", "K", "1st"]` | Yes | Grade level |
-| theme | `str` | Yes | Lesson theme |
-| constraints | `str` | No | Any specific constraints |
-
-**Generation inputs:** TBD
+| Parameter | Type | Required |
+|-----------|------|----------|
+| grade | `Literal["PreK", "K", "1st"]` | Yes |
+| theme | `str` | Yes |
+| constraints | `str` | No |
 
 ---
 
-## Handoff State
+## Evaluation Strategy
 
-When transitioning between layers:
+### Per-Layer Evals
 
-```python
-class HandoffState(BaseModel):
-    task_type: Literal["handwriting", "vocabulary", "idea"]
-    collected_params: dict  # {"grade": "PreK", "letter": "A"}
-    conversation_summary: str  # For context continuity
-    clarification_attempts: int  # Track loops
-```
+| Layer | Criteria | Target |
+|-------|----------|--------|
+| Routing | `routing_accuracy` | >= 95% |
+| Routing | `turn_efficiency` | <= 2.0 avg turns |
+| Task Agents | `param_extraction_accuracy` | >= 90% |
+| Generation | `structure_complete` | >= 85% |
+| Generation | `verbatim_check` | 100% (rule-based) |
 
----
+### Eval Workflow
 
-## Guardrails
-
-| Guardrail | Value | Behavior |
-|-----------|-------|----------|
-| Max clarification turns | 3 | Fall back to defaults or escalate |
-| Max agent turns | 10 | Force completion or error |
-| Cancellation phrases | "never mind", "cancel" | Exit to greeting |
-
----
-
-## Evaluation Points
-
-| Layer | Eval Type | Criteria |
-|-------|-----------|----------|
-| Routing | Rule-based | Correct task classification |
-| Param Collection | Rule-based | All required params collected |
-| Generation | Rule-based | `structure_complete`, `verbatim_check` |
-| Generation | LLM-as-judge | `activity_appropriate`, `objective_alignment`, `guided_practice_nuance` |
-
-See `backend/specs/008-langfuse-evals/spec.md` for eval implementation details.
-
----
-
-## Current Implementation Files
-
-### LangGraph State Machine (v1)
-
-| File | Purpose |
-|------|---------|
-| `app/graph/state.py` | GraphState TypedDict |
-| `app/graph/nodes.py` | Node functions (greeting, main_router, clarification) |
-| `app/graph/graph.py` | Graph definition and compilation |
-| `app/graph/prompts.py` | System prompts and messages |
-| `app/schemas/task_route.py` | Pydantic routing schema |
-| `app/service/chat_service.py` | Graph invocation and resumption |
-| `app/routers/chat.py` | REST API endpoints |
-
-### Specs
-
-| Spec | Description |
-|------|-------------|
-| `002-lesson-graph/001-greeting-main-router.md` | Initial routing implementation |
-| `002-lesson-graph/002-main-router-clarification-loop.md` | Clarification loop |
-| `002-lesson-graph/003-dynamic-parameter-collection.md` | Parameter collection pattern |
-| `002-lesson-graph/004-expand-handwriting-parameters.md` | Handwriting-specific params |
-| `002-lesson-graph/005-expand-vocab-idea-gen-parameters.md` | Vocab/Idea params |
-
-### Eval System
-
-| File | Purpose |
-|------|---------|
-| `app/langfuse/criteria.py` | Evaluation criteria (structure_complete) |
-| `app/langfuse/service.py` | compare_models(), dataset functions |
-| `app/langfuse/router.py` | `/api/v1/evals/*` endpoints |
-| `app/llm/runner.py` | `run_prompt()` for model execution |
+1. Define test cases in `tests/datasets/<layer>.py`
+2. Sync to Langfuse dataset
+3. Run experiment with run name (e.g., `v1-gpt4o-mini`)
+4. View results in Langfuse dashboard
+5. Iterate until thresholds met
 
 ---
 
@@ -189,91 +155,92 @@ See `backend/specs/008-langfuse-evals/spec.md` for eval implementation details.
 
 Incremental approach — each phase is a separate spec with its own evals.
 
-### Phase 1: Eval Infrastructure
+### Phase 1: Routing Agent ✅ Spec Written
 
-**Goal:** Add dataset-driven evals so we can test routing before building it.
+**Spec:** `010-routing-agent`
 
-- Add `routing_accuracy` criterion to Langfuse evals
-- Create endpoint to run evals against a dataset (not just single prompts)
-- Build initial routing test dataset (20-30 cases)
-
-**Eval:** Can run dataset and get accuracy score in Langfuse.
-
-**Spec:** `010-dataset-evals`
+- ReAct agent for greeting + routing
+- Three routing tools (no params)
+- Placeholder nodes for task agents
+- Prompts in Langfuse
+- Evals: `routing_accuracy`, `turn_efficiency`
 
 ---
 
-### Phase 2: Routing Layer
+### Phase 2: Handwriting Task Agent
 
-**Goal:** Replace current structured output routing with something that can handle ambiguity better.
+**Spec:** `011-handwriting-agent`
 
-- Decide: semantic router vs structured output (keep simple for now)
-- Routing returns task type + extracted info from user message
-- Wire into existing graph as replacement for current router
-
-**Eval:** `routing_accuracy` ≥ 95% on test dataset.
-
-**Spec:** `011-v2-routing`
+- ReAct agent for parameter collection
+- Extracts grade, letter, student_level from conversation
+- Hands off to generator when complete
+- Evals: `param_extraction_accuracy`
 
 ---
 
-### Phase 3: Handwriting Agent
+### Phase 3: Handwriting Generator
 
-**Goal:** Replace fixed parameter nodes with a conversational agent for handwriting.
+**Spec:** `012-handwriting-generator`
 
-- Agent collects grade, letter, student level through conversation
-- Can extract multiple params from one message
-- Hands off to generation when all required params collected
-
-**Eval:** `param_extraction_accuracy` on handwriting test cases.
-
-**Spec:** `012-handwriting-agent`
+- Deterministic node with explicit prompts
+- Uses Forms B, C, D, F structure
+- Evals: `structure_complete`, `verbatim_check`
 
 ---
 
-### Phase 4: Handwriting Generator
+### Phase 4: Vocabulary & Idea Generation
 
-**Goal:** Deterministic generation node that takes params and produces lesson.
+**Specs:** `013-vocab-agent`, `014-idea-agent`
 
-- Takes collected params as input
-- Uses existing Forms B, C, D, F prompts from n8n workflow
-- Returns structured lesson output
-
-**Eval:** `structure_complete` (existing), add `verbatim_check` for form content.
-
-**Spec:** `013-handwriting-generator`
+- Same pattern as handwriting
+- Task-specific parameter extraction
+- Task-specific generation
 
 ---
 
-### Phase 5: Vocabulary & Idea Agents
+### Phase 5: Quality Evals
 
-**Goal:** Repeat Phase 3-4 pattern for remaining task types.
+**Spec:** `015-quality-evals`
 
-- Vocabulary agent + generator
-- Idea generation agent + generator
-
-**Eval:** Same pattern — param extraction + structure checks.
-
-**Spec:** `014-vocab-agent`, `015-idea-agent`
+- LLM-as-judge criteria
+- `activity_appropriate`, `objective_alignment`
+- Track scores over time
 
 ---
 
-### Phase 6: Quality Evals
+## Current Implementation Files
 
-**Goal:** Add LLM-as-judge evals for lesson quality.
+### v1 (To Be Replaced)
 
-- `activity_appropriate` — activities match grade level
-- `objective_alignment` — lesson meets stated objectives
+| File | Purpose |
+|------|---------|
+| `app/graph/state.py` | GraphState TypedDict |
+| `app/graph/nodes.py` | Node functions |
+| `app/graph/graph.py` | Graph definition |
+| `app/graph/prompts.py` | Hardcoded prompts |
+| `app/schemas/task_route.py` | Pydantic routing schema |
 
-**Eval:** Track scores over time in Langfuse.
+### Eval System (Keep)
 
-**Spec:** `016-quality-evals`
+| File | Purpose |
+|------|---------|
+| `app/langfuse/criteria.py` | Evaluation criteria |
+| `app/langfuse/service.py` | compare_models(), dataset functions |
+| `app/llm/client.py` | Model registry access |
 
 ---
 
 ## Open Questions
 
-1. Should routing agent have access to conversation history across sessions?
-2. How to handle mid-conversation task switching ("actually, let's do vocabulary instead")?
-3. Should task agents share a common base class/prompt structure?
-4. Where does human review fit in the generation pipeline?
+1. Should agents remember user preferences across sessions?
+2. How to handle very long conversations (context window limits)?
+3. Where does human review fit in the generation pipeline?
+
+---
+
+## Spec Revisions
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 0.1 | 2026-01-13 | Initial proposal |
+| 0.2 | 2026-01-23 | Updated based on 010 spec discussion: ReAct agent, Langfuse prompts, eval strategy |

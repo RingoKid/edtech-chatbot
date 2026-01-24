@@ -9,7 +9,6 @@ import json
 
 from fastapi import WebSocket, WebSocketDisconnect
 from app.graph.graph import create_graph
-from app.graph.prompts import GREETING_WELCOME_MESSAGE
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 from app.schemas.chat_history import MessageItem
@@ -76,7 +75,7 @@ class ChatService:
         if messages:
             reply = messages[-1].content
         else:
-            reply = GREETING_WELCOME_MESSAGE
+            reply = "Welcome! I'm here to help you build lesson plans. What would you like to work on?"
 
         return ChatMessageResponse(
             thread_id=thread_id,
@@ -173,10 +172,17 @@ class ChatService:
             reply = "I'm sorry, I couldn't generate a response."
 
         # Update conversation metadata
-        # Update title if task_name was set
-        task_name = result.get("task_name")
-        if task_name and task_name != "__CLARIFY__":
-            await chat_history_service.update_title(user_id, thread_id, task_name)
+        # Update title if task_type was set (v2 architecture)
+        task_type = result.get("task_type")
+        if task_type:
+            # Map task_type to display name
+            task_display_names = {
+                "handwriting": "Handwriting",
+                "vocabulary": "Vocabulary",
+                "idea_generation": "Idea Generation",
+            }
+            title = task_display_names.get(task_type, task_type.title())
+            await chat_history_service.update_title(user_id, thread_id, title)
 
         # Update last_message_preview with the AI's response
         await chat_history_service.update_preview(user_id, thread_id, reply)
