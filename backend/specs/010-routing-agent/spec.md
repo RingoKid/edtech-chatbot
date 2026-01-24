@@ -12,6 +12,8 @@
 | Eval criteria | ✅ Done | `app/langfuse/criteria.py` |
 | Test dataset | ✅ Done | `tests/datasets/routing_agent.py` |
 | Eval tests | ✅ Done | `tests/evals/test_routing_agent.py` |
+| Langfuse tracing | ✅ Done | Traces visible in dashboard |
+| Langfuse scores | 🔲 Planned | Needs `@observe` decorator refactor |
 | v1 code cleanup | ✅ Done | Removed old nodes, prompts, schemas |
 | Chat service integration | ✅ Done | Updated for v2 state fields |
 
@@ -327,6 +329,26 @@ Implementation is complete when:
 ```bash
 docker compose exec backend pytest tests/evals/test_routing_agent.py -v
 ```
+
+### Langfuse Tracing
+
+Eval tests log traces to Langfuse via `CallbackHandler`. Traces show:
+- Full conversation (messages, tool calls, LLM responses)
+- Token usage and latency
+- Tags for filtering (`eval`, `routing-agent`, category)
+
+**Scores:** Currently disabled. The `CallbackHandler` doesn't expose `trace_id` at scoring time. To enable scores, refactor to use `@observe()` decorator pattern:
+
+```python
+from langfuse import observe
+
+@observe(name="eval-routing")
+async def run_eval_case(input_msg):
+    # langfuse.score_current_trace() works here
+    ...
+```
+
+**SDK Version:** Langfuse v3.12.0
 
 ---
 
