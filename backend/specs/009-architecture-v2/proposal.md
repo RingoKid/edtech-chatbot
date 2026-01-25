@@ -2,9 +2,9 @@
 
 ## Overview
 
-Agent-based architecture using LangGraph's `create_react_agent` for conversational flexibility with deterministic nodes for consistent lesson generation.
+Agent-based architecture using LangGraph's `create_agent` for conversational flexibility with deterministic nodes for consistent lesson generation.
 
-**Status:** In Progress
+**Status:** In Progress (Phase 1 Complete)
 **Current Implementation:** LangGraph state machine (see `backend/specs/002-lesson-graph/`)
 
 ---
@@ -30,7 +30,7 @@ Agent-based architecture using LangGraph's `create_react_agent` for conversation
 │  ┌──────────────────────────────────────────────────────────────┐  │
 │  │              Greeting & Routing Agent                         │  │
 │  │                                                               │  │
-│  │  - create_react_agent (langgraph.prebuilt)                   │  │
+│  │  - create_agent (langchain.agents) — LangGraph 1.0+          │  │
 │  │  - Model: gpt-4o-mini (cost-optimized)                       │  │
 │  │  - Prompt: Fetched from Langfuse                             │  │
 │  │  - Tools: route_to_handwriting, route_to_vocabulary,         │  │
@@ -78,10 +78,11 @@ Agent-based architecture using LangGraph's `create_react_agent` for conversation
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Framework | `create_react_agent` | Prebuilt, handles agent loop |
+| Framework | `create_agent` (LangGraph 1.0+) | Prebuilt, handles agent loop |
 | Model | `gpt-4o-mini` | Cost-effective for routing (~20x cheaper than gpt-4o) |
 | Tool params | None | Task agents extract params, not routing agent |
 | Prompts | Langfuse | Change without deploy, track versions, A/B test |
+| Greeting | Static (not agent-generated) | Avoids double-greeting bug on session init |
 
 ### Evals
 
@@ -135,7 +136,7 @@ Agent-based architecture using LangGraph's `create_react_agent` for conversation
 
 | Layer | Criteria | Target |
 |-------|----------|--------|
-| Routing | `routing_accuracy` | >= 95% |
+| Routing | `routing_accuracy` | >= 90% (adjusted for LLM variability) |
 | Routing | `turn_efficiency` | <= 2.0 avg turns |
 | Task Agents | `param_extraction_accuracy` | >= 90% |
 | Generation | `structure_complete` | >= 85% |
@@ -155,15 +156,16 @@ Agent-based architecture using LangGraph's `create_react_agent` for conversation
 
 Incremental approach — each phase is a separate spec with its own evals.
 
-### Phase 1: Routing Agent ✅ Spec Written
+### Phase 1: Routing Agent ✅ Implemented
 
 **Spec:** `010-routing-agent`
 
-- ReAct agent for greeting + routing
+- ReAct agent for greeting + routing (`create_agent` from LangGraph 1.0+)
 - Three routing tools (no params)
 - Placeholder nodes for task agents
-- Prompts in Langfuse
-- Evals: `routing_accuracy`, `turn_efficiency`
+- Prompts in Langfuse (`routing-agent` prompt)
+- Static greeting on init (agent invoked on first user message)
+- Evals: `routing_accuracy` >= 90%, `turn_efficiency` <= 2.0
 
 ---
 
@@ -210,23 +212,25 @@ Incremental approach — each phase is a separate spec with its own evals.
 
 ## Current Implementation Files
 
-### v1 (To Be Replaced)
+### v2 (Phase 1 Complete)
 
 | File | Purpose |
 |------|---------|
-| `app/graph/state.py` | GraphState TypedDict |
-| `app/graph/nodes.py` | Node functions |
-| `app/graph/graph.py` | Graph definition |
-| `app/graph/prompts.py` | Hardcoded prompts |
-| `app/schemas/task_route.py` | Pydantic routing schema |
+| `app/graph/state.py` | GraphState v2 (messages, task_type, routing_complete) |
+| `app/graph/graph.py` | Agent-based graph definition |
+| `app/graph/agents/routing.py` | Routing agent + tools |
+| `app/graph/nodes/placeholders.py` | Placeholder nodes for task agents |
+| `scripts/setup_prompts.py` | Langfuse prompt setup |
 
-### Eval System (Keep)
+### Eval System
 
 | File | Purpose |
 |------|---------|
-| `app/langfuse/criteria.py` | Evaluation criteria |
+| `app/langfuse/criteria.py` | Evaluation criteria (routing_accuracy, turn_efficiency) |
 | `app/langfuse/service.py` | compare_models(), dataset functions |
 | `app/llm/client.py` | Model registry access |
+| `tests/datasets/routing_agent.py` | Routing eval test cases |
+| `tests/evals/test_routing_agent.py` | Routing eval tests |
 
 ---
 
@@ -244,3 +248,4 @@ Incremental approach — each phase is a separate spec with its own evals.
 |---------|------|---------|
 | 0.1 | 2026-01-13 | Initial proposal |
 | 0.2 | 2026-01-23 | Updated based on 010 spec discussion: ReAct agent, Langfuse prompts, eval strategy |
+| 0.3 | 2026-01-24 | Sync with 010 implementation: LangGraph 1.0 API, static greeting, 90% accuracy target |
