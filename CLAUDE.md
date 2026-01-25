@@ -10,6 +10,21 @@ All backend commands run inside the `backend` Docker container:
 - **Run tests:** `docker compose exec backend pytest [path/to/test]`
 - **Shell access:** `docker compose exec backend /bin/bash`
 
+### Evals
+
+Run agent evaluation tests:
+
+```bash
+# Routing agent evals
+docker compose exec backend pytest tests/evals/test_routing_agent.py -v
+
+# Param agent evals
+docker compose exec backend pytest tests/evals/test_param_agent.py -v
+
+# All evals
+docker compose exec backend pytest tests/evals/ -v
+```
+
 After rebuilding, always initialize the database:
 
 ```bash

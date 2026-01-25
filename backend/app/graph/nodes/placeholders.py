@@ -16,6 +16,7 @@ def handwriting_placeholder(state: GraphState) -> dict:
     Placeholder for handwriting task agent.
 
     Will be replaced by spec 012 implementation.
+    Note: This is the old placeholder before param collection was added.
     """
     message = AIMessage(
         content=(
@@ -28,6 +29,38 @@ def handwriting_placeholder(state: GraphState) -> dict:
     return {
         "messages": [message],
         "routing_complete": True,
+    }
+
+
+def handwriting_generator_placeholder(state: GraphState) -> dict:
+    """
+    Placeholder for handwriting generator (after param collection).
+
+    Shows the collected parameters to confirm extraction worked.
+    Will be replaced by actual generator in spec 012.
+    """
+    params = state.get("handwriting_params")
+
+    if params:
+        content = (
+            f"**Handwriting Lesson Generator** - Coming Soon!\n\n"
+            f"I've collected your lesson parameters:\n"
+            f"- **Grade Level:** {params['grade']}\n"
+            f"- **Letter:** {params['letter']}\n"
+            f"- **Student Level:** {params['student_level']}\n\n"
+            f"The full lesson generator is coming in the next update. "
+            f"Check back soon!"
+        )
+    else:
+        content = (
+            "**Handwriting Lesson Generator** - Coming Soon!\n\n"
+            "Something went wrong - no parameters were collected. "
+            "Please try again."
+        )
+
+    message = AIMessage(content=content)
+    return {
+        "messages": [message],
     }
 
 

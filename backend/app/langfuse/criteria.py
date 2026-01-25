@@ -26,6 +26,10 @@ CRITERIA_REGISTRY: dict[str, dict] = {
         "type": "rule-based",
         "description": "Measures how many turns to complete routing (lower is better)",
     },
+    "param_extraction_accuracy": {
+        "type": "rule-based",
+        "description": "Checks if all extracted params match expected (exact match)",
+    },
 }
 
 
@@ -164,6 +168,68 @@ def evaluate_turn_efficiency(
     )
 
 
+def evaluate_param_extraction_accuracy(
+    actual_params: dict | None,
+    expected_params: dict | None,
+) -> EvalResult:
+    """
+    Evaluate if parameter extraction was correct (exact match).
+
+    All fields must match for a score of 1.0.
+
+    Args:
+        actual_params: The extracted parameters (dict with grade, letter, student_level)
+        expected_params: The expected parameters
+
+    Returns:
+        EvalResult with score 1.0 if all fields match, 0.0 otherwise
+    """
+    if actual_params is None and expected_params is None:
+        # Both None is a match (e.g., for cases where no extraction expected)
+        return EvalResult(
+            name="param_extraction_accuracy",
+            score=1.0,
+            details={"actual": None, "expected": None, "correct": True},
+        )
+
+    if actual_params is None or expected_params is None:
+        # One is None, one isn't - not a match
+        return EvalResult(
+            name="param_extraction_accuracy",
+            score=0.0,
+            details={
+                "actual": actual_params,
+                "expected": expected_params,
+                "correct": False,
+                "reason": "One is None, other is not",
+            },
+        )
+
+    # Compare each field
+    mismatches = []
+    for key in ["grade", "letter", "student_level"]:
+        actual_val = actual_params.get(key)
+        expected_val = expected_params.get(key)
+        # Normalize letter comparison (case-insensitive)
+        if key == "letter":
+            actual_val = actual_val.upper() if actual_val else None
+            expected_val = expected_val.upper() if expected_val else None
+        if actual_val != expected_val:
+            mismatches.append(f"{key}: got '{actual_val}', expected '{expected_val}'")
+
+    is_correct = len(mismatches) == 0
+    return EvalResult(
+        name="param_extraction_accuracy",
+        score=1.0 if is_correct else 0.0,
+        details={
+            "actual": actual_params,
+            "expected": expected_params,
+            "correct": is_correct,
+            "mismatches": mismatches,
+        },
+    )
+
+
 def run_criterion(criterion_name: str, output: str = "", **kwargs) -> EvalResult | None:
     """
     Run a single evaluation criterion on the output.
@@ -189,6 +255,12 @@ def run_criterion(criterion_name: str, output: str = "", **kwargs) -> EvalResult
         return evaluate_turn_efficiency(
             actual_turns=kwargs.get("actual_turns", 0),
             expected_max_turns=kwargs.get("expected_max_turns", 1),
+        )
+
+    if criterion_name == "param_extraction_accuracy":
+        return evaluate_param_extraction_accuracy(
+            actual_params=kwargs.get("actual_params"),
+            expected_params=kwargs.get("expected_params"),
         )
 
     return None

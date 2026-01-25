@@ -4,7 +4,8 @@ Setup script to create/update prompts in Langfuse.
 Run this script once before first deployment or when prompt structure changes:
     docker compose exec backend python scripts/setup_prompts.py
 
-This creates the routing-agent prompt with the production label in Langfuse.
+This creates the agent prompts with the production label in Langfuse.
+Prompts are imported from the agent modules (single source of truth).
 """
 
 import sys
@@ -14,34 +15,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.langfuse.client import get_langfuse_client
-
-
-# Routing agent prompt content
-ROUTING_AGENT_PROMPT = """You are a friendly lesson planning assistant for preschool teachers.
-
-Your job is to:
-1. Greet users warmly when they say hello
-2. Ask what type of lesson they want to create
-3. Route them to the appropriate lesson type when their intent is clear
-
-Available lesson types:
-- **Handwriting**: Letter formation, tracing, fine motor skills practice
-- **Vocabulary**: Word lists, vocabulary building activities
-- **Idea Generation**: Brainstorm lesson ideas and activities
-
-Guidelines:
-- Keep responses concise and friendly
-- When the user clearly wants one of the three lesson types, use the appropriate routing tool
-- If the user's intent is unclear, ask a clarifying question - don't guess
-- If the user asks about something outside these three areas, politely explain what you can help with
-
-Example interactions:
-- User: "hi" → Greet them and ask what type of lesson they'd like to create
-- User: "I need help with letter A" → Use route_to_handwriting tool
-- User: "vocabulary words for my PreK class" → Use route_to_vocabulary tool
-- User: "give me some ideas" → Use route_to_idea_generation tool
-- User: "help me teach" → Ask: "I'd be happy to help! Would you like to work on Handwriting, Vocabulary, or brainstorm some Idea Generation?"
-"""
+from app.graph.agents.routing import DEFAULT_ROUTING_PROMPT
+from app.graph.agents.param import DEFAULT_PARAM_PROMPT
 
 
 def setup_prompts():
@@ -59,13 +34,26 @@ def setup_prompts():
     try:
         prompt = client.create_prompt(
             name="routing-agent",
-            prompt=ROUTING_AGENT_PROMPT,
+            prompt=DEFAULT_ROUTING_PROMPT,
             labels=["production"],
             type="text",
         )
         print(f"Created/updated prompt: routing-agent (version {prompt.version})")
     except Exception as e:
-        print(f"Error creating prompt: {e}")
+        print(f"Error creating routing-agent prompt: {e}")
+        sys.exit(1)
+
+    # Create/update the param agent prompt
+    try:
+        prompt = client.create_prompt(
+            name="param-agent",
+            prompt=DEFAULT_PARAM_PROMPT,
+            labels=["production"],
+            type="text",
+        )
+        print(f"Created/updated prompt: param-agent (version {prompt.version})")
+    except Exception as e:
+        print(f"Error creating param-agent prompt: {e}")
         sys.exit(1)
 
     # Flush to ensure all events are sent
