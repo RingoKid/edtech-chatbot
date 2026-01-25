@@ -295,10 +295,15 @@ curl -X POST http://localhost:8000/api/chat \
 
 ## Future Work
 
-- Add `submit_vocabulary_params` tool
-- Add `submit_idea_params` tool
-- Add corresponding state fields
-- Update routing logic for all task types
+To add vocabulary or idea_generation support:
+1. Add `submit_vocabulary_params` / `submit_idea_params` tool to `param.py`
+2. Add tool to `PARAM_TOOLS` list
+3. Add `VocabularyParams` / `IdeaParams` TypedDict to `state.py`
+4. Add extraction logic in `graph.py` (`extract_params_from_messages`)
+5. Add generator placeholder to `placeholders.py`
+6. Update routing in `graph.py` to route all tasks through param_agent
+
+Note: The generic prompt is already in place - no prompt changes needed.
 
 ---
 
@@ -313,13 +318,17 @@ curl -X POST http://localhost:8000/api/chat \
 
 ### Key Design Decisions Made
 
-1. **Pydantic for tool validation**: `SubmitHandwritingParams` uses Pydantic to validate LLM-provided args at the boundary. TypedDict is used for state storage (no runtime overhead).
+1. **Generic prompt for all task types**: The prompt is intentionally generic - it tells the agent to look at conversation context (routing history) to determine which task type the user wants, then use the appropriate tool. This means adding a new task type only requires adding the tool; no prompt changes needed.
 
-2. **Letter normalization**: Letters are normalized to uppercase in the extraction function (`extract_handwriting_params`), not in the tool itself.
+2. **Pydantic for tool validation**: `SubmitHandwritingParams` uses Pydantic to validate LLM-provided args at the boundary. TypedDict is used for state storage (no runtime overhead).
 
-3. **Eval target adjustment**: Original spec called for 90% accuracy, but actual results showed ~88-90% due to LLM non-determinism AND routing variance (tests depend on routing working first). Adjusted to 85%.
+3. **Letter normalization**: Letters are normalized to uppercase in the extraction function (`extract_handwriting_params`), not in the tool itself.
 
-4. **Routing retry in tests**: The `run_param_agent_flow` test helper includes retry logic for routing since gpt-4o-mini is non-deterministic.
+4. **Eval target adjustment**: Original spec called for 90% accuracy, but actual results showed ~88-90% due to LLM non-determinism AND routing variance (tests depend on routing working first). Adjusted to 85%.
+
+5. **Routing retry in tests**: The `run_param_agent_flow` test helper includes retry logic for routing since gpt-4o-mini is non-deterministic.
+
+6. **Single source of truth for prompts**: `setup_prompts.py` imports `DEFAULT_PARAM_PROMPT` from `param.py` rather than duplicating it.
 
 ### Test Coverage
 
@@ -335,3 +344,4 @@ curl -X POST http://localhost:8000/api/chat \
 |---------|------|---------|
 | 0.1 | 2026-01-25 | Initial draft |
 | 0.2 | 2026-01-25 | Implementation complete. Updated status, verification, accuracy target (85%), added implementation notes. |
+| 0.3 | 2026-01-25 | Refactored to generic prompt. Agent uses conversation context to pick tool. Updated future work with clear steps. |
