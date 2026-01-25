@@ -6,7 +6,14 @@ You are implementing a feature following the mandatory development workflow.
 
 ## Arguments
 
-- `$ARGUMENTS` - Path to the spec file (e.g., `backend/specs/007-new-feature/spec.md`)
+- `$ARGUMENTS` - Path to the spec file (e.g., `backend/specs/007-new-feature/spec.md` or `frontend/specs/001-feature/spec.md`)
+
+## Detect Context
+
+**Check the spec path to determine context:**
+
+- If path starts with `backend/` → **Backend context**
+- If path starts with `frontend/` → **Frontend context**
 
 ## Workflow Steps
 
@@ -16,26 +23,33 @@ Follow these steps **in order**. Do not skip steps.
 
 First, read the spec file at `$ARGUMENTS` to understand what needs to be implemented.
 
-Also read `backend/specs/000-project-common.md` for architectural rules if you haven't already.
+**Backend only:** Also read `backend/specs/000-project-common.md` for architectural rules.
 
 ### 2. Implement
 
-Write the code according to the spec. Follow the architecture rules:
+Write the code according to the spec.
 
+**Backend architecture rules:**
 - Use LangGraph for all agent logic
 - Use single `GraphState` TypedDict in `app/graph/state.py`
 - Use Pydantic tools for routing (never `if/elif` on raw text)
 - Only use `interrupt_after` in graph's `compile()` for pausing
 
+**Frontend architecture rules:**
+- Use React with Vite
+- Follow existing component patterns in the codebase
+- Use Tailwind CSS for styling
+- Use React Router for navigation
+
 ### 3. Rebuild (MANDATORY)
 
-After writing code, **you MUST rebuild** the container:
+After writing code, **you MUST rebuild** the containers:
 
 ```bash
 docker compose down && docker compose up -d --build
 ```
 
-Then initialize the database:
+**Backend only** - Initialize the database:
 
 ```bash
 docker compose exec backend python init_db.py
@@ -45,8 +59,14 @@ docker compose exec backend python init_db.py
 
 Run the tests specified in the spec:
 
+**Backend:**
 ```bash
 docker compose exec backend pytest [path/to/test_file.py] -v
+```
+
+**Frontend:**
+```bash
+docker compose exec frontend npm run test
 ```
 
 ### 5. Fix & Iterate
@@ -113,7 +133,11 @@ curl -X POST http://localhost:8000/api/endpoint -d '{"key": "value"}'
 
 #### 6.2 Update the Specs Index
 
-Update `backend/specs/README.md`:
+Update the appropriate specs README:
+- **Backend:** `backend/specs/README.md`
+- **Frontend:** `frontend/specs/README.md` (create if doesn't exist)
+
+Changes:
 - Set correct status (Draft → Implemented)
 - Add any new related files
 - Link to reviews/incidents if applicable
@@ -138,7 +162,7 @@ What did we decide to do?
 What are the trade-offs?
 ```
 
-Save to: `backend/specs/XXX-feature/decisions/001-decision-name.md`
+Save to: `[backend|frontend]/specs/XXX-feature/decisions/001-decision-name.md`
 
 ## Checklist
 

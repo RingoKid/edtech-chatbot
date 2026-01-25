@@ -84,6 +84,29 @@ specs/
 - `app/llm/` - Shared LLM infrastructure
 - `app/langfuse/` - Evaluation module
 
+### 009 - Architecture v2
+**Status:** Proposal
+**Spec:** [009-architecture-v2/proposal.md](./009-architecture-v2/proposal.md)
+**Description:** Redesigned architecture using ReAct agents and Langfuse prompt management.
+
+### 010 - Greeting & Routing Agent
+**Status:** Implemented
+**Spec:** [010-routing-agent/spec.md](./010-routing-agent/spec.md)
+**Description:** ReAct agent that handles initial greeting and routes users to task-specific agents using tool calls. First implementation of the v2 architecture.
+
+**Features:**
+- ReAct agent with `create_react_agent` from LangGraph
+- Three routing tools (handwriting, vocabulary, idea_generation)
+- Placeholder nodes for future task agents
+- Langfuse prompt management integration
+- Evaluation tests with 90%+ routing accuracy
+
+**Related Files:**
+- `app/graph/agents/routing.py` - Routing agent definition
+- `app/graph/nodes/placeholders.py` - Task placeholder nodes
+- `tests/evals/test_routing_agent.py` - Eval tests
+- `tests/datasets/routing_agent.py` - Test dataset
+
 ---
 
 ## How to Use This Structure

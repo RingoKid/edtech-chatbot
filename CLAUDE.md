@@ -13,7 +13,7 @@ All backend commands run inside the `backend` Docker container:
 After rebuilding, always initialize the database:
 
 ```bash
-docker compose exec backend python init_db.py
+docker compose exec backend python scripts/init_db.py
 ```
 
 This creates the DynamoDB tables in the local container. Without this, API requests will fail with 500 errors.

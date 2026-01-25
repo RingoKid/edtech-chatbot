@@ -15,8 +15,9 @@ Implement individual video pages for three practice categories using videos host
 | **Phase 2: Frontend** | | |
 | Add `react-player` to package.json | ✅ Done | v3.4.0 |
 | Create `videoData.js` | ✅ Done | `src/data/videoData.js` |
-| Create `VideoPageTemplate` component | ✅ Done | `src/components/VideoPageTemplate.jsx` |
-| Update category pages | ✅ Done | All 3 category pages updated |
+| Create `VideoPageTemplate` component | ✅ Done | Skip controls, playback speed |
+| Create `VideoCard` component | ✅ Done | Shared card for category pages |
+| Update category pages | ✅ Done | Use shared `VideoCard` component |
 | Update BestPractices.jsx routes | ✅ Done | Fixed `/vocabulary-syntax` and `/idea-generation` |
 | Add routes in AppRoutes.jsx | ✅ Done | Dynamic routing with `:videoId` param |
 
@@ -150,24 +151,39 @@ Create `frontend/src/components/VideoPageTemplate.jsx`:
   - Back navigation link
   - Video title and practice description
   - ReactPlayer with controls (use `src` prop, not `url` - v3.x API)
+  - **Custom controls toolbar:**
+    - Skip buttons: ±5 seconds, ±10 seconds
+    - Playback speed: 0.5x, 0.75x, 1x, 1.25x, 1.5x, 2x
   - Video selector buttons when multiple videos exist
   - "Video coming soon" placeholder when `noVideoYet: true`
   - "Explore More" section showing related videos
 - Use existing styling patterns (Tailwind, framer-motion)
 
-### 3.4 Update Category Pages
+### 3.4 Create VideoCard Component
+
+Create `frontend/src/components/VideoCard.jsx`:
+- Props: `video`, `basePath`, `index`
+- Features:
+  - Entire card is clickable (Link wrapper)
+  - Thumbnail with play button overlay on hover
+  - Title and description
+  - "Watch Video" button aligned to bottom (flexbox)
+  - "No Video Yet" state with VideoOff icon
+- Used by all 3 category pages to eliminate code duplication
+
+### 3.5 Update Category Pages
 
 Update `HandwritingSpelling.jsx`, `VocabularySyntax.jsx`, `IdeaGeneration.jsx`:
 - Import video data from `videoData.js`
-- Link each practice card to its individual page route
+- Use shared `VideoCard` component for consistent styling
 
-### 3.5 Update BestPractices.jsx
+### 3.6 Update BestPractices.jsx
 
 Fix route links:
 - Vocabulary: `/vocabulary-syntax` (was `/videos/vocabulary`)
 - Idea Generation: `/idea-generation` (was `/videos/idea-generation`)
 
-### 3.6 Add Routes
+### 3.7 Add Routes
 
 Add 23 individual video page routes to `AppRoutes.jsx`:
 - Pattern: `/<category>/<slug>` → renders `VideoPageTemplate` with video data
@@ -193,9 +209,13 @@ curl -I "https://l4c-videos.s3.amazonaws.com/videos/Oral%20Rehearsal.mp4"
 **Frontend** - After rebuild, verify at http://localhost:3000:
 - [ ] All 23 video pages load
 - [ ] Videos play from S3
+- [ ] Skip controls work (±5s, ±10s)
+- [ ] Playback speed controls work (0.5x-2x)
 - [ ] Multi-video pages show selector buttons
 - [ ] "No Video Yet" pages show placeholder
 - [ ] "Explore More" shows related videos
+- [ ] Category page cards are fully clickable
+- [ ] Card buttons are aligned at bottom
 
 ---
 
@@ -204,10 +224,11 @@ curl -I "https://l4c-videos.s3.amazonaws.com/videos/Oral%20Rehearsal.mp4"
 | File | Purpose |
 |------|---------|
 | `frontend/src/data/videoData.js` | Central video configuration with S3 URLs |
-| `frontend/src/components/VideoPageTemplate.jsx` | Reusable video page component |
-| `frontend/src/pages/HandwritingSpelling.jsx` | Category listing page (updated) |
-| `frontend/src/pages/VocabularySyntax.jsx` | Category listing page (updated) |
-| `frontend/src/pages/IdeaGeneration.jsx` | Category listing page (updated) |
+| `frontend/src/components/VideoPageTemplate.jsx` | Individual video page with player + controls |
+| `frontend/src/components/VideoCard.jsx` | Shared card component for category grids |
+| `frontend/src/pages/HandwritingSpelling.jsx` | Category listing page |
+| `frontend/src/pages/VocabularySyntax.jsx` | Category listing page |
+| `frontend/src/pages/IdeaGeneration.jsx` | Category listing page |
 | `frontend/src/pages/BestPractices.jsx` | Fixed route links |
 | `frontend/src/AppRoutes.jsx` | Dynamic routing for video pages |
 
@@ -227,3 +248,4 @@ curl -I "https://l4c-videos.s3.amazonaws.com/videos/Oral%20Rehearsal.mp4"
 | 0.1 | 2025-01-22 | Initial spec |
 | 0.2 | 2025-01-22 | Simplified - removed verbose code, kept intent + data |
 | 0.3 | 2026-01-22 | Implementation complete - AWS S3 + Frontend |
+| 0.4 | 2026-01-22 | Added VideoCard component, skip/speed controls |

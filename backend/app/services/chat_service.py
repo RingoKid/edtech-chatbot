@@ -9,7 +9,6 @@ import json
 
 from fastapi import WebSocket, WebSocketDisconnect
 from app.graph.graph import create_graph
-from app.graph.prompts import GREETING_WELCOME_MESSAGE
 from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 from app.schemas.chat_history import MessageItem
@@ -50,7 +49,8 @@ class ChatService:
     async def init_chat(self, user_id: str) -> ChatMessageResponse:
         """
         Initialize a new chat session.
-        Invokes the graph to create a checkpoint at greeting_node interrupt.
+        Creates a new thread and returns a static greeting.
+        The routing agent will be invoked on the first user message.
 
         Args:
             user_id (str): The user identifier
@@ -65,18 +65,14 @@ class ChatService:
         chat_history_service = get_chat_history_service()
         await chat_history_service.create_conversation(user_id, thread_id)
 
-        # Invoke the graph to create a checkpoint at greeting_node
-        # This ensures the graph state exists when user sends first message
-        graph = await self._get_graph()
-        config = {"configurable": {"thread_id": thread_id}}
-        result = await graph.ainvoke({"messages": []}, config=config)
-
-        # Extract greeting from graph result
-        messages = result.get("messages", [])
-        if messages:
-            reply = messages[-1].content
-        else:
-            reply = GREETING_WELCOME_MESSAGE
+        # Return static greeting - the routing agent will handle the conversation
+        # when the user sends their first message. This avoids the double-greeting
+        # issue where init invokes the agent and then the first message invokes it again.
+        reply = (
+            "Hello! I'm your lesson planning assistant. "
+            "I can help you with **Handwriting**, **Vocabulary**, or **Idea Generation** lessons. "
+            "What would you like to work on today?"
+        )
 
         return ChatMessageResponse(
             thread_id=thread_id,
@@ -173,10 +169,17 @@ class ChatService:
             reply = "I'm sorry, I couldn't generate a response."
 
         # Update conversation metadata
-        # Update title if task_name was set
-        task_name = result.get("task_name")
-        if task_name and task_name != "__CLARIFY__":
-            await chat_history_service.update_title(user_id, thread_id, task_name)
+        # Update title if task_type was set (v2 architecture)
+        task_type = result.get("task_type")
+        if task_type:
+            # Map task_type to display name
+            task_display_names = {
+                "handwriting": "Handwriting",
+                "vocabulary": "Vocabulary",
+                "idea_generation": "Idea Generation",
+            }
+            title = task_display_names.get(task_type, task_type.title())
+            await chat_history_service.update_title(user_id, thread_id, title)
 
         # Update last_message_preview with the AI's response
         await chat_history_service.update_preview(user_id, thread_id, reply)

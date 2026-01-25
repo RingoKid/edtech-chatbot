@@ -1,21 +1,28 @@
-from typing import TypedDict, Annotated, List, Optional, Dict, Any
+"""Graph state for v2 architecture - simplified for agent-based routing."""
+
+from typing import TypedDict, Annotated, List, Optional, Literal
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 
+# Task type literals for routing
+TaskType = Literal["handwriting", "vocabulary", "idea_generation"]
+
+
 class GraphState(TypedDict):
     """
-    The unified state object for the entire graph.
+    Unified state object for the routing agent graph.
+
+    v2 Architecture Notes:
+    - messages: Full conversation history, managed by add_messages reducer
+    - task_type: Set when routing tool is called, indicates destination
+    - routing_complete: Signals successful handoff to task agent
     """
-    # Messages are handled with add_messages reducer
+    # Messages are handled with add_messages reducer (appends, not replaces)
     messages: Annotated[List[BaseMessage], add_messages]
 
-    # This key will be populated by the main_router
-    task_name: Optional[str]
+    # Set by routing tools when user intent is clear
+    task_type: Optional[TaskType]
 
-    # New fields for parameter collection
-    parameter_schema_name: Optional[str]  # Name of the schema class (e.g., "HandwritingParams")
-    required_parameters: List[str]  # List of param names still needed
-    collected_parameters: Dict[str, Any]  # Stores collected {name: value} pairs
-    current_question: Optional[str]  # The question currently asked
-    collection_error_message: Optional[str]  # Temporary error message for re-asking
+    # Signals that routing has completed and handoff should occur
+    routing_complete: bool
