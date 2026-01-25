@@ -15,14 +15,14 @@
 | Langfuse tracing | ✅ Done | Traces visible in dashboard |
 | Langfuse scores | 🔲 Planned | Needs `@observe` decorator refactor |
 | v1 code cleanup | ✅ Done | Removed old nodes, prompts, schemas |
-| Chat service integration | ✅ Done | Updated for v2 state fields |
+| Chat service integration | ✅ Done | Static greeting, graph invoked on first user message |
 
 ## Overview
 
 **Status:** Implemented
 **Layer:** Routing (Layer 1 of v2 architecture)
 **Model:** `gpt-4o-mini` (from model registry)
-**Framework:** `create_react_agent` from `langgraph.prebuilt`
+**Framework:** `create_agent` from `langchain.agents` (LangGraph 1.0+)
 
 ReAct agent that handles initial greeting and routes users to task-specific agents. Uses tool calls for routing decisions rather than static classification.
 
@@ -358,6 +358,40 @@ async def run_eval_case(input_msg):
 - **Checkpointer wired separately** — When integrating with chat API, add DynamoDB checkpointer (existing setup)
 - **Pull latest docs** — Use Context7 MCP to get current LangGraph and Langfuse SDK documentation
 
+### LangGraph 1.0 Migration
+
+As of LangGraph 1.0, `create_react_agent` was renamed and moved:
+
+```python
+# Before (deprecated)
+from langgraph.prebuilt import create_react_agent
+agent = create_react_agent(model, tools, prompt=system_prompt)
+
+# After (LangGraph 1.0+)
+from langchain.agents import create_agent
+agent = create_agent(model, tools, system_prompt=system_prompt)
+```
+
+Key changes:
+- Import from `langchain.agents` instead of `langgraph.prebuilt`
+- Function renamed from `create_react_agent` to `create_agent`
+- Parameter renamed from `prompt` to `system_prompt`
+
+### Chat Service Integration
+
+The chat service (`app/services/chat_service.py`) uses a **static greeting** approach:
+
+1. `init_chat()` returns a pre-defined greeting without invoking the graph
+2. The routing agent is first invoked when the user sends their first message
+3. This avoids the "double greeting" bug where both init and first message trigger agent greetings
+
+**Why not invoke the graph on init?**
+- Graph completes to `END` after greeting (no interrupt)
+- `handle_message()` checks `state.next` to decide resume vs fresh start
+- Empty `state.next` means fresh start → agent loses greeting context → greets again
+
+**Alternative approach** (not used): Add `interrupt_after=["routing_agent"]` to pause the graph after greeting, then resume on first message. This adds complexity for minimal benefit.
+
 ---
 
 ## Open Questions
@@ -373,3 +407,4 @@ async def run_eval_case(input_msg):
 |---------|------|---------|
 | 0.1 | 2026-01-23 | Initial proposal |
 | 1.0 | 2026-01-23 | Implementation complete - ReAct agent, placeholders, evals passing |
+| 1.1 | 2026-01-24 | LangGraph 1.0 migration (`create_agent`), fix double-greeting bug in chat service |

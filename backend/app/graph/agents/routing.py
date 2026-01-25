@@ -6,7 +6,7 @@ The agent can ask clarifying questions when intent is ambiguous.
 """
 
 from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from app.llm.client import get_chat_model
 from app.langfuse.client import get_langfuse_client
@@ -154,13 +154,11 @@ def create_routing_agent(recursion_limit: int = 10):
     system_prompt = get_routing_prompt()
 
     # Create ReAct agent with tools
-    # Note: create_react_agent handles the ReAct loop internally
-    agent = create_react_agent(
+    # Note: create_agent handles the ReAct loop internally
+    agent = create_agent(
         model=model,
         tools=ROUTING_TOOLS,
-        prompt=system_prompt,
-        # state_schema defaults to MessagesState, which works with our GraphState
-        # since GraphState has messages: Annotated[List[BaseMessage], add_messages]
+        system_prompt=system_prompt,
     )
 
     return agent

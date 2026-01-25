@@ -49,7 +49,8 @@ class ChatService:
     async def init_chat(self, user_id: str) -> ChatMessageResponse:
         """
         Initialize a new chat session.
-        Invokes the graph to create a checkpoint at greeting_node interrupt.
+        Creates a new thread and returns a static greeting.
+        The routing agent will be invoked on the first user message.
 
         Args:
             user_id (str): The user identifier
@@ -64,18 +65,14 @@ class ChatService:
         chat_history_service = get_chat_history_service()
         await chat_history_service.create_conversation(user_id, thread_id)
 
-        # Invoke the graph to create a checkpoint at greeting_node
-        # This ensures the graph state exists when user sends first message
-        graph = await self._get_graph()
-        config = {"configurable": {"thread_id": thread_id}}
-        result = await graph.ainvoke({"messages": []}, config=config)
-
-        # Extract greeting from graph result
-        messages = result.get("messages", [])
-        if messages:
-            reply = messages[-1].content
-        else:
-            reply = "Welcome! I'm here to help you build lesson plans. What would you like to work on?"
+        # Return static greeting - the routing agent will handle the conversation
+        # when the user sends their first message. This avoids the double-greeting
+        # issue where init invokes the agent and then the first message invokes it again.
+        reply = (
+            "Hello! I'm your lesson planning assistant. "
+            "I can help you with **Handwriting**, **Vocabulary**, or **Idea Generation** lessons. "
+            "What would you like to work on today?"
+        )
 
         return ChatMessageResponse(
             thread_id=thread_id,
