@@ -6,8 +6,9 @@ Architecture:
 2. Routing agent (ReAct) processes and either:
    - Asks clarifying questions (continues conversation)
    - Calls a routing tool (triggers handoff)
-3. If routing tool was called, route to appropriate placeholder node
-4. Placeholder node returns "coming soon" and ends conversation
+3. If routing tool was called, route to param agent
+4. Param agent collects task-specific parameters
+5. When params collected, route to generator placeholder → END
 """
 
 import os
@@ -17,15 +18,20 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph_checkpoint_aws import DynamoDBSaver
 from langchain_core.messages import AIMessage, ToolMessage
 
-from app.graph.state import GraphState
+from app.graph.state import GraphState, HandwritingParams
 from app.graph.agents.routing import (
     create_routing_agent,
     TOOL_TO_TASK_TYPE,
+)
+from app.graph.agents.param import (
+    create_param_agent,
+    HANDWRITING_TOOL_NAME,
 )
 from app.graph.nodes.placeholders import (
     handwriting_placeholder,
     vocabulary_placeholder,
     idea_generation_placeholder,
+    handwriting_generator_placeholder,
 )
 from app.config import settings
 
@@ -77,13 +83,14 @@ def route_after_agent(state: GraphState) -> str:
     """
     Routing function: decide where to go after the routing agent runs.
 
-    If a routing tool was called (task_type is set), go to the appropriate
-    placeholder node. Otherwise, end the graph (agent will continue on next invoke).
+    If a routing tool was called (task_type is set), go to param agent.
+    Otherwise, end the graph (agent will continue on next invoke).
     """
     task_type = state.get("task_type")
 
     if task_type == "handwriting":
-        return "handwriting_placeholder"
+        # Go to param agent to collect handwriting parameters
+        return "param_agent"
     elif task_type == "vocabulary":
         return "vocabulary_placeholder"
     elif task_type == "idea_generation":
@@ -92,6 +99,74 @@ def route_after_agent(state: GraphState) -> str:
         # No routing tool called - agent asked a question or greeted
         # End this invocation; user will respond and invoke again
         return END
+
+
+def param_agent_node(state: GraphState) -> dict:
+    """
+    Node that runs the parameter collection ReAct agent.
+
+    The agent will either:
+    1. Ask for missing parameters
+    2. Call submit_handwriting_params when all params collected
+
+    After the agent runs, we inspect messages for tool calls and
+    extract parameters to state.
+    """
+    # Create fresh agent instance (stateless)
+    agent = create_param_agent()
+
+    # Invoke the agent with current messages
+    result = agent.invoke({"messages": state["messages"]})
+
+    # Extract messages from agent result
+    new_messages = result.get("messages", [])
+
+    # Check if the handwriting tool was called and extract parameters
+    handwriting_params = extract_handwriting_params(new_messages)
+
+    return {
+        "messages": new_messages,
+        "handwriting_params": handwriting_params,
+    }
+
+
+def extract_handwriting_params(messages: list) -> HandwritingParams | None:
+    """
+    Extract handwriting parameters from tool call in messages.
+
+    Looks for the submit_handwriting_params tool call and extracts
+    the arguments as HandwritingParams.
+
+    Returns None if the tool wasn't called.
+    """
+    # Look for AI message with tool_calls
+    for msg in reversed(messages):
+        if isinstance(msg, AIMessage) and hasattr(msg, 'tool_calls') and msg.tool_calls:
+            for tool_call in msg.tool_calls:
+                if tool_call.get('name') == HANDWRITING_TOOL_NAME:
+                    args = tool_call.get('args', {})
+                    # Normalize letter to uppercase
+                    letter = args.get('letter', '').upper().strip()
+                    return HandwritingParams(
+                        grade=args.get('grade'),
+                        letter=letter,
+                        student_level=args.get('student_level', 'on-level'),
+                    )
+    return None
+
+
+def route_after_param_agent(state: GraphState) -> str:
+    """
+    Routing function: decide where to go after the param agent runs.
+
+    If handwriting params were collected, go to generator placeholder.
+    Otherwise, end the graph (user needs to provide more info).
+    """
+    if state.get("handwriting_params") is not None:
+        return "handwriting_generator_placeholder"
+
+    # Param agent asked for more info - wait for user response
+    return END
 
 
 async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
@@ -117,7 +192,9 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
 
     # Add nodes
     graph.add_node("routing_agent", routing_agent_node)
+    graph.add_node("param_agent", param_agent_node)
     graph.add_node("handwriting_placeholder", handwriting_placeholder)
+    graph.add_node("handwriting_generator_placeholder", handwriting_generator_placeholder)
     graph.add_node("vocabulary_placeholder", vocabulary_placeholder)
     graph.add_node("idea_generation_placeholder", idea_generation_placeholder)
 
@@ -129,15 +206,26 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
         "routing_agent",
         route_after_agent,
         {
-            "handwriting_placeholder": "handwriting_placeholder",
+            "param_agent": "param_agent",
             "vocabulary_placeholder": "vocabulary_placeholder",
             "idea_generation_placeholder": "idea_generation_placeholder",
             END: END,
         }
     )
 
-    # Placeholder nodes always end the conversation
+    # Add conditional edges from param agent
+    graph.add_conditional_edges(
+        "param_agent",
+        route_after_param_agent,
+        {
+            "handwriting_generator_placeholder": "handwriting_generator_placeholder",
+            END: END,
+        }
+    )
+
+    # Placeholder/generator nodes always end the conversation
     graph.add_edge("handwriting_placeholder", END)
+    graph.add_edge("handwriting_generator_placeholder", END)
     graph.add_edge("vocabulary_placeholder", END)
     graph.add_edge("idea_generation_placeholder", END)
 

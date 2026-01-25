@@ -107,6 +107,26 @@ specs/
 - `tests/evals/test_routing_agent.py` - Eval tests
 - `tests/datasets/routing_agent.py` - Test dataset
 
+### 011 - Parameter Collection Agent
+**Status:** Implemented
+**Spec:** [011-param-agent/spec.md](./011-param-agent/spec.md)
+**Description:** ReAct agent that collects task-specific parameters through conversation. First task type implemented: handwriting. Vocabulary and idea generation tools planned for future.
+
+**Features:**
+- Single param agent with task-specific tools (handwriting first)
+- `submit_handwriting_params(grade, letter, student_level)` tool
+- Parameter extraction from tool calls in node wrapper
+- Generator placeholder showing collected params
+- Evaluation tests with 85%+ param extraction accuracy
+
+**Related Files:**
+- `app/graph/agents/param.py` - Param agent and handwriting tool
+- `app/graph/state.py` - `HandwritingParams` TypedDict
+- `app/graph/graph.py` - Param agent node and extraction logic
+- `app/graph/nodes/placeholders.py` - Generator placeholder
+- `tests/evals/test_param_agent.py` - Eval tests
+- `tests/datasets/param_agent.py` - Test dataset (18 cases)
+
 ---
 
 ## How to Use This Structure

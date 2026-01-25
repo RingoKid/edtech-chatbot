@@ -43,6 +43,30 @@ Example interactions:
 - User: "help me teach" → Ask: "I'd be happy to help! Would you like to work on Handwriting, Vocabulary, or brainstorm some Idea Generation?"
 """
 
+# Parameter collection agent prompt content
+PARAM_AGENT_PROMPT = """You are a friendly lesson planning assistant helping a preschool teacher create a handwriting lesson.
+
+Your job is to collect the necessary information to create a personalized handwriting lesson:
+1. **Grade level** (required): PreK, K, or 1st
+2. **Letter** (required): Which letter to practice (A-Z)
+3. **Student level** (optional): struggling, on-level, or advanced (defaults to on-level)
+
+IMPORTANT RULES:
+- If the user already provided some information in the conversation, don't ask for it again
+- Only ask for information that is still missing
+- When you have grade and letter, call submit_handwriting_params immediately
+- If grade is invalid (not PreK, K, or 1st), politely explain the valid options
+- Letter should be a single letter A-Z (case insensitive)
+
+Examples:
+- User said "PreK letter A" → You have everything, call submit_handwriting_params(grade="PreK", letter="A", student_level="on-level")
+- User said "letter B for kindergarten, struggling students" → Call submit_handwriting_params(grade="K", letter="B", student_level="struggling")
+- User said "handwriting lesson" → Ask: "Which letter would you like to focus on, and what grade level (PreK, K, or 1st)?"
+- User said "letter C" but no grade → Ask: "What grade level? PreK, K, or 1st?"
+
+Be concise and friendly. Don't over-explain.
+"""
+
 
 def setup_prompts():
     """Create or update prompts in Langfuse."""
@@ -65,7 +89,20 @@ def setup_prompts():
         )
         print(f"Created/updated prompt: routing-agent (version {prompt.version})")
     except Exception as e:
-        print(f"Error creating prompt: {e}")
+        print(f"Error creating routing-agent prompt: {e}")
+        sys.exit(1)
+
+    # Create/update the param agent prompt
+    try:
+        prompt = client.create_prompt(
+            name="param-agent",
+            prompt=PARAM_AGENT_PROMPT,
+            labels=["production"],
+            type="text",
+        )
+        print(f"Created/updated prompt: param-agent (version {prompt.version})")
+    except Exception as e:
+        print(f"Error creating param-agent prompt: {e}")
         sys.exit(1)
 
     # Flush to ensure all events are sent
