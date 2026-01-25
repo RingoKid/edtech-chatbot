@@ -4,20 +4,7 @@
 
 Agent-based architecture using LangGraph's `create_agent` for conversational flexibility with deterministic nodes for consistent lesson generation.
 
-**Status:** In Progress (Phase 1 Complete)
-**Current Implementation:** LangGraph state machine (see `backend/specs/002-lesson-graph/`)
-
----
-
-## Current vs Proposed
-
-| Aspect | Current (v1) | Proposed (v2) |
-|--------|--------------|---------------|
-| Routing | LLM structured output → fixed paths | ReAct agent with routing tools |
-| Param collection | Explicit nodes per parameter | Task-specific ReAct agents |
-| Generation | Not implemented yet | Deterministic nodes with explicit prompts |
-| Prompts | Hardcoded in codebase | Stored in Langfuse, fetched at runtime |
-| Flexibility | Low — predefined paths | High — agents adapt to conversation |
+**Status:** In Progress (Phase 2 Complete)
 
 ---
 
@@ -42,22 +29,28 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
                               │ Tool call (task_type only)
                               ▼
 ┌────────────────────────────────────────────────────────────────────┐
-│                 TASK AGENTS LAYER                                  │
-│                    (ReAct Agents)                                  │
+│                 PARAM COLLECTION LAYER                             │
 │                                                                    │
-│  ┌──────────────┬───────────────┬───────────────┐                  │
-│  │ Handwriting  │  Vocabulary   │     Idea      │                  │
-│  │    Agent     │    Agent      │    Agent      │                  │
-│  │              │               │               │                  │
-│  │ Extracts:    │ Extracts:     │ Extracts:     │                  │
-│  │ - grade      │ - grade       │ - grade       │                  │
-│  │ - letter     │ - topic       │ - theme       │                  │
-│  │ - level      │ - word_count  │ - constraints │                  │
-│  └──────┬───────┴───────┬───────┴───────┬───────┘                  │
-│         │               │               │                          │
-└─────────┼───────────────┼───────────────┼──────────────────────────┘
-          │ params        │ params        │ params
-          ▼               ▼               ▼
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │              Parameter Agent (single agent)                   │  │
+│  │                                                               │  │
+│  │  - create_agent (langchain.agents) — LangGraph 1.0+          │  │
+│  │  - Model: gpt-4o                                             │  │
+│  │  - Prompt: Generic (looks at context to pick tool)           │  │
+│  │  - Tools: submit_handwriting_params                          │  │
+│  │           (future: submit_vocabulary_params,                 │  │
+│  │            submit_idea_params)                               │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                    │
+│  Extracts task-specific params via tool calls:                     │
+│  - Handwriting: grade, letter, student_level                       │
+│  - Vocabulary: grade, topic, word_count (future)                   │
+│  - Idea Gen: grade, theme, constraints (future)                    │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ params stored in state
+                              ▼
 ┌────────────────────────────────────────────────────────────────────┐
 │                    GENERATION LAYER                                │
 │                 (Deterministic Nodes)                              │
@@ -65,6 +58,7 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 │  ┌──────────────┬───────────────┬───────────────┐                  │
 │  │ Handwriting  │  Vocabulary   │     Idea      │                  │
 │  │  Generator   │  Generator    │   Generator   │                  │
+│  │  (planned)   │  (planned)    │   (planned)   │                  │
 │  └──────────────┴───────────────┴───────────────┘                  │
 │                                                                    │
 └────────────────────────────────────────────────────────────────────┘
@@ -80,9 +74,21 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 |----------|--------|-----------|
 | Framework | `create_agent` (LangGraph 1.0+) | Prebuilt, handles agent loop |
 | Model | `gpt-4o-mini` | Cost-effective for routing (~20x cheaper than gpt-4o) |
-| Tool params | None | Task agents extract params, not routing agent |
+| Tool params | None | Param agent extracts params, not routing agent |
 | Prompts | Langfuse | Change without deploy, track versions, A/B test |
 | Greeting | Static (not agent-generated) | Avoids double-greeting bug on session init |
+
+### Param Agent
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Architecture | Single agent for all task types | Less duplication, easier to add tasks |
+| Framework | `create_agent` (LangGraph 1.0+) | Same pattern as routing |
+| Model | `gpt-4o` | Better instruction following for extraction |
+| Tools | Task-specific (one tool per task type) | Explicit handoff, structured extraction |
+| Prompt | Generic (context-aware) | No prompt changes needed for new task types |
+| State storage | TypedDict per task type | Type-safe, clear generator contracts |
+| Tool validation | Pydantic | Validates LLM args at boundary |
 
 ### Evals
 
@@ -104,7 +110,7 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 
 ## Task Parameters
 
-### Handwriting
+### Handwriting ✅ Implemented
 
 | Parameter | Type | Required |
 |-----------|------|----------|
@@ -112,7 +118,7 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 | letter | `str` | Yes |
 | student_level | `Literal["struggling", "on-level", "advanced"]` | No |
 
-### Vocabulary
+### Vocabulary (Planned)
 
 | Parameter | Type | Required |
 |-----------|------|----------|
@@ -120,7 +126,7 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 | topic | `str` | Yes |
 | word_count | `int` | No |
 
-### Idea Generation
+### Idea Generation (Planned)
 
 | Parameter | Type | Required |
 |-----------|------|----------|
@@ -136,9 +142,9 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 
 | Layer | Criteria | Target |
 |-------|----------|--------|
-| Routing | `routing_accuracy` | >= 90% (adjusted for LLM variability) |
+| Routing | `routing_accuracy` | >= 90% |
 | Routing | `turn_efficiency` | <= 2.0 avg turns |
-| Task Agents | `param_extraction_accuracy` | >= 90% |
+| Param Agent | `param_extraction_accuracy` | >= 85% |
 | Generation | `structure_complete` | >= 85% |
 | Generation | `verbatim_check` | 100% (rule-based) |
 
@@ -160,23 +166,24 @@ Incremental approach — each phase is a separate spec with its own evals.
 
 **Spec:** `010-routing-agent`
 
-- ReAct agent for greeting + routing (`create_agent` from LangGraph 1.0+)
+- ReAct agent for greeting + routing
 - Three routing tools (no params)
 - Placeholder nodes for task agents
 - Prompts in Langfuse (`routing-agent` prompt)
-- Static greeting on init (agent invoked on first user message)
+- Static greeting on init
 - Evals: `routing_accuracy` >= 90%, `turn_efficiency` <= 2.0
 
 ---
 
-### Phase 2: Handwriting Task Agent
+### Phase 2: Parameter Agent ✅ Implemented
 
-**Spec:** `011-handwriting-agent`
+**Spec:** `011-param-agent`
 
-- ReAct agent for parameter collection
-- Extracts grade, letter, student_level from conversation
-- Hands off to generator when complete
-- Evals: `param_extraction_accuracy`
+- Single ReAct agent for all task types
+- Handwriting tool implemented (`submit_handwriting_params`)
+- Generic prompt (context-aware, no changes for new tools)
+- Node wrapper extracts tool args into state
+- Evals: `param_extraction_accuracy` >= 85%
 
 ---
 
@@ -192,11 +199,12 @@ Incremental approach — each phase is a separate spec with its own evals.
 
 ### Phase 4: Vocabulary & Idea Generation
 
-**Specs:** `013-vocab-agent`, `014-idea-agent`
+**Specs:** `013-vocab-params`, `014-idea-params`
 
-- Same pattern as handwriting
-- Task-specific parameter extraction
-- Task-specific generation
+- Add tools to existing param agent
+- Add state fields for each task type
+- Add generator placeholders
+- No prompt changes needed
 
 ---
 
@@ -212,25 +220,33 @@ Incremental approach — each phase is a separate spec with its own evals.
 
 ## Current Implementation Files
 
-### v2 (Phase 1 Complete)
+### Routing Layer (Phase 1)
 
 | File | Purpose |
 |------|---------|
-| `app/graph/state.py` | GraphState v2 (messages, task_type, routing_complete) |
-| `app/graph/graph.py` | Agent-based graph definition |
 | `app/graph/agents/routing.py` | Routing agent + tools |
-| `app/graph/nodes/placeholders.py` | Placeholder nodes for task agents |
-| `scripts/setup_prompts.py` | Langfuse prompt setup |
-
-### Eval System
-
-| File | Purpose |
-|------|---------|
-| `app/langfuse/criteria.py` | Evaluation criteria (routing_accuracy, turn_efficiency) |
-| `app/langfuse/service.py` | compare_models(), dataset functions |
-| `app/llm/client.py` | Model registry access |
 | `tests/datasets/routing_agent.py` | Routing eval test cases |
 | `tests/evals/test_routing_agent.py` | Routing eval tests |
+
+### Param Collection Layer (Phase 2)
+
+| File | Purpose |
+|------|---------|
+| `app/graph/agents/param.py` | Param agent + handwriting tool |
+| `app/graph/state.py` | GraphState with HandwritingParams |
+| `tests/datasets/param_agent.py` | Param eval test cases |
+| `tests/evals/test_param_agent.py` | Param eval tests |
+
+### Core Infrastructure
+
+| File | Purpose |
+|------|---------|
+| `app/graph/graph.py` | Graph definition with all nodes and routing |
+| `app/graph/nodes/placeholders.py` | Generator placeholders |
+| `app/langfuse/criteria.py` | Evaluation criteria |
+| `app/langfuse/service.py` | Langfuse helper functions |
+| `app/llm/client.py` | Model registry access |
+| `scripts/setup_prompts.py` | Langfuse prompt setup |
 
 ---
 
@@ -239,6 +255,7 @@ Incremental approach — each phase is a separate spec with its own evals.
 1. Should agents remember user preferences across sessions?
 2. How to handle very long conversations (context window limits)?
 3. Where does human review fit in the generation pipeline?
+4. How to handle user changing mind mid-collection? (e.g., "actually I want vocabulary")
 
 ---
 
@@ -249,3 +266,4 @@ Incremental approach — each phase is a separate spec with its own evals.
 | 0.1 | 2026-01-13 | Initial proposal |
 | 0.2 | 2026-01-23 | Updated based on 010 spec discussion: ReAct agent, Langfuse prompts, eval strategy |
 | 0.3 | 2026-01-24 | Sync with 010 implementation: LangGraph 1.0 API, static greeting, 90% accuracy target |
+| 0.4 | 2026-01-25 | Phase 2 complete: Single param agent, 85% accuracy target, removed v1 references |
