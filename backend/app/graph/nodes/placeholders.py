@@ -102,3 +102,73 @@ def idea_generation_placeholder(state: GraphState) -> dict:
         "messages": [message],
         "routing_complete": True,
     }
+
+
+def vocabulary_generator_placeholder(state: GraphState) -> dict:
+    """
+    Placeholder for vocabulary generator (after param collection).
+
+    Shows the collected parameters to confirm extraction worked.
+    Will be replaced by actual generator in a future spec.
+    """
+    params = state.get("vocabulary_params")
+
+    if params:
+        vocab_list = ", ".join(params.get('key_vocabulary', []))
+        content = (
+            f"**Vocabulary Lesson Generator** - Coming Soon!\n\n"
+            f"I've collected your lesson parameters:\n"
+            f"- **Grade Level:** {params['grade']}\n"
+            f"- **Writing Type:** {params['writing_type']}\n"
+            f"- **Key Vocabulary:** {vocab_list}\n"
+            f"- **Objectives:** {params['objectives']}\n"
+            f"- **Student Level:** {params['student_level']}\n\n"
+            f"The full lesson generator is coming in the next update. "
+            f"Check back soon!"
+        )
+    else:
+        content = (
+            "**Vocabulary Lesson Generator** - Coming Soon!\n\n"
+            "Something went wrong - no parameters were collected. "
+            "Please try again."
+        )
+
+    message = AIMessage(content=content)
+    return {
+        "messages": [message],
+    }
+
+
+def idea_generation_generator_placeholder(state: GraphState) -> dict:
+    """
+    Placeholder for idea generation generator (after param collection).
+
+    Shows the collected parameters to confirm extraction worked.
+    Will be replaced by actual generator in a future spec.
+    """
+    params = state.get("idea_generation_params")
+
+    if params:
+        content = (
+            f"**Idea Generation Lesson Generator** - Coming Soon!\n\n"
+            f"I've collected your lesson parameters:\n"
+            f"- **Grade Level:** {params['grade']}\n"
+            f"- **Genre:** {params['genre']}\n"
+            f"- **Genre Component:** {params['genre_component']}\n"
+            f"- **Writing Stage:** {params['writing_stage']}\n"
+            f"- **Objectives:** {params['objectives']}\n"
+            f"- **Student Level:** {params['student_level']}\n\n"
+            f"The full lesson generator is coming in the next update. "
+            f"Check back soon!"
+        )
+    else:
+        content = (
+            "**Idea Generation Lesson Generator** - Coming Soon!\n\n"
+            "Something went wrong - no parameters were collected. "
+            "Please try again."
+        )
+
+    message = AIMessage(content=content)
+    return {
+        "messages": [message],
+    }

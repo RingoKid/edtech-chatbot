@@ -30,6 +30,14 @@ CRITERIA_REGISTRY: dict[str, dict] = {
         "type": "rule-based",
         "description": "Checks if all extracted params match expected (exact match)",
     },
+    "vocab_param_extraction_accuracy": {
+        "type": "rule-based",
+        "description": "Checks if vocabulary params match expected (exact match)",
+    },
+    "idea_param_extraction_accuracy": {
+        "type": "rule-based",
+        "description": "Checks if idea generation params match expected (exact match)",
+    },
 }
 
 
@@ -220,6 +228,122 @@ def evaluate_param_extraction_accuracy(
     is_correct = len(mismatches) == 0
     return EvalResult(
         name="param_extraction_accuracy",
+        score=1.0 if is_correct else 0.0,
+        details={
+            "actual": actual_params,
+            "expected": expected_params,
+            "correct": is_correct,
+            "mismatches": mismatches,
+        },
+    )
+
+
+def evaluate_vocab_param_extraction_accuracy(
+    actual_params: dict | None,
+    expected_params: dict | None,
+) -> EvalResult:
+    """
+    Evaluate if vocabulary parameter extraction was correct.
+
+    Compares: grade, writing_type, key_vocabulary, objectives, student_level
+
+    Args:
+        actual_params: The extracted vocabulary parameters
+        expected_params: The expected parameters
+
+    Returns:
+        EvalResult with score 1.0 if all fields match, 0.0 otherwise
+    """
+    if actual_params is None and expected_params is None:
+        return EvalResult(
+            name="vocab_param_extraction_accuracy",
+            score=1.0,
+            details={"actual": None, "expected": None, "correct": True},
+        )
+
+    if actual_params is None or expected_params is None:
+        return EvalResult(
+            name="vocab_param_extraction_accuracy",
+            score=0.0,
+            details={
+                "actual": actual_params,
+                "expected": expected_params,
+                "correct": False,
+                "reason": "One is None, other is not",
+            },
+        )
+
+    mismatches = []
+    for key in ["grade", "writing_type", "objectives", "student_level"]:
+        actual_val = actual_params.get(key)
+        expected_val = expected_params.get(key)
+        if actual_val != expected_val:
+            mismatches.append(f"{key}: got '{actual_val}', expected '{expected_val}'")
+
+    # Special handling for key_vocabulary (list comparison - order doesn't matter)
+    actual_vocab = set(actual_params.get("key_vocabulary", []))
+    expected_vocab = set(expected_params.get("key_vocabulary", []))
+    if actual_vocab != expected_vocab:
+        mismatches.append(f"key_vocabulary: got {actual_vocab}, expected {expected_vocab}")
+
+    is_correct = len(mismatches) == 0
+    return EvalResult(
+        name="vocab_param_extraction_accuracy",
+        score=1.0 if is_correct else 0.0,
+        details={
+            "actual": actual_params,
+            "expected": expected_params,
+            "correct": is_correct,
+            "mismatches": mismatches,
+        },
+    )
+
+
+def evaluate_idea_param_extraction_accuracy(
+    actual_params: dict | None,
+    expected_params: dict | None,
+) -> EvalResult:
+    """
+    Evaluate if idea generation parameter extraction was correct.
+
+    Compares: grade, genre, genre_component, writing_stage, objectives, student_level
+
+    Args:
+        actual_params: The extracted idea generation parameters
+        expected_params: The expected parameters
+
+    Returns:
+        EvalResult with score 1.0 if all fields match, 0.0 otherwise
+    """
+    if actual_params is None and expected_params is None:
+        return EvalResult(
+            name="idea_param_extraction_accuracy",
+            score=1.0,
+            details={"actual": None, "expected": None, "correct": True},
+        )
+
+    if actual_params is None or expected_params is None:
+        return EvalResult(
+            name="idea_param_extraction_accuracy",
+            score=0.0,
+            details={
+                "actual": actual_params,
+                "expected": expected_params,
+                "correct": False,
+                "reason": "One is None, other is not",
+            },
+        )
+
+    mismatches = []
+    for key in ["grade", "genre", "genre_component", "writing_stage", "objectives", "student_level"]:
+        actual_val = actual_params.get(key)
+        expected_val = expected_params.get(key)
+        if actual_val != expected_val:
+            mismatches.append(f"{key}: got '{actual_val}', expected '{expected_val}'")
+
+    is_correct = len(mismatches) == 0
+    return EvalResult(
+        name="idea_param_extraction_accuracy",
         score=1.0 if is_correct else 0.0,
         details={
             "actual": actual_params,

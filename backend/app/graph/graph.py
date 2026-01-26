@@ -18,7 +18,12 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph_checkpoint_aws import DynamoDBSaver
 from langchain_core.messages import AIMessage, ToolMessage
 
-from app.graph.state import GraphState, HandwritingParams
+from app.graph.state import (
+    GraphState,
+    HandwritingParams,
+    VocabularySyntaxParams,
+    IdeaGenerationParams,
+)
 from app.graph.agents.routing import (
     create_routing_agent,
     TOOL_TO_TASK_TYPE,
@@ -26,12 +31,16 @@ from app.graph.agents.routing import (
 from app.graph.agents.param import (
     create_param_agent,
     HANDWRITING_TOOL_NAME,
+    VOCABULARY_TOOL_NAME,
+    IDEA_GENERATION_TOOL_NAME,
 )
 from app.graph.nodes.placeholders import (
     handwriting_placeholder,
     vocabulary_placeholder,
     idea_generation_placeholder,
     handwriting_generator_placeholder,
+    vocabulary_generator_placeholder,
+    idea_generation_generator_placeholder,
 )
 from app.config import settings
 
@@ -92,9 +101,11 @@ def route_after_agent(state: GraphState) -> str:
         # Go to param agent to collect handwriting parameters
         return "param_agent"
     elif task_type == "vocabulary":
-        return "vocabulary_placeholder"
+        # Go to param agent to collect vocabulary parameters
+        return "param_agent"
     elif task_type == "idea_generation":
-        return "idea_generation_placeholder"
+        # Go to param agent to collect idea generation parameters
+        return "param_agent"
     else:
         # No routing tool called - agent asked a question or greeted
         # End this invocation; user will respond and invoke again
@@ -107,7 +118,7 @@ def param_agent_node(state: GraphState) -> dict:
 
     The agent will either:
     1. Ask for missing parameters
-    2. Call submit_handwriting_params when all params collected
+    2. Call the appropriate submit tool when all params collected
 
     After the agent runs, we inspect messages for tool calls and
     extract parameters to state.
@@ -121,12 +132,16 @@ def param_agent_node(state: GraphState) -> dict:
     # Extract messages from agent result
     new_messages = result.get("messages", [])
 
-    # Check if the handwriting tool was called and extract parameters
+    # Check which tool was called and extract parameters
     handwriting_params = extract_handwriting_params(new_messages)
+    vocabulary_params = extract_vocabulary_params(new_messages)
+    idea_generation_params = extract_idea_generation_params(new_messages)
 
     return {
         "messages": new_messages,
         "handwriting_params": handwriting_params,
+        "vocabulary_params": vocabulary_params,
+        "idea_generation_params": idea_generation_params,
     }
 
 
@@ -155,15 +170,72 @@ def extract_handwriting_params(messages: list) -> HandwritingParams | None:
     return None
 
 
+def extract_vocabulary_params(messages: list) -> VocabularySyntaxParams | None:
+    """
+    Extract vocabulary parameters from tool call in messages.
+
+    Looks for the submit_vocabulary_params tool call and extracts
+    the arguments as VocabularySyntaxParams.
+
+    Returns None if the tool wasn't called.
+    """
+    # Look for AI message with tool_calls
+    for msg in reversed(messages):
+        if isinstance(msg, AIMessage) and hasattr(msg, 'tool_calls') and msg.tool_calls:
+            for tool_call in msg.tool_calls:
+                if tool_call.get('name') == VOCABULARY_TOOL_NAME:
+                    args = tool_call.get('args', {})
+                    return VocabularySyntaxParams(
+                        grade=args.get('grade'),
+                        writing_type=args.get('writing_type'),
+                        key_vocabulary=args.get('key_vocabulary', []),
+                        objectives=args.get('objectives', ''),
+                        student_level=args.get('student_level', 'on-level'),
+                    )
+    return None
+
+
+def extract_idea_generation_params(messages: list) -> IdeaGenerationParams | None:
+    """
+    Extract idea generation parameters from tool call in messages.
+
+    Looks for the submit_idea_generation_params tool call and extracts
+    the arguments as IdeaGenerationParams.
+
+    Returns None if the tool wasn't called.
+    """
+    # Look for AI message with tool_calls
+    for msg in reversed(messages):
+        if isinstance(msg, AIMessage) and hasattr(msg, 'tool_calls') and msg.tool_calls:
+            for tool_call in msg.tool_calls:
+                if tool_call.get('name') == IDEA_GENERATION_TOOL_NAME:
+                    args = tool_call.get('args', {})
+                    return IdeaGenerationParams(
+                        grade=args.get('grade'),
+                        genre=args.get('genre'),
+                        genre_component=args.get('genre_component', ''),
+                        writing_stage=args.get('writing_stage'),
+                        objectives=args.get('objectives', ''),
+                        student_level=args.get('student_level', 'on-level'),
+                    )
+    return None
+
+
 def route_after_param_agent(state: GraphState) -> str:
     """
     Routing function: decide where to go after the param agent runs.
 
-    If handwriting params were collected, go to generator placeholder.
+    If params were collected, go to appropriate generator placeholder.
     Otherwise, end the graph (user needs to provide more info).
     """
     if state.get("handwriting_params") is not None:
         return "handwriting_generator_placeholder"
+
+    if state.get("vocabulary_params") is not None:
+        return "vocabulary_generator_placeholder"
+
+    if state.get("idea_generation_params") is not None:
+        return "idea_generation_generator_placeholder"
 
     # Param agent asked for more info - wait for user response
     return END
@@ -196,7 +268,9 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
     graph.add_node("handwriting_placeholder", handwriting_placeholder)
     graph.add_node("handwriting_generator_placeholder", handwriting_generator_placeholder)
     graph.add_node("vocabulary_placeholder", vocabulary_placeholder)
+    graph.add_node("vocabulary_generator_placeholder", vocabulary_generator_placeholder)
     graph.add_node("idea_generation_placeholder", idea_generation_placeholder)
+    graph.add_node("idea_generation_generator_placeholder", idea_generation_generator_placeholder)
 
     # Set entry point
     graph.set_entry_point("routing_agent")
@@ -219,6 +293,8 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
         route_after_param_agent,
         {
             "handwriting_generator_placeholder": "handwriting_generator_placeholder",
+            "vocabulary_generator_placeholder": "vocabulary_generator_placeholder",
+            "idea_generation_generator_placeholder": "idea_generation_generator_placeholder",
             END: END,
         }
     )
@@ -227,7 +303,9 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
     graph.add_edge("handwriting_placeholder", END)
     graph.add_edge("handwriting_generator_placeholder", END)
     graph.add_edge("vocabulary_placeholder", END)
+    graph.add_edge("vocabulary_generator_placeholder", END)
     graph.add_edge("idea_generation_placeholder", END)
+    graph.add_edge("idea_generation_generator_placeholder", END)
 
     # Compile the graph
     # Note: No interrupt_after needed - the ReAct agent naturally returns

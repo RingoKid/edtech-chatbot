@@ -26,6 +26,43 @@ class HandwritingParams(TypedDict):
     student_level: StudentLevel
 
 
+# Writing type literals for vocabulary lessons
+WritingType = Literal["informational", "narrative", "personal_narrative", "opinion"]
+
+# Genre literals for idea generation lessons
+Genre = Literal["narrative", "informational", "opinion"]
+
+# Writing stage literals for idea generation lessons
+WritingStage = Literal["brainstorm", "initial_draft", "revise", "edit"]
+
+
+class VocabularySyntaxParams(TypedDict):
+    """
+    Parameters for vocabulary & sentence structure lesson generation.
+
+    Collected by the param agent before handing off to the generator.
+    """
+    grade: GradeLevel
+    writing_type: WritingType
+    key_vocabulary: list[str]
+    objectives: str
+    student_level: StudentLevel
+
+
+class IdeaGenerationParams(TypedDict):
+    """
+    Parameters for idea generation & organization lesson generation.
+
+    Collected by the param agent before handing off to the generator.
+    """
+    grade: GradeLevel
+    genre: Genre
+    genre_component: str
+    writing_stage: WritingStage
+    objectives: str
+    student_level: StudentLevel
+
+
 class GraphState(TypedDict):
     """
     Unified state object for the routing agent graph.
@@ -47,3 +84,9 @@ class GraphState(TypedDict):
 
     # Handwriting lesson parameters (set by param agent)
     handwriting_params: Optional[HandwritingParams]
+
+    # Vocabulary & syntax lesson parameters (set by param agent)
+    vocabulary_params: Optional[VocabularySyntaxParams]
+
+    # Idea generation lesson parameters (set by param agent)
+    idea_generation_params: Optional[IdeaGenerationParams]
