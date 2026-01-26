@@ -110,7 +110,7 @@ specs/
 ### 011 - Parameter Collection Agent
 **Status:** Implemented
 **Spec:** [011-param-agent/spec.md](./011-param-agent/spec.md)
-**Description:** ReAct agent that collects task-specific parameters through conversation. First task type implemented: handwriting. Vocabulary and idea generation tools planned for future.
+**Description:** ReAct agent that collects task-specific parameters through conversation. First task type implemented: handwriting.
 
 **Features:**
 - Single param agent with task-specific tools (handwriting first)
@@ -126,6 +126,28 @@ specs/
 - `app/graph/nodes/placeholders.py` - Generator placeholder
 - `tests/evals/test_param_agent.py` - Eval tests
 - `tests/datasets/param_agent.py` - Test dataset (18 cases)
+
+### 012 - Vocabulary & Idea Generation Parameter Tools
+**Status:** Implemented
+**Spec:** [012-vocab-idea-params/spec.md](./012-vocab-idea-params/spec.md)
+**Description:** Extends the param agent with vocabulary and idea generation tools. Adds two new parameter collection flows to complete the Layer 2 task agents.
+
+**Features:**
+- `submit_vocabulary_params(grade, writing_type, key_vocabulary, objectives, student_level)` tool
+- `submit_idea_generation_params(grade, genre, genre_component, writing_stage, objectives, student_level)` tool
+- Updated routing: vocab and idea_generation now go to param_agent
+- Generator placeholders showing collected params
+- Evaluation tests for both new param types
+
+**Related Files:**
+- `app/graph/agents/param.py` - All three param tools
+- `app/graph/state.py` - VocabularySyntaxParams, IdeaGenerationParams TypedDicts
+- `app/graph/graph.py` - Extraction functions for all param types
+- `app/graph/nodes/placeholders.py` - Generator placeholders
+- `tests/evals/test_vocab_params.py` - Vocab eval tests
+- `tests/evals/test_idea_params.py` - Idea generation eval tests
+- `tests/datasets/vocab_params.py` - Vocab test dataset (18 cases)
+- `tests/datasets/idea_params.py` - Idea generation test dataset (20 cases)
 
 ---
 
