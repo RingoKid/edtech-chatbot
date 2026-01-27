@@ -12,18 +12,14 @@ All backend commands run inside the `backend` Docker container:
 
 ### Evals
 
-Run agent evaluation tests:
+When asked to run evals:
 
-```bash
-# Routing agent evals
-docker compose exec backend pytest tests/evals/test_routing_agent.py -v
+1. **Discover** — List all eval files: `ls backend/tests/evals/test_*.py`
+2. **Present** — Show the available evals to the user
+3. **Ask** — Which eval(s) to run? (or "all")
+4. **Run** — `docker compose exec backend pytest tests/evals/<selected_file> -v`
 
-# Param agent evals
-docker compose exec backend pytest tests/evals/test_param_agent.py -v
-
-# All evals
-docker compose exec backend pytest tests/evals/ -v
-```
+To run all evals at once: `docker compose exec backend pytest tests/evals/ -v`
 
 After rebuilding, always initialize the database:
 
