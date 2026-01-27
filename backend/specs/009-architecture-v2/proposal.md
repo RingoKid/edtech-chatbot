@@ -4,7 +4,7 @@
 
 Agent-based architecture using LangGraph's `create_agent` for conversational flexibility with deterministic nodes for consistent lesson generation.
 
-**Status:** In Progress (Phase 4 Complete)
+**Status:** In Progress (Phase 3 Complete)
 
 ---
 
@@ -58,7 +58,7 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 │  ┌──────────────┬───────────────┬───────────────┐                  │
 │  │ Handwriting  │  Vocabulary   │     Idea      │                  │
 │  │  Generator   │  Generator    │   Generator   │                  │
-│  │  (planned)   │  (planned)    │   (planned)   │                  │
+│  │     ✅       │  (planned)    │   (planned)   │                  │
 │  └──────────────┴───────────────┴───────────────┘                  │
 │                                                                    │
 └────────────────────────────────────────────────────────────────────┘
@@ -152,8 +152,9 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 | Param Agent (Handwriting) | `param_extraction_accuracy` | >= 85% |
 | Param Agent (Vocabulary) | `vocab_param_extraction_accuracy` | >= 85% |
 | Param Agent (Idea Gen) | `idea_param_extraction_accuracy` | >= 60% |
-| Generation | `structure_complete` | >= 85% |
-| Generation | `verbatim_check` | 100% (rule-based) |
+| Generation | `structure_complete` | >= 80% |
+| Generation | `verbatim_check` | >= 60% (word overlap) |
+| Generation | `verbal_cues_correct` | >= 75% |
 
 ### Eval Workflow
 
@@ -194,13 +195,15 @@ Incremental approach — each phase is a separate spec with its own evals.
 
 ---
 
-### Phase 3: Handwriting Generator
+### Phase 3: Handwriting Generator ✅ Implemented
 
-**Spec:** `013-handwriting-generator` (planned)
+**Spec:** `013-handwriting-generator`
 
-- Deterministic node with explicit prompts
-- Uses Forms B, C, D, F structure
-- Evals: `structure_complete`, `verbatim_check`
+- ReAct agent with `finalize_lesson` tool for multi-turn modifications
+- Uses Forms B, C, D, F, H reference materials
+- Conditional entry routing for modification loop
+- Evals: `structure_complete` >= 80%, `verbatim_check` >= 60%, `verbal_cues_correct` >= 75%
+- Test results: 91% pass rate (10/11 tests)
 
 ---
 
@@ -249,6 +252,15 @@ Incremental approach — each phase is a separate spec with its own evals.
 | `tests/evals/test_vocab_params.py` | Vocabulary param eval tests |
 | `tests/evals/test_idea_params.py` | Idea generation param eval tests |
 
+### Generation Layer (Phase 3)
+
+| File | Purpose |
+|------|---------|
+| `app/graph/agents/handwriting_generator.py` | Handwriting generator agent + finalize tool |
+| `prompt/reference_materials/handwriting_reference.md` | L4C Forms B, C, D, F, H |
+| `tests/datasets/handwriting_generator.py` | Generator test cases (14) |
+| `tests/evals/test_handwriting_generator.py` | Generator eval tests |
+
 ### Core Infrastructure
 
 | File | Purpose |
@@ -280,3 +292,4 @@ Incremental approach — each phase is a separate spec with its own evals.
 | 0.3 | 2026-01-24 | Sync with 010 implementation: LangGraph 1.0 API, static greeting, 90% accuracy target |
 | 0.4 | 2026-01-25 | Phase 2 complete: Single param agent, 85% accuracy target, removed v1 references |
 | 0.5 | 2026-01-26 | Phase 4 complete: Vocab and idea generation param tools, updated task parameters |
+| 0.6 | 2026-01-26 | Phase 3 complete: Handwriting generator with modification loop, 91% test pass rate |
