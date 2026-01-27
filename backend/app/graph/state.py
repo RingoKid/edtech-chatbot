@@ -72,6 +72,7 @@ class GraphState(TypedDict):
     - task_type: Set when routing tool is called, indicates destination
     - routing_complete: Signals successful handoff to task agent
     - handwriting_params: Set when param agent collects all handwriting params
+    - lesson_finalized: Set when generator's finalize_lesson tool is called
     """
     # Messages are handled with add_messages reducer (appends, not replaces)
     messages: Annotated[List[BaseMessage], add_messages]
@@ -90,3 +91,6 @@ class GraphState(TypedDict):
 
     # Idea generation lesson parameters (set by param agent)
     idea_generation_params: Optional[IdeaGenerationParams]
+
+    # Signals that the lesson has been finalized by the generator
+    lesson_finalized: bool

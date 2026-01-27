@@ -4,7 +4,7 @@
 
 Agent-based architecture using LangGraph's `create_agent` for conversational flexibility with deterministic nodes for consistent lesson generation.
 
-**Status:** In Progress (Phase 2 Complete)
+**Status:** In Progress (Phase 4 Complete)
 
 ---
 
@@ -37,15 +37,15 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 │  │  - create_agent (langchain.agents) — LangGraph 1.0+          │  │
 │  │  - Model: gpt-4o                                             │  │
 │  │  - Prompt: Generic (looks at context to pick tool)           │  │
-│  │  - Tools: submit_handwriting_params                          │  │
-│  │           (future: submit_vocabulary_params,                 │  │
-│  │            submit_idea_params)                               │  │
+│  │  - Tools: submit_handwriting_params,                         │  │
+│  │           submit_vocabulary_params,                          │  │
+│  │           submit_idea_generation_params                      │  │
 │  └──────────────────────────────────────────────────────────────┘  │
 │                                                                    │
 │  Extracts task-specific params via tool calls:                     │
 │  - Handwriting: grade, letter, student_level                       │
-│  - Vocabulary: grade, topic, word_count (future)                   │
-│  - Idea Gen: grade, theme, constraints (future)                    │
+│  - Vocabulary: grade, writing_type, key_vocabulary, objectives     │
+│  - Idea Gen: grade, genre, genre_component, writing_stage, obj.    │
 │                                                                    │
 └────────────────────────────────────────────────────────────────────┘
                               │
@@ -118,21 +118,26 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 | letter | `str` | Yes |
 | student_level | `Literal["struggling", "on-level", "advanced"]` | No |
 
-### Vocabulary (Planned)
+### Vocabulary ✅ Implemented
 
 | Parameter | Type | Required |
 |-----------|------|----------|
 | grade | `Literal["PreK", "K", "1st"]` | Yes |
-| topic | `str` | Yes |
-| word_count | `int` | No |
+| writing_type | `Literal["informational", "narrative", "personal_narrative", "opinion"]` | Yes |
+| key_vocabulary | `list[str]` | Yes |
+| objectives | `str` | Yes |
+| student_level | `Literal["struggling", "on-level", "advanced"]` | No |
 
-### Idea Generation (Planned)
+### Idea Generation ✅ Implemented
 
 | Parameter | Type | Required |
 |-----------|------|----------|
 | grade | `Literal["PreK", "K", "1st"]` | Yes |
-| theme | `str` | Yes |
-| constraints | `str` | No |
+| genre | `Literal["narrative", "informational", "opinion"]` | Yes |
+| genre_component | `str` | Yes |
+| writing_stage | `Literal["brainstorm", "initial_draft", "revise", "edit"]` | Yes |
+| objectives | `str` | Yes |
+| student_level | `Literal["struggling", "on-level", "advanced"]` | No |
 
 ---
 
@@ -144,7 +149,9 @@ Agent-based architecture using LangGraph's `create_agent` for conversational fle
 |-------|----------|--------|
 | Routing | `routing_accuracy` | >= 90% |
 | Routing | `turn_efficiency` | <= 2.0 avg turns |
-| Param Agent | `param_extraction_accuracy` | >= 85% |
+| Param Agent (Handwriting) | `param_extraction_accuracy` | >= 85% |
+| Param Agent (Vocabulary) | `vocab_param_extraction_accuracy` | >= 85% |
+| Param Agent (Idea Gen) | `idea_param_extraction_accuracy` | >= 60% |
 | Generation | `structure_complete` | >= 85% |
 | Generation | `verbatim_check` | 100% (rule-based) |
 
@@ -189,7 +196,7 @@ Incremental approach — each phase is a separate spec with its own evals.
 
 ### Phase 3: Handwriting Generator
 
-**Spec:** `012-handwriting-generator`
+**Spec:** `013-handwriting-generator` (planned)
 
 - Deterministic node with explicit prompts
 - Uses Forms B, C, D, F structure
@@ -197,20 +204,21 @@ Incremental approach — each phase is a separate spec with its own evals.
 
 ---
 
-### Phase 4: Vocabulary & Idea Generation
+### Phase 4: Vocabulary & Idea Generation ✅ Implemented
 
-**Specs:** `013-vocab-params`, `014-idea-params`
+**Spec:** `012-vocab-idea-params`
 
-- Add tools to existing param agent
-- Add state fields for each task type
-- Add generator placeholders
-- No prompt changes needed
+- Added `submit_vocabulary_params` and `submit_idea_generation_params` tools
+- Added `VocabularySyntaxParams` and `IdeaGenerationParams` state fields
+- Added generator placeholders for both task types
+- Updated routing to send vocab/idea_generation to param agent
+- Evals: `vocab_param_extraction_accuracy` >= 85%, `idea_param_extraction_accuracy` >= 60%
 
 ---
 
 ### Phase 5: Quality Evals
 
-**Spec:** `015-quality-evals`
+**Spec:** `014-quality-evals` (planned)
 
 - LLM-as-judge criteria
 - `activity_appropriate`, `objective_alignment`
@@ -228,14 +236,18 @@ Incremental approach — each phase is a separate spec with its own evals.
 | `tests/datasets/routing_agent.py` | Routing eval test cases |
 | `tests/evals/test_routing_agent.py` | Routing eval tests |
 
-### Param Collection Layer (Phase 2)
+### Param Collection Layer (Phase 2 + 4)
 
 | File | Purpose |
 |------|---------|
-| `app/graph/agents/param.py` | Param agent + handwriting tool |
-| `app/graph/state.py` | GraphState with HandwritingParams |
-| `tests/datasets/param_agent.py` | Param eval test cases |
-| `tests/evals/test_param_agent.py` | Param eval tests |
+| `app/graph/agents/param.py` | Param agent + all three tools |
+| `app/graph/state.py` | GraphState with all param TypedDicts |
+| `tests/datasets/param_agent.py` | Handwriting param test cases |
+| `tests/datasets/vocab_params.py` | Vocabulary param test cases |
+| `tests/datasets/idea_params.py` | Idea generation param test cases |
+| `tests/evals/test_param_agent.py` | Handwriting param eval tests |
+| `tests/evals/test_vocab_params.py` | Vocabulary param eval tests |
+| `tests/evals/test_idea_params.py` | Idea generation param eval tests |
 
 ### Core Infrastructure
 
@@ -267,3 +279,4 @@ Incremental approach — each phase is a separate spec with its own evals.
 | 0.2 | 2026-01-23 | Updated based on 010 spec discussion: ReAct agent, Langfuse prompts, eval strategy |
 | 0.3 | 2026-01-24 | Sync with 010 implementation: LangGraph 1.0 API, static greeting, 90% accuracy target |
 | 0.4 | 2026-01-25 | Phase 2 complete: Single param agent, 85% accuracy target, removed v1 references |
+| 0.5 | 2026-01-26 | Phase 4 complete: Vocab and idea generation param tools, updated task parameters |

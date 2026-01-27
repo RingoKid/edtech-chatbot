@@ -1,5 +1,5 @@
 """
-Graph definition for v2 architecture - ReAct routing agent with task placeholders.
+Graph definition for v2 architecture - ReAct routing agent with task generators.
 
 Architecture:
 1. User message comes in
@@ -8,7 +8,8 @@ Architecture:
    - Calls a routing tool (triggers handoff)
 3. If routing tool was called, route to param agent
 4. Param agent collects task-specific parameters
-5. When params collected, route to generator placeholder → END
+5. When params collected, route to generator agent
+6. Generator produces lesson, allows modifications until finalized
 """
 
 import os
@@ -34,11 +35,14 @@ from app.graph.agents.param import (
     VOCABULARY_TOOL_NAME,
     IDEA_GENERATION_TOOL_NAME,
 )
+from app.graph.agents.handwriting_generator import (
+    create_handwriting_generator_agent,
+    FINALIZE_TOOL_NAME,
+)
 from app.graph.nodes.placeholders import (
     handwriting_placeholder,
     vocabulary_placeholder,
     idea_generation_placeholder,
-    handwriting_generator_placeholder,
     vocabulary_generator_placeholder,
     idea_generation_generator_placeholder,
 )
@@ -225,11 +229,11 @@ def route_after_param_agent(state: GraphState) -> str:
     """
     Routing function: decide where to go after the param agent runs.
 
-    If params were collected, go to appropriate generator placeholder.
+    If params were collected, go to appropriate generator.
     Otherwise, end the graph (user needs to provide more info).
     """
     if state.get("handwriting_params") is not None:
-        return "handwriting_generator_placeholder"
+        return "handwriting_generator"
 
     if state.get("vocabulary_params") is not None:
         return "vocabulary_generator_placeholder"
@@ -239,6 +243,95 @@ def route_after_param_agent(state: GraphState) -> str:
 
     # Param agent asked for more info - wait for user response
     return END
+
+
+def handwriting_generator_node(state: GraphState) -> dict:
+    """
+    Node that runs the handwriting generator ReAct agent.
+
+    The agent will:
+    1. Generate a complete lesson on first invocation
+    2. Allow modifications based on user feedback
+    3. Call finalize_lesson when user is satisfied
+
+    Returns state updates including messages and lesson_finalized flag.
+    """
+    # Get params from state
+    params = state.get("handwriting_params")
+    if params is None:
+        # Shouldn't happen, but handle gracefully
+        return {
+            "messages": [AIMessage(content="Error: No handwriting parameters found.")],
+        }
+
+    # Create agent with params
+    agent = create_handwriting_generator_agent(
+        grade=params["grade"],
+        letter=params["letter"],
+        student_level=params["student_level"],
+    )
+
+    # Invoke the agent with current messages
+    result = agent.invoke({"messages": state["messages"]})
+
+    # Extract messages from agent result
+    new_messages = result.get("messages", [])
+
+    # Check if finalize_lesson tool was called
+    lesson_finalized = check_finalize_called(new_messages)
+
+    return {
+        "messages": new_messages,
+        "lesson_finalized": lesson_finalized,
+    }
+
+
+def check_finalize_called(messages: list) -> bool:
+    """
+    Check if the finalize_lesson tool was called in messages.
+
+    Returns True if the tool was called, False otherwise.
+    """
+    for msg in reversed(messages):
+        if isinstance(msg, AIMessage) and hasattr(msg, 'tool_calls') and msg.tool_calls:
+            for tool_call in msg.tool_calls:
+                if tool_call.get('name') == FINALIZE_TOOL_NAME:
+                    return True
+    return False
+
+
+def route_after_handwriting_generator(state: GraphState) -> str:
+    """
+    Routing function: decide where to go after the handwriting generator runs.
+
+    If finalize_lesson was called, go to END.
+    Otherwise, end this invocation and wait for user response.
+    """
+    if state.get("lesson_finalized"):
+        return END
+
+    # Generator presented lesson or made modifications - wait for user feedback
+    return END
+
+
+def entry_router(state: GraphState) -> str:
+    """
+    Entry point router: decide where to start based on current state.
+
+    If we're mid-generation (params set, not finalized), go directly to generator.
+    Otherwise, go through normal routing flow.
+    """
+    # Check if we're in an active handwriting generation session
+    if (
+        state.get("handwriting_params") is not None
+        and not state.get("lesson_finalized", False)
+    ):
+        return "handwriting_generator"
+
+    # TODO: Add similar checks for vocabulary and idea_generation when implemented
+
+    # Default: go through routing
+    return "routing_agent"
 
 
 async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
@@ -266,14 +359,20 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
     graph.add_node("routing_agent", routing_agent_node)
     graph.add_node("param_agent", param_agent_node)
     graph.add_node("handwriting_placeholder", handwriting_placeholder)
-    graph.add_node("handwriting_generator_placeholder", handwriting_generator_placeholder)
+    graph.add_node("handwriting_generator", handwriting_generator_node)
     graph.add_node("vocabulary_placeholder", vocabulary_placeholder)
     graph.add_node("vocabulary_generator_placeholder", vocabulary_generator_placeholder)
     graph.add_node("idea_generation_placeholder", idea_generation_placeholder)
     graph.add_node("idea_generation_generator_placeholder", idea_generation_generator_placeholder)
 
-    # Set entry point
-    graph.set_entry_point("routing_agent")
+    # Set conditional entry point - routes based on current session state
+    graph.set_conditional_entry_point(
+        entry_router,
+        {
+            "routing_agent": "routing_agent",
+            "handwriting_generator": "handwriting_generator",
+        }
+    )
 
     # Add conditional edges from routing agent
     graph.add_conditional_edges(
@@ -292,16 +391,24 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
         "param_agent",
         route_after_param_agent,
         {
-            "handwriting_generator_placeholder": "handwriting_generator_placeholder",
+            "handwriting_generator": "handwriting_generator",
             "vocabulary_generator_placeholder": "vocabulary_generator_placeholder",
             "idea_generation_generator_placeholder": "idea_generation_generator_placeholder",
             END: END,
         }
     )
 
-    # Placeholder/generator nodes always end the conversation
+    # Handwriting generator can have multi-turn conversation
+    graph.add_conditional_edges(
+        "handwriting_generator",
+        route_after_handwriting_generator,
+        {
+            END: END,
+        }
+    )
+
+    # Placeholder nodes always end the conversation
     graph.add_edge("handwriting_placeholder", END)
-    graph.add_edge("handwriting_generator_placeholder", END)
     graph.add_edge("vocabulary_placeholder", END)
     graph.add_edge("vocabulary_generator_placeholder", END)
     graph.add_edge("idea_generation_placeholder", END)

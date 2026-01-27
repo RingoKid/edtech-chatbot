@@ -18,6 +18,14 @@ CRITERIA_REGISTRY: dict[str, dict] = {
         "type": "rule-based",
         "description": "Checks if lesson has all required sections and markers",
     },
+    "verbatim_check": {
+        "type": "rule-based",
+        "description": "Checks if [Explanation] text matches Form B exactly",
+    },
+    "verbal_cues_correct": {
+        "type": "rule-based",
+        "description": "Checks if ##Sequence Verbal Cues match Form F for target letter",
+    },
     "routing_accuracy": {
         "type": "rule-based",
         "description": "Checks if agent routed to the correct task type",
@@ -112,6 +120,229 @@ def evaluate_structure_complete(output: str) -> EvalResult:
             "passed": passed,
             "total": total,
             "checks": checks,
+        },
+    )
+
+
+# Expected verbatim explanations from Form B (must match exactly)
+EXPECTED_EXPLANATIONS = {
+    "review_connect": (
+        "The purpose of this part of the lesson is to start with a quick review of "
+        "previously learned sounds. Do not use sounds that have not been directly taught. "
+        "Do not use words that have sounds that have not been directly taught."
+    ),
+    "model_explain_engage": (
+        "The purpose of this part of the lesson is to connect a sound or sound patterns "
+        "that you focused on during your reading block to writing its corresponding "
+        "grapheme patterns. First, make sure children clearly can distinguish the targeted "
+        "sound; then, hook that sound to the letter patterns through modeling and explaining "
+        "the sequence of strokes for letters and correct order of letters."
+    ),
+    "guided_practice": (
+        "The purpose of this part of the lesson is to give children practice writing the "
+        "letter while supporting proper pencil grip and correct sequence of stroke formation "
+        "using handwriting lines."
+    ),
+    "application": (
+        "The purpose of this part of the lesson is to facilitate children's spelling of the "
+        "letter or letter patterns when they hear the sound(s). This supports children's "
+        "early coordination of matching sound to letter(s) for the purpose of spelling words"
+    ),
+    "wrap_up": (
+        "The purpose of this part of the lesson is to remind students what they were focused "
+        "on and provide praise for their accomplishments"
+    ),
+}
+
+
+# Verbal cues from Form F for each letter (uppercase)
+VERBAL_CUES = {
+    "A": "Big line up, big line down, little line across",
+    "B": "Big line down, rainbow bump, rainbow bump",
+    "C": "Start at the top, curve around like a rainbow",
+    "D": "Big line down, big rainbow bump",
+    "E": "Big line down, little line at the top, middle, and bottom",
+    "F": "Big line down, little line at the top and in the middle",
+    "G": "Big curve like a rainbow, little line in",
+    "H": "Big line down, big line down, little line across",
+    "I": "Little line on top, big line down, little line on bottom",
+    "J": "Big line down and hook, little line on top",
+    "K": "Big line down, little line slant in, little line slant out",
+    "L": "Big line down, little line across",
+    "M": "Big line down, rainbow bump, rainbow bump",
+    "N": "Big line down, slant up, big line down",
+    "O": "Big curve around, close it up",
+    "P": "Big line down, rainbow bump",
+    "Q": "Big curve around, close it up, little line out",
+    "R": "Big line down, rainbow bump, slant out",
+    "S": "Little curve this way, little curve that way",
+    "T": "Big line down, little line across the top",
+    "U": "Big curve down and up, little line down",
+    "V": "Slant down, slant up",
+    "W": "Slant down, slant up, slant down, slant up",
+    "X": "Slant down, slant the other way",
+    "Y": "Little slant, little slant, big line down",
+    "Z": "Little line across, slant down, little line across",
+    # Lowercase
+    "a": "Start at the middle, rainbow around, little line down",
+    "b": "Big line down, rainbow bump from the middle",
+    "c": "Start at the middle, curve around like a rainbow",
+    "d": "Rainbow around, big line up and down",
+    "e": "Little line out, curve around like a smile",
+    "f": "Curve down, straight down, little line across",
+    "g": "Rainbow around, little line down, hook under",
+    "h": "Big line down, rainbow bump from the middle",
+    "i": "Little line down, dot on top",
+    "j": "Little line down, hook it up, dot on top",
+    "k": "Big line down, little slant in, little slant out",
+    "l": "Big line down",
+    "m": "Little line down, rainbow bump, rainbow bump",
+    "n": "Little line down, rainbow bump",
+    "o": "Rainbow around, close it up",
+    "p": "Big line down below the bottom, rainbow bump",
+    "q": "Rainbow around, little line down, slant out",
+    "r": "Little line down, tiny curve out",
+    "s": "Little curve this way, little curve that way",
+    "t": "Little line down, little line across the top",
+    "u": "Curve down, curve up, little line down",
+    "v": "Slant down, slant up",
+    "w": "Slant down, slant up, slant down, slant up",
+    "x": "Slant down, slant the other way",
+    "y": "Slant down, slant down below the line",
+    "z": "Little line across, slant down the stairs, little line across",
+}
+
+
+def evaluate_verbatim_check(output: str) -> EvalResult:
+    """
+    Check if [Explanation] text matches Form B exactly.
+
+    Extracts text within brackets [...] and compares against expected
+    verbatim explanations from Form B.
+
+    Returns score as matched_explanations / total_expected.
+    """
+    # Extract all [Explanation] blocks from output
+    # Match content within brackets, handling multi-line
+    explanation_pattern = r'\[([^\]]+)\]'
+    found_explanations = re.findall(explanation_pattern, output, re.IGNORECASE | re.DOTALL)
+
+    # Normalize text for comparison (lowercase, collapse whitespace)
+    def normalize(text: str) -> str:
+        return ' '.join(text.lower().split())
+
+    # Check each expected explanation
+    checks = {}
+    for key, expected in EXPECTED_EXPLANATIONS.items():
+        expected_norm = normalize(expected)
+        found = False
+
+        for found_exp in found_explanations:
+            found_norm = normalize(found_exp)
+            # Check if expected text is contained in found text
+            # (allow some flexibility for surrounding context)
+            if expected_norm in found_norm or found_norm in expected_norm:
+                found = True
+                break
+            # Also check for high similarity (80%+ overlap)
+            # using simple word overlap
+            expected_words = set(expected_norm.split())
+            found_words = set(found_norm.split())
+            if len(expected_words) > 0:
+                overlap = len(expected_words & found_words) / len(expected_words)
+                if overlap >= 0.8:
+                    found = True
+                    break
+
+        checks[key] = found
+
+    passed = sum(1 for v in checks.values() if v)
+    total = len(checks)
+    score = passed / total if total > 0 else 0.0
+
+    return EvalResult(
+        name="verbatim_check",
+        score=score,
+        details={
+            "passed": passed,
+            "total": total,
+            "checks": checks,
+            "found_explanations": len(found_explanations),
+        },
+    )
+
+
+def evaluate_verbal_cues_correct(output: str, target_letter: str) -> EvalResult:
+    """
+    Check if ##Sequence Verbal Cues match Form F for target letter.
+
+    Extracts verbal cues after ## markers and compares against expected
+    cues for the target letter.
+
+    Args:
+        output: The lesson output text
+        target_letter: The target letter (A-Z or a-z)
+
+    Returns:
+        EvalResult with score 1.0 if cues match, 0.0 otherwise
+    """
+    # Get expected cues for target letter
+    letter_upper = target_letter.upper()
+    letter_lower = target_letter.lower()
+
+    expected_upper = VERBAL_CUES.get(letter_upper, "")
+    expected_lower = VERBAL_CUES.get(letter_lower, "")
+
+    # Extract ##Sequence Verbal Cues section
+    # Look for content after ## that mentions verbal cues
+    cue_pattern = r'##\s*(?:Sequence\s+)?Verbal\s+Cues[:\s]*([^\n#]+(?:\n(?!#)[^\n]+)*)'
+    matches = re.findall(cue_pattern, output, re.IGNORECASE)
+
+    if not matches:
+        # Try alternative pattern - just look for ## followed by cue text
+        alt_pattern = r'##\s*([^\n]+)'
+        matches = re.findall(alt_pattern, output)
+
+    # Normalize for comparison
+    def normalize(text: str) -> str:
+        return ' '.join(text.lower().strip().split())
+
+    expected_upper_norm = normalize(expected_upper)
+    expected_lower_norm = normalize(expected_lower)
+
+    found_match = False
+    matched_cue = None
+    for match in matches:
+        match_norm = normalize(match)
+        # Check if expected cues appear in the match
+        if expected_upper_norm and expected_upper_norm in match_norm:
+            found_match = True
+            matched_cue = match.strip()
+            break
+        if expected_lower_norm and expected_lower_norm in match_norm:
+            found_match = True
+            matched_cue = match.strip()
+            break
+        # Check word overlap
+        expected_words = set(expected_upper_norm.split()) | set(expected_lower_norm.split())
+        match_words = set(match_norm.split())
+        if len(expected_words) > 0:
+            overlap = len(expected_words & match_words) / len(expected_words)
+            if overlap >= 0.7:
+                found_match = True
+                matched_cue = match.strip()
+                break
+
+    return EvalResult(
+        name="verbal_cues_correct",
+        score=1.0 if found_match else 0.0,
+        details={
+            "target_letter": target_letter,
+            "expected_uppercase": expected_upper,
+            "expected_lowercase": expected_lower,
+            "matched_cue": matched_cue,
+            "found_match": found_match,
+            "cue_matches_found": len(matches),
         },
     )
 
@@ -368,6 +599,15 @@ def run_criterion(criterion_name: str, output: str = "", **kwargs) -> EvalResult
     """
     if criterion_name == "structure_complete":
         return evaluate_structure_complete(output)
+
+    if criterion_name == "verbatim_check":
+        return evaluate_verbatim_check(output)
+
+    if criterion_name == "verbal_cues_correct":
+        return evaluate_verbal_cues_correct(
+            output=output,
+            target_letter=kwargs.get("target_letter", "A"),
+        )
 
     if criterion_name == "routing_accuracy":
         return evaluate_routing_accuracy(
