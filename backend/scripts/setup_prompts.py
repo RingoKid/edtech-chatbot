@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.langfuse.client import get_langfuse_client
 from app.graph.agents.routing import DEFAULT_ROUTING_PROMPT
 from app.graph.agents.param import DEFAULT_PARAM_PROMPT
+from app.graph.agents.handwriting_generator import DEFAULT_HANDWRITING_GENERATOR_PROMPT
 
 
 def setup_prompts():
@@ -54,6 +55,19 @@ def setup_prompts():
         print(f"Created/updated prompt: param-agent (version {prompt.version})")
     except Exception as e:
         print(f"Error creating param-agent prompt: {e}")
+        sys.exit(1)
+
+    # Create/update the handwriting generator prompt
+    try:
+        prompt = client.create_prompt(
+            name="handwriting-generator",
+            prompt=DEFAULT_HANDWRITING_GENERATOR_PROMPT,
+            labels=["production"],
+            type="text",
+        )
+        print(f"Created/updated prompt: handwriting-generator (version {prompt.version})")
+    except Exception as e:
+        print(f"Error creating handwriting-generator prompt: {e}")
         sys.exit(1)
 
     # Flush to ensure all events are sent

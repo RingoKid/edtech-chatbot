@@ -149,6 +149,33 @@ specs/
 - `tests/datasets/vocab_params.py` - Vocab test dataset (18 cases)
 - `tests/datasets/idea_params.py` - Idea generation test dataset (20 cases)
 
+### 013 - Handwriting Generator Agent
+**Status:** Implemented
+**Spec:** [013-handwriting-generator/spec.md](./013-handwriting-generator/spec.md)
+**Description:** ReAct agent that generates handwriting & spelling lesson plans following the L4C methodology. Replaces the handwriting generator placeholder with a real lesson generator.
+
+**Features:**
+- ReAct agent with `create_agent` from `langchain.agents`
+- `finalize_lesson()` tool to signal completion
+- Reference materials loaded from `handwriting_reference.md` (Forms B, C, D, F, H)
+- Langfuse prompt management with `handwriting-generator` prompt
+- Lesson structure following L4C methodology (Standards, Objectives, Materials, D.1-5)
+- Verbatim explanations from Form B
+- Verbal cues from Form F for each letter
+- Activity level selection based on student_level (low/mid/high from Form D)
+- Multi-turn conversation for modifications
+- Rule-based evaluation criteria (structure_complete, verbatim_check, verbal_cues_correct)
+
+**Related Files:**
+- `app/graph/agents/handwriting_generator.py` - Generator agent and finalize tool
+- `app/graph/state.py` - `lesson_finalized` state field
+- `app/graph/graph.py` - Generator node, routing logic
+- `app/langfuse/criteria.py` - Eval criteria functions
+- `prompt/reference_materials/handwriting_reference.md` - L4C reference materials
+- `scripts/setup_prompts.py` - Langfuse prompt setup
+- `tests/evals/test_handwriting_generator.py` - Eval tests (10/11 passed)
+- `tests/datasets/handwriting_generator.py` - Test dataset (14 cases)
+
 ---
 
 ## How to Use This Structure
