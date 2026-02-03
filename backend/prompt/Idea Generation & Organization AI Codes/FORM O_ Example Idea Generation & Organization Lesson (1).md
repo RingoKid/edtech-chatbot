@@ -1,18 +1,18 @@
-FORM O
+**FORM O**
 
-This is FORM O.
+**This is FORM O.**
 
-Idea Generation & Organization Sample Lesson
+**Idea Generation & Organization Sample Le****sson**
 
-A. STANDARDS 
+**A. STANDARDS **
 
-K.F.H.2.a Practice basic transcription 
+**K.F.H.2.a **Practice basic transcription 
 
-K.P.EICC.4.c Generate idea for content by assessing prior knowledge, gathering information from texts, and engaging in discussions with others
+**K.P.EICC.4.c **Generate idea for content by assessing prior knowledge, gathering information from texts, and engaging in discussions with others
 
-K.P.A.C.2.a Integrate literary, expository, and opinion (grades K-5) to achieve specific purposes 
+**K.P.A.C.2.a** Integrate literary, expository, and opinion (grades K-5) to achieve specific purposes 
 
-B. OBJECTIVES 
+**B. OBJECTIVES **
 
 Recall relevant details related to informational topic 
 
@@ -20,18 +20,18 @@ Record relevant details using transcription skills
 
 Determine how the detail relates to the informational topic 
 
-C. MATERIALS
+**C. MATERIALS**
 
 Pictures from read texts about the unit topic and focus
 
 Note-taking sheet with columns and visual for Write, Sketch, and Tell How
 
-D. SCRIPTED IDEA GENERATION AND ORGANIZATION LESSON 
- 
-1. Review & Connect
-[Explanation: The purpose of this part of the lesson is to quickly review the type of text genre and content /unit topics children are learning and connect to the writing topic and purpose]
+**D. SCRIPTED IDEA GENERATION AND ORGANIZATION LESSON **
 
-#Teacher Script:
+**1. Review & Connect**
+**[Explanation**: The purpose of this part of the lesson is to quickly review the type of text genre and content /unit topics children are learning and connect to the writing topic and purpose]
+
+**#Teacher Script:**
 Remember boys and girls we have been learning all about habitats. 
 What’s a habitat everyone? {Teacher points to picture cue of habitat} 
 (Children respond, “A place where an animal or plant lives.”)
@@ -41,7 +41,8 @@ Right, and we know that information because we’ve been reading some texts that
 Jeremiah, what habitat are we learning about now? (Child responds, “the Antartic”). 
 Gabby, is the Antarctic at the top, North pole, or bottom, South pole of the earth?  (Child response: South pole). 
 Right, and we know that the south pole is the coldest habitat on the earth.
-Class, get ready for a Think–Pair–Share. Partners, you already know your roles. Partner One and Partner Two, eyes on me. Here is the question: How does the very cold weather in the South Pole affect the types of animals that can live there?  Everyone, think. {Teacher pause for 5–8 seconds.} 
+Class, get ready for a Think–Pair–Share. Partners, you already know your roles. Partner One and Partner Two, eyes on me. Here is the question: *How does the very cold weather in the South Pole affect the types of animals that can live there?
+* Everyone, think. {Teacher pause for 5–8 seconds.} 
 Partner Ones, you answer first. Tell your partner your idea. (Partner Ones share while teacher listens and scans.)
 Okay, Switch. Partner Twos, your turn. Tell your partner your idea. (Partner Twos share.)
 Bring it back to me. 
@@ -50,10 +51,10 @@ Exactly, remember our book? {Teacher references the text children have been read
 What animal did we just get done reading about, everyone? ( Response: penguins). 
 And we found out some cool information about the penguins. So today we want to share information about penguins and how they can live in such a cold, freezing habitat. We are writing informational text. So our topic is penguins and we want to focus on telling our readers all about how these animals can live in the freezing Antarctic. How can penguins live in the Antarctic? 
 
-2. Model, Explain, Engage
-[Explanation: The purpose of this part of the lesson is for the teacher to explicitly define the writing concept or skill and provide examples and non-examples so children clearly understand. Next, the skill or concept is directly modeled, step-by step so children can begin to apply the skill or concept during a writing task]
+**2. Model, Explain, Engage**
+**[Explanation: **The purpose of this part of the lesson** **is for the teacher to explicitly define the writing concept or skill and provide examples and non-examples so children clearly understand. Next, the skill or concept is directly modeled, step-by step so children can begin to apply the skill or concept during a writing task**]**
 
-#Teacher Script: 
+**#Teacher Script: **
 The first thing we need to do is brainstorm. We need to remember the information we learned about how penguins can live in this freezing habitat. 
 Here is our book. {Teacher displays book on overhead}.
 We are going to do Note-Taking of Relevant Textual Details about the information we learned that tells how penguins can live in the Antarctic. Now, there are four steps to note-taking: Think, Write, Sketch, and Tell How. {teacher displays visual of the 4 steps}
@@ -74,7 +75,7 @@ I am thinking about what I remember from this picture. I see a penguin and then 
 Remember what these feathers were compared to in the book? The feathers keep them warm like a, Everyone . .  (Children respond: coat). 
 Their short, thick feathers are like a coat. 
 So my next step is to write the note. 
-On my note-taking sheet, I am going to write feathers like a coat in the first column under words. Remember notes are just words and phrases that help us remember the idea. So, I am going to write what I can. Then we’ll draw next, but let’s write we can first.  
+On my note-taking sheet, I am going to write feathers like a coat in the first column under *words*. Remember notes are just words and phrases that help us remember the idea. So, I am going to write what I can. Then we’ll draw next, but let’s write we can first.  
 I know /f/ eathers, begins with f, /f/. So I write that for feathers.{teacher writes f in column}.
 I am going to now give a finger space to move onto my next word. 
 Remember I said too that we don’t need to write every word.
@@ -89,18 +90,18 @@ Feathers = coat. This note and my sketch helps me to remember what about penguin
 Number Twos tell your partner. {teacher waits and monitors}
 Number Ones give me a thumbs up if your partner was correct. {Teacher calls on a few Number 1 children to relay what their partner said} 
 (Child responses should be something like: feathers keep them warm in the cold like a coat). 
-Exactly, so in my last column that says Tell How, you see it says Keeps penguins ______. We are going to fill in “warm” as best we can by listening to the sounds we hear. {teacher models invented spelling, using only sound patterns children have learned}
+Exactly, so in my last column that says *Tell* *How, *you see it says *Keeps penguins* ______. We are going to fill in “warm” as best we can by listening to the sounds we hear. {teacher models invented spelling, using only sound patterns children have learned}
 And there was something special about these feathers. How were they described, Kendra? {Teacher uses the picture from the text as a cue.} (child response: short and thick) 
 So these short and thick feathers on the penguin keep their bodies warm, just like a coat. 
 What season do we wear coats, everyone? (Child response: the winter)
 In the winter when it’s cold. 
 Coats put a thick barrier around you, like a penguin’s thick feathers, to protect you from the icy, cold winds. Without coats you wouldn’t be able to play in the snow, play outside; you wouldn’t be able to survive outside in that environment. You’d have to stay in the house all day. So, penguins have these thick, short feathers that create a type of coat for them, which protects them from the harsh and freezing winds and allows them to live and survive in their habitat. 
 Remember that is what we are trying to explain to our audience: How can penguins live in the Antarctic? 
-     
-3. Guided Practice 
-[Explanation: The purpose of this part of the lesson is for children to begin to apply the writing skill or concept during a task that is broken down into component steps so that children can practice step by step and have teacher feedback for improvement]
 
-#Teacher Script:
+**3. Guided Practice **
+**[Explanation: **The purpose of this part of the lesson is for children to begin to apply the writing skill or concept during a task that is broken down into component steps so that children can practice step by step and have teacher feedback for improvement**]**
+
+**#Teacher Script:**
 Alright, now you are going to try to take a note on your note-taking sheet. So the first thing you are going to do is look at the next picture from the book we read. Everyone is going to think about what note to take. You are not saying it yet, you are thinking of that note in your head. When I say go, you are going to turn to your partner and share. Number 1 partner goes first, then Number 2. 
 Get Ready, go ahead and think in your head. {Teacher waits a minute}.
 Alright, turn to your partner. Number Ones Go. (Number One partner shares).
@@ -112,20 +113,20 @@ Riley, what is your note? (Child response: fat under feathers)
 Fat under feathers {teacher writes down}
 Maddie, what was your note? (Child response: Fat) {teacher writes down}
 Corey? (Blubber under skin) {teacher writes down}
-Great, all of these notes can help us remember. In the picture {teacher displays picture in book,} we see that under the penguin's skin, there is a layer of blubber, which is a thick layer of fat. So you can write fat under skin or blubber under skin. 
+Great, all of these notes can help us remember. In the picture {teacher displays picture in book,} we see that under the penguin's skin, there is a layer of blubber, which is a thick layer of fat. So you can write *fat under skin* or *blubber under skin*. 
 Everyone, take a minute and write what you can hear. (Children use invented spelling). {Teacher waits a minute or two and circulates to monitor progress}. 
-Great, our next step is to draw a picture. How do you think we could draw blubber under skin? {Teacher takes a few suggestions and demonstrates how to possibly draw the child suggestions.}
+Great, our next step is to draw a picture. How do you think we could draw *blubber under skin*? {Teacher takes a few suggestions and demonstrates how to possibly draw the child suggestions.}
 Okay, now you are going to draw your own, go ahead. {Teacher waits about a minute and circulates to monitor progress}. 
 The last thing we want to think about is how does the blubber under a penguin’s skin help it survive in its habitat? 
 Before you answer. Let me reread this sentence from the text. Listen. 
-Underneath their feathers, penguins have thick blubber. Okay now listen to this:  It traps heat like a warm, soft blanket to keep them cozy in the icy cold water.
+*Underneath their feathers, penguins have thick blubber. *Okay now listen to this: * It traps heat like a warm, soft blanket to keep them cozy in the icy cold water.*
 So what does the blubber do? What verb did the text use, everyone? (Child response: traps heat). 
-Great so in the last column, it says Helps penguins ________, what? (Child response: trap heat). {Teacher writes trap heat in column three in the note-taking sheet}. 
+Great so in the last column, it says *Helps penguins* ________, what? (Child response: trap heat). {Teacher writes trap heat in column three in the note-taking sheet}. 
 
-4. Application 
-[Explanation: The purpose of this part of the lesson is to allow children practice in applying writing skills and concepts without the step by step guidance to check child facility with the writing process or task.The teacher can assess the degree to which the child has mastered the skill to further adapt instruction to child needs]. 
+**4. Applica****tion**** **
+[**Explanation: **The purpose of this part of the lesson is to allow children practice in applying writing skills and concepts without the step by step guidance to check child facility with the writing process or task.The teacher can assess the degree to which the child has mastered the skill to further adapt instruction to child needs]. 
 
-#Teacher Script 
+**#Teacher Script **
 Now you are going to do the next note by yourself. You are filling in the third row, and you are looking at page 3 of your book. Everyone put a star next to the third row {Teacher demonstrates on the overhead–circulates to check students}.
 Now open to page 3; I am coming around to check. Show me. {Teacher circulates to check}. 
 Remember our steps: 
@@ -137,7 +138,7 @@ Okay. Everyone look at the picture. Everyone think. {Teacher waits 15 seconds}
 Everyone write as best you can. Remember you listen to sounds and write the word as best you can. 
 {Teacher waits for 1-2 minutes. Teacher circulates as children write a note to monitor progress}. 
 Now Everyone sketch your note. {Teacher waits 1-2 minutes while circulating}
-Alright, last step. Everyone, fill in the blank Helps penguins __how?__  {Teacher waits 1-2 minutes while circulating}
+Alright, last step. Everyone, fill in the blank *Helps penguins __how?__  *{Teacher waits 1-2 minutes while circulating}
 Now you can share your note with your partner. Tell your partner the words you wrote, show your picture and tell how the note shows how penguins survive in the Antarctic. Partner Two goes first this time. 
 Get ready. Go. {Teacher waits for a minute}. 
 Now Partner One, go ahead and share your note. {Teacher waits for a minute}. 
@@ -145,13 +146,11 @@ Everyone, stop. Eyes up here.
 Who wants to share their note with the class? 
 {Teacher allows a few children to share their notes, monitoring children’s progress}.
 
-5. Wrap-Up
-[Explanation: The purpose of this part of the lesson is to remind children about the target writing skill or concept, how it’s different or similar from previously learned writing skills or genre components, and why they are important to the type of genre you are writing in class]. 
+**5. Wrap-Up**
+[**Explanation:** The purpose of this part of the lesson is to remind children about the target writing skill or concept, how it’s different or similar from previously learned writing skills or genre components, and why they are important to the type of genre you are writing in class]. 
 
-#Teacher Script:
+**#Teacher Script:**
 Everyone, we are working on writing informational text, we want to give information to the audience. The information we want to tell our audience is about penguins and how penguins are able to survive in the Antarctic, which is freezing and very cold. So today we took notes that can help us write. Tomorrow we will talk more about how we can organize those notes in a way that makes sense to our readers. 
 
 *Modification: Let me know if you would like any modifications to the lesson.
-
-
 

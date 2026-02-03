@@ -1,46 +1,57 @@
-FORM J
+**FORM J**
 
-This is FORM J.
+**This is FORM J.**
 
-Vocabulary & Sentence Structure Sample Lesson
+**Vocabulary & Sentence Structure Sample Les****son**
 
-A. STANDARDS 
+**A. STANDARDS **
 
-ELAGSEKL1 – Demonstrate command of the conventions of standard English grammar and usage when writing or speaking.
-	•	f. Produce and expand complete sentences in shared language activities.
-ELAGSEKL5 – With guidance and support from adults, explore word relationships and nuances in word meanings.
-	•	a. Sort common objects into categories to gain a sense of the concepts the categories represent.
-ELAGSEKL6 – Use words and phrases acquired through conversations, reading and being read to, and responding to texts.
+**ELAGSEKL1 – **Demonstrate command of the conventions of standard English grammar and usage when writing or speaking.
+**f. **Produce and expand complete sentences in shared language activities.
+**ELAGSEKL5 – With guidance and support from adults, explore word relationships and nuances in word meanings.**
+**a. **Sort common objects into categories to gain a sense of the concepts the categories represent.
+**ELAGSEKL6 – **Use words and phrases acquired through conversations, reading and being read to, and responding to texts.
 
-B. OBJECTIVES 
+**B. OBJECTIVES **
 
 Identify be verbs in a sentence
 
-Differentiate between action verbs and be-verbs 
+Differentiate between action verbs and be-verbs
+
 Construct simple be-verb sentences using the verbs "is" and "are" 
 
-Apply vocabulary words (e.g., fierce, nimble)  in an informational sentence. 
+Apply vocabulary words (e.g., fierce, nimble)  in an informational sentence**.
+**
 
-C. MATERIALS
+**C. MATERIA****LS**
 
-	•	Visual cards of sea creatures (e.g., shark, dolphin, sea turtle, squid, orca) 
-	•	Vocabulary picture cards (predator, prey, fierce, nimble) 
-	•	Sentence cards with be-verbs (is, are) 
-	•	Noun marker cards (“a” and “the” in uppercase and lowercase) 
-	•	Sticky notes (for periods and writing f/n for vocabulary) 
-	•	Sight word chart 
-	•	Sentence-building cards or pocket chart (optional support) 
-	•	Whiteboard and markers (for teacher modeling) 
-	•	Laminated sentence starter cards or student mats 
-	•	Timer (for the Add-a-Word challenge) 
+**Visual cards of sea creatures (e.g., shark, dolphin, sea turtle, squid, orca)
+**
+**Vocabulary picture cards (predator, prey, fierce, nimble)
+**
+**Sentence cards with be-verbs (*****is*****, *****are*****)
+**
+**Noun marker cards (“a” and “the” in uppercase and lowercase)
+**
+**Sticky notes (for periods and writing f/n for vocabulary)
+**
+**Sight word chart
+**
+**Sentence-building cards or pocket chart (optional support)
+**
+**Whiteboard and markers (for teacher modeling)
+**
+**Laminated sentence starter cards or student mats
+**
+**Timer (for the Add-a-Word challenge)
+**
 
+**D. SCRIPTED VOCABULARY & SENTENCE STRUCTURE  LESSON **
 
-D. SCRIPTED VOCABULARY & SENTENCE STRUCTURE  LESSON 
- 
-1. Review & Connect (5 minutes)
-[Explanation: The purpose of this part of the lesson is to quickly review vocabulary from a unit of study and specific sentence structures children have used to express those concepts and vocabulary. Do not introduce new vocabulary or concepts. The goal is to have children apply vocabulary that they have been directly taught using sentence structures]
+**1. Review & Connect (5 minutes)**
+**[Explanation**: The purpose of this part of the lesson is to quickly review vocabulary from a unit of study and specific sentence structures children have used to express those concepts and vocabulary. Do not introduce new vocabulary or concepts. The goal is to have children apply vocabulary that they have been directly taught using sentence structures]
 
-#Teacher Script:
+**#Teacher Script:**
 Yesterday, we were talking about the what? {Teacher points to a visual cue} (Children should respond ocean habitat). And we said that a habitat is a what? (Children should respond in some way that a habitat is a home).
 Right, it’s the place where animals and plants live. It gives them what they need to grow and stay alive—like food, water, air, and shelter. Every animal and plant has special body parts or ways of doing things that help them live in their habitat. In habitats, we have predators and prey. {Teacher draws children’s attention to visual for predator and prey} 
 Remember, what’s a predator? Predators _____ (Children should respond “hunt and eat other animals”). They are usually larger animals, and they have to eat smaller animals. Prey are the animals that are being, everyone _____(children should respond, “hunted”). Prey usually have to be fast, and they have to hide. Some have body parts that help them hide. Some sea creatures can be both predator and prey. Like the squid. The squid hunts for fish; it is a predator. Remember they use their tentacles to catch prey. But, dolphins, whales, and sharks can also hunt and eat squid. So, squid can also be prey.   
@@ -49,30 +60,29 @@ Let’s look at this ocean animal. Is this animal a predator or is it prey? (Chi
 Why do you think this is a predator and not prey? (Children should point out that the teeth are sharp for eating other animals. ) 
 Right, an Orca uses its sharp teeth to be able to eat other sea creatures, like a seal. So, an Orca can live in the ocean because its body allows it to be able to eat and survive there. 
 Before we said every sentence needs a subject, that is the person, animal, thing, or place that we are talking about. The subject is the star of the show. Every sentence needs a subject and an action verb. 
-Let’s play our Spotlight Sentence. I am going to tell you a sentence about one of the creatures in the sea and you are going to tell me the subject –the who or what sea creature that I am talking about? Watch me because I am going to show you how to do this. So, here’s the first picture, and my sentence is Manatees nibble on seagrass. So, I am thinking What is the subject? The subject is who or what the sentence is about? In my sentence manatees nibble seagrass, it is telling me about manatees, that is what my sentence is about. And, manatees are the ones doing the action. They nibble. So, the subject is manatee.
-My turn. My sentence is Whales gulp fish in the ocean. {Teacher displays sentence along with the visual of the whale in the subject spot of the sentence}. 
+Let’s play our Spotlight Sentence. I am going to tell you a sentence about one of the creatures in the sea and you are going to tell me the subject –the who or what sea creature that I am talking about? Watch me because I am going to show you how to do this. So, here’s the first picture, and my sentence is *Manatees nibble on seagrass. *So, I am thinking What is the subject? The subject is who or what the sentence is about? In my sentence manatees nibble seagrass, it is telling me about manatees, that is what my sentence is about. And, manatees are the ones doing the action. They nibble. So, the subject is manatee.
+My turn. My sentence is *Whales gulp fish in the ocean.* {Teacher displays sentence along with the visual of the whale in the subject spot of the sentence}. 
 What is the subject? Who/What is this sentence all about? Get Ready. Go. (Children should respond, whales.) 
 
-+Additional examples about sea creatures and what they eat for you to use in this review. 
++*Additional examples about sea creatures and what they eat for you to use in this revie**w.** *
 Subjects are bolded. 
-Dolphins catch fish with their mouth.
-Sea turtles munch on seaweed 
-Belugas chomp shrimp.
-Narwhals slurp up crabs on the ocean floor.
-Whales gulp fish in the ocean. 
- 
+**Dolphins **catch fish with their mouth.
+**Sea turtles **munch on seaweed 
+**Belugas** chomp shrimp.
+**Narwhals **slurp up crabs on the ocean floor.
+**Whales** gulp fish in the ocean. 
 
-2. Model, Explain, Engage (10 minutes)
-[Explanation: The purpose of this section is to introduce and reinforce a targeted sentence structure through modeling and providing clear examples, while connecting to genre purpose and incorporating children’s vocabulary associated with what they are reading and writing about in their unit of study]
+**2. Model, Explain, Engage (10 minutes)**
+**[Explanation: **The purpose of this section is to introduce and reinforce a targeted sentence structure through modeling and providing clear examples, while connecting to genre purpose and incorporating children’s vocabulary associated with what they are reading and writing about in their unit of study**]**
 
-#Teacher Script: 
-Great! So we know that a sentence needs a subject and a verb. Verbs are usually actions. But, remember we are writing informational text. Sometimes we need to tell information about our subject. Like, an Orca is a predator. {Teacher displays the sentence} 
+**#Teacher Script: **
+Great! So we know that a sentence needs a subject and a verb. Verbs are usually actions. But, remember we are writing informational text. Sometimes we need to tell information about our subject. Like, an *Orca is a predator.* {Teacher displays the sentence} 
 Did the Orca do anything? (Children should respond no). 
-No. we are just telling something about the Orca’s being –or something that is about who they are as a sea creature. So these are special verbs. They are not action verbs. 
+No. we are just telling something about the Orca’s* being* –or something that is about who they are as a sea creature. So these are special verbs. They are not action verbs. 
 They are “be” verbs: The Orca is a predator. {Teacher circles/underlines the word “is”}. 
-I could also say the Orcas are predators. {Teacher circles the word are}. 
-Why did I use are? (Children should respond that there is more than one.) 
-Right. We use the verb are when talking about more than one person, place, thing, or animal.  
+I could also say the Orcas *are* predators. {Teacher circles the word *are*}. 
+Why did I use *are*? (Children should respond that there is more than one.) 
+Right. We use the verb *are *when talking about more than one person, place, thing, or animal.  
 {Teacher displays the words “is” and “are”}. So, these two special be-verbs are used to tell information about the subject –the who or what we are talking about. 
 Let me show you some more examples. {Teacher displays example sentences, calling children’s attention to the purpose of the sentence and the be-verb used for that purpose}. 
 Sofia is a good listener. In this sentence I want to tell you something special about Sophia. She didn’t do anything. I am just telling you something about her. She’s a good listener. 
@@ -86,23 +96,45 @@ My turn. Listen. Whales are mammals. Get Ready. What’s the verb?. (Children an
 Right! I want to say that all whales are mammals, not just one. And if I am talking about more than one whale, how did I change the word “whale”? (Children should notice that there is an s on the end)
 Exactly Right. When we put an s at the end of a noun, it changes it into more than one. {Teacher provides a few more examples}  
 
-+Additional “be-verb” examples about sea creatures in their habitat for you to use in this activity. 
++*Additional “be-verb” examples about sea creatures in their habitat for you to use in this activity**.** *
 Be-Verb Sentences About Sea Creatures in Their Habitats
-Singular (“is”)
-The jellyfish is in the deep ocean. The sea turtle is near the coral reef. The octopus is in a rocky cave. The seahorse is in the tall sea grass. The shark is at the top of the food chain. The stingray is on the sandy bottom. The dolphin is in a warm ocean. The crab is under a rock. The starfish is on the coral. The eel is inside a dark crevice.
+**Singular (“is”)**
+The jellyfish is in the deep ocean.
+The sea turtle is near the coral reef.
+The octopus is in a rocky cave.
+The seahorse is in the tall sea grass.
+The shark is at the top of the food chain.
+The stingray is on the sandy bottom.
+The dolphin is in a warm ocean.
+The crab is under a rock.
+The starfish is on the coral.
+The eel is inside a dark crevice.
 
-Plural (“are”)
-The penguins are on the icy shore. The dolphins are in a big pod. The sea otters are in the kelp forest. The seals are on the rocks. The fish are in a large school. The orcas are in cold northern waters. The clams are under the sand. The crabs are in the tide pool. The whales are in the open ocean. The shrimp are between the coral branches. 
- Challenge Examples
-These help students justify why it’s is or are:
+**Plural (“are”)**
+The penguins are on the icy shore.
+The dolphins are in a big pod.
+The sea otters are in the kelp forest.
+The seals are on the rocks.
+The fish are in a large school.
+The orcas are in cold northern waters.
+The clams are under the sand.
+The crabs are in the tide pool.
+The whales are in the open ocean.
+The shrimp are between the coral branches.
 
-The sea stars are on the reef. The squid is in the deep water. The manta rays are near the surface. The pufferfish is in warm tropical water. The tiny minnows are in the shallow cove.
+ **Challenge Examples**
+These help students justify *why* it’s is or are:
 
+The sea stars are on the reef.
+The squid is in the deep water.
+The manta rays are near the surface.
+The pufferfish is in warm tropical water.
+The tiny minnows are in the shallow cove.
 
-4. Guided Practice 
-[Explanation: The purpose of this section of the lesson is to guide children in applying the targeted sentence structure to express an idea that relates to topic and genre, incorporating their vocabulary words]
+**4. Guided Pract****ice**** **
+**[Explanation:** The purpose of this section of the lesson is to guide children in applying the targeted sentence structure to express an idea that relates to topic and genre, incorporating their vocabulary words**]**
 
-#Teacher Script:
+**#Teacher Script:**
 Now you are going to do Build-a-Sentence. You are going to tell me information about a sea creature. You are thinking about whether that sea creature is a predator or prey. You want to explain that a particular sea creature is a predator or prey in their ocean habitat.  
 I am going to give everybody a special be-verb card; the “is” card. Everyone also has the predator and prey card, along with your “noun marker” cards, “a” and “the”. 
 Look up here at our sight words. {Teacher draws children’s attention to the sight word chart} 
@@ -132,7 +164,7 @@ Perfect. Did the walrus do an action? (Child responds no)
 So what kind of a verb did you use? (Child should respond “be-verb”).  
 {Teacher has multiple children read their sentences}
 
-+Additional examples about predators and prey in this activity. 
++*Additional examples about predators and prey in this activity**.** *
 
 Sea predators:
 Sharks chase fish.
@@ -146,39 +178,39 @@ Moray eels lunge from rocks.
 Squid capture shrimp.
 Penguins scoop up fish.
 
-Sea prey: Minnows dart away from bigger fish.               
-Krill drift in large groups. Shrimp flick their tails to escape. Clams bury themselves in the sand. Mussels cling tightly to rocks. Sea urchins crawl slowly across the ocean floor.
-Crabs scuttle across the sand.  Sea stars cling to coral and rocks.  Plankton float near the surface.  Baby sea turtles paddle quickly toward deeper water.
+Sea prey:
+Minnows dart away from bigger fish.               
+Krill drift in large groups.
+Shrimp flick their tails to escape.
+Clams bury themselves in the sand.
+Mussels cling tightly to rocks.
+Sea urchins crawl slowly across the ocean floor.
+Crabs scuttle across the sand.
+ Sea stars cling to coral and rocks.
+ Plankton float near the surface.
+ Baby sea turtles paddle quickly toward deeper water.
 
-Application 
-[Explanation: The purpose of this section of the lesson is to provide children further practice using the new sentence structure to express their ideas and incorporate vocabulary from a unit of study.]
+**Application **
+[**Explanation: **The purpose of this section of the lesson is to provide children further practice using the new sentence structure to express their ideas and incorporate vocabulary from a unit of study.]
 
-#Teacher Script:
+**#Teacher Script**:
 Alright everyone the last thing you are going to do is pick another sea creature and create a be-verb sentence to tell me whether your animal is a predator or a prey. This time I want you to add one of our vocabulary words. We are doing the Add-A-Word challenge.. 
 After you create the sentence, choose a vocabulary word to describe the predator or prey. 
 Look up here {Teacher directs children’s attention to two vocabulary words with a visual}
-We have Fierce and Nimble. So you are thinking to yourself, How would I describe my predator or how would I describe my prey. Would it be fierce or nimble. 
+We have Fierce and Nimble. So you are thinking to yourself, *How would I describe my predator or how would I describe my prey. Would it be fierce or nimble. *
 To show me which word you chose, you are going to write either the letter f for /f/ fierce, or you will write the letter n for /n/ nimble. You are writing that on your post it and adding that to your sentence. I am going to put five minutes on the clock. When I say stop, everyone puts their hands up. Get Ready. Go. {Teacher gives children five minutes to create their sentence, adding in an adjective vocabulary word. Teacher monitors to support students who may need extra support}. 
 Okay stop. Hands up. Hands down.
-Cooper, tell us your sentence. (Child should respond: The shark is a fierce predator).
+Cooper, tell us your sentence. (Child should respond: *The shark is a fierce predator*).
 Why would a predator be fierce? (Child should respond that the predator has to hunt and fight to get its food). Exactly, the predator has to fight to eat, so usually predators have to be fierce. Fierce means strong, powerful, or full of energy. A predator isn’t going to give up because they need to eat to survive. {Teacher continues to take examples, writing them or displaying them for children to see, drawing attention to vocabulary and the be-verb “is”}
 
+*Modification: *Let me know if you would like modifications of the lesson based on child ability level.*
 
-*Modification: Let me know if you would like modifications of the lesson based on child ability level.
+**5. Wrap-Up**
+[**Explanation:** The purpose of this section is to remind children about the target structure, how it’s different from previously learned structures and why they are important to the type of genre you are reading and writing in class]. 
 
-
-5. Wrap-Up
-[Explanation: The purpose of this section is to remind children about the target structure, how it’s different from previously learned structures and why they are important to the type of genre you are reading and writing in class]. 
-
-#Teacher Script:
+**#Teacher Script:**
 Everyone, we are working on writing informational text, we want to give information to the audience. Be-verb sentences tell us something about our subject. Action sentences tell us about what they do. We need both kinds of sentences so that we can tell the audience some facts, some things that are true about our topic. I am going to give you a sentence, you tell me if it is action –for an action verb sentence or being for a be-verb sentence. My turn. The manatee is the sloth of the sea. Get Ready. Go. (Children should chorally respond “Be-Verb”). 
 Very good. What special verb did I use? (Children should respond “is”)
 Excellent “is”. That is my be-verb. 
-My turn. The manatee munches slowly on seagrass Get Ready. Go. (Children should answer “Action”). Perfect! “Munch” is to take your time eating something. It’s an action.  You all did awesome.     
-
-
-
-
-
-
+My turn. The manatee munches slowly on seagrass Get Ready. Go. (Children should answer “Action”). Perfect! “Munch” is to take your time eating something. It’s an action.  You all did awesome.    
 

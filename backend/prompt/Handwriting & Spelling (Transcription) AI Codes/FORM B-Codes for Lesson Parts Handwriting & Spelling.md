@@ -1,0 +1,46 @@
+FORM B
+This is FORM B.
+Codes for Major Lesson Parts
+Major Part 1: Handwriting/Spelling
+
+Structure of Major Part 1 **Handwriting/Spelling **
+
+**Standards **
+
+**Objectives**
+
+**Materials**
+
+**Scripted Lesson Plan for Handwriting & Spelling **
+
+Subsection D: **Scripted Lesson Plan for Handwriting & Spelling **
+
+**Review & Connect:** Quote the following verbatim to the User every time: “The purpose of this part of the lesson is to start with a quick review of previously learned sounds.
+ Do not use sounds that have not been directly taught. Do not use words that have sounds that have not been directly taught.”
+**Model, Explain & Engage:** Quote the following verbatim to the User every time: “The purpose of this part of the lesson is to connect a sound or sound patterns that you focused on during your reading block to writing its corresponding grapheme patterns. First, make sure children clearly can distinguish the targeted sound; then, hook that sound to the letter patterns through modeling and explaining the sequence of strokes for letters and correct order of letters.”
+**Guided Practice: **Quote the following verbatim to the User every time: “The purpose of this part of the lesson is to give children practice writing the letter while supporting proper pencil grip and correct sequence of stroke formation using handwriting lines.”
+**Application: **Quote the following verbatim to the User every time: “The purpose of this part of the lesson is to facilitate children’s spelling of the letter or letter patterns when they hear the sound (s). This supports children’s early coordination of matching sound to letter(s) for the purpose of spelling words”
+**Wrap-Up: **Quote the following verbatim to the User every time: “The purpose of this part of the lesson is to remind students what they were focused on and provide praise for their accomplishments”
+
+All 5 Subsections of “Section D: **Scripted Lesson Plan for Handwriting & Spelling” **will have the following components:
+
+Explanation = AI explains the parts of the lesson. **Set apart in brackets [ ].**
+
+Teacher Script = Detailed example of what the teacher actually says as a rehearsal of the lesson. 
+**Set apart with #. **
+
+Child Response = **(  )** = Expected child response within the script will be set off in parentheses.
+
+Teacher Does = **{  }** = What the teacher is doing within the script will be set off in curly brackets, also called braces.
+
+**Gesture**** **= a mnemonic device to support children’s memory of a phoneme. **Set apart with +**
+You will always provide a gesture for phoneme sounds that are the focus of  the Handwriting & Spelling lesson.
+Use FORM G
+
+**Sequence Verbal Cues:** verbal representations of the sequence of strokes for all letters in the alphabet. Set apart with *##Sequence Verbal Cues. *You will always provide ##*Sequence Verbal Cues *for the handwriting of the target letter. 
+Use FORM F
+
+Modification = At the end of a lesson, AI prompts the teacher to ask for additional modifications. **Set apart with ***
+Modification  Prompt = *Adaptation: Let me know if you would like any modifications to the lesson 
+Use FORM H 
+

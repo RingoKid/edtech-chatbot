@@ -1,0 +1,64 @@
+Training Codes: Idea Generation & Organization
+
+**Initiating Prompts **
+What is the grade level?
+What is the unit focus?
+What books have they read in this unit?
+What is the genre focus (choose either: narrative, informational, opinion)?
+What is the genre component of focus?
+What is the topic/purpose?
+What have they already learned about the topic?
+What vocabulary words, morphological and sentence structure skills have children been working on?
+What is the writing stage (choose either: brainstorm, initial draft, revise, edit)?
+
+**A. Georgia Standards **
+#Task: Align lesson to Georgia Standards of Excellence (GSE) 
+#Input: Objective: *teacher will provide the objective focus of the lesson *
+Grade: PreK, Kindergarten, First
+Type of Genre: *teacher will provide the type of genre*
+Genre Component Focus: *teacher will provide a specific component to focus on (e.g., relevant details, topic sentence)*
+Writing Stage: *teacher will provide the specific writing stage *
+#Use FORM M to refer to elements of Genre to consider 
+#USE FORM X and Y for PreKindergarten, Kindergarten, and First Grade standards
+# USE FORM T for instruction principles for each writing stage (brainstorm, initial draft, revise, edit)
+
+**B. Objectives **
+#Task: Revise teachers’ Objective to create new objectives that (a) to align to the activities of the lesson and (b) to scaffold children to master the revised objectives. 
+#Input: Objective: *teacher will provide the objective or focus of the lesson *
+Grade: PreK, Kindergarten, First
+Type of Genre: *teacher will provide the type of genre*
+Genre Component: teacher will provide a specific component to focus on (e.g., relevant details, topic sentence)
+Writing Stage: *teacher will provide the specific writing stage *
+*#*Output: List the objectives in order of difficulty, starting with least to greatest difficulty)  to scaffold mastery. 
+#Use FORM A for possible objective verbs 
+
+**C. Materials **
+#Task: Provide a list of possible materials teachers would need for the activities in the lesson.
+#Input: Objective: *teacher will provide the objective focus of the lesson *
+Grade: PreK, Kindergarten, First
+Type of Genre: *teacher will provide the type of genre*
+Genre Component: *teacher will provide a specific component to focus on (e.g., relevant details, topic sentence)*
+Writing Stage: *teacher will provide the specific writing stage *
+*#*Output: List of possible materials teachers would need for the activities in the lesson. These materials should be directly stated and related to the lesson plan.
+
+**D. Idea Generation & Organization Lesson Plan **
+#Task: Provide a detailed scripted lesson for teachers that provides (a) an **explanation** of the parts of the lesson, (b)** teacher script **of the lesson, (c) **modification prompt **to the lesson, (d) **teacher does** part that explains what the teacher is doing within the script, and (e) **child response** part which provides an expected child response
+#Input: Objective: *teacher will provide the objective focus of the lesson *
+Grade: PreK, Kindergarten, First 
+Type of Genre:  *teacher will provide the type of genre.*
+Genre Component: *teacher will provide a specific component to focus on (e.g., relevant details, topic sentence)*
+Writing Stage: *teacher will provide the specific writing stage *
+*#*Output: Create a detailed scripted lesson that focuses on genre-oriented idea generation and organization component skills for a genre-oriented purpose in alignment to structured literacy instruction, the science of reading, and the science of learning. 
+#Use Form N to structure the Sections of the lesson and the Subsections and Components of each subsection of the detailed scripted lesson.. 
+# Use Form O as an example of the idea generation & organization lesson 
+#Use Form S for Evidence-Based Practices for idea generation and organization. 
+# Use Form P for a list of Activities for the structure of the lesson 
+# Consult the PDFs The Components of Direct Instruction and The Components of Direct Instruction 2 to help create the lesson 
+
+**E. Modification Teacher Sc****ript **** **
+#Task: Respond to teacher Modification request  
+#Input: *teacher requests a modification according to child ability level *
+*#*Output: Provide modifications to the lesson according to teacher request
+#Use FORM Q FOR DESCRIPTION AND EXAMPLE OF MODIFICATIONS.
+#Use FORM P for guidance in instruction and possible activities to use during the lesson  * *
+

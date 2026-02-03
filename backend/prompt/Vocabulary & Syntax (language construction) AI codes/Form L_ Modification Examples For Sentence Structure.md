@@ -1,13 +1,12 @@
 FORM L
-Modification Examples For Sentence Structure
+Modification 
 
 This is FORM L.
 
 *Modification
-#TASK = AI prompts teacher request for modifications according to child ability level. 
-#OUTPUT = * Let me know if you would like modifications of the lesson based on child ability level.
+#TASK = AI prompts *teacher request* for modifications according to child ability level.** **
+#OUTPUT = ** Let me know if you would like modifications of the lesson based on child ability level.*
 
-  
 Modifications can be made according to the Science of Learning, including considerations of cognitive load and working and long term memory. These modifications in a few aspects of the lesson: 
 1/ the activity level, reducing or increasing demand (cognitive load)
 2/including additional time, limiting time, or getting rid of a lesson part to allow for more modeling and guided practice (which would continue for a few days for more support), or decreasing time on modeling and guided practice with more application time to increase difficulty. 
@@ -15,20 +14,19 @@ Modifications can be made according to the Science of Learning, including consid
 
 Always refer to principles of the Science of Learning.
 
-
-Modification of Activity by Child Ability Level (more support, more challenge, on target) 
-#TASK = Respond to teacher request for modifications according to child ability level. 
-#INPUT = Teacher requests modifications according to child ability level. 
+**Modification of Activity by Child Ability Level (more support, more challenge, on target) **
+#TASK = Respond to teacher request for modifications according to child ability level.** **
+#INPUT = *Teacher requests* modifications according to child ability level.** **
 #OUTPUT = Use Activities for Modifications to change activity according to teacher request for child ability level. Revise lesson plan with modified teacher script. 
 # USE EXAMPLE A BELOW 
 
-EXAMPLE A: Modification of Activity by Child Ability Level (low, middle, high) 
+EXAMPLE A: **Modification of Activity by Child Ability Level (low, middle, high) **
 
-#INPUT = teacher asks for a modification for children who need more challenge.
+**#INPUT = **teacher asks for a modification for children who need more challenge.
 
-^Modification Teacher Script:
+**^Modification Teacher Script:**
 
-Great! Now we are going to play our Two Sentence Build-It Challenge. 
+Great! Now we are going to play our **Two Sentence Build-It Challenge**. 
 You are going to tell me information about a sea creature. You are thinking about whether that sea creature is a predator or prey. You want to explain that a particular sea creature is a predator or prey in their ocean habitat.  
 I am going to give everybody a special be-verb card; the “is” card. Everyone also has the predator and prey card, along with your “noun marker” cards, “a” and “the”. 
 Look up here at our sight words. {Teacher draws children’s attention to the sight word chart} 
@@ -58,9 +56,4 @@ So what kind of a verb did you use? (Child should respond “be-verb”).
 Now Jasper tell us your action sentence. What does a walrus do that tells us that it is a predator? (Child should respond with something like the walrus hunts for fish in the ocean. 
 Perfect! “Hunt” is something a predator would do, and we know that walruses do eat fish in order to survive. So they would be hunting. 
 {Teacher takes more examples, highlighting the difference in purpose between the two verbs and relaying how one sentence is related to another to provide information to an audience}. 
-
-
-
- 
-
 
