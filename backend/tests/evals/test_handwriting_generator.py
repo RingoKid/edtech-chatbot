@@ -235,8 +235,8 @@ class TestVerbatimCheck:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "test_case",
-        get_basic_generation_cases()[:2],  # Test a subset
-        ids=[tc.description for tc in get_basic_generation_cases()[:2]],
+        get_basic_generation_cases(),  # Test all basic generation cases
+        ids=[tc.description for tc in get_basic_generation_cases()],
     )
     async def test_explanations_match_form_b(
         self,

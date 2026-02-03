@@ -45,7 +45,7 @@ REQUIRED_SECTIONS = [
 
 HANDWRITING_GENERATOR_TEST_CASES: List[HandwritingGeneratorTestCase] = [
     # ==========================================
-    # Category: basic_generation (4)
+    # Category: basic_generation (5)
     # Different letters and grades
     # ==========================================
     HandwritingGeneratorTestCase(
@@ -90,6 +90,17 @@ HANDWRITING_GENERATOR_TEST_CASES: List[HandwritingGeneratorTestCase] = [
         expected_sections=REQUIRED_SECTIONS,
         expected_verbal_cues="Big line down, rainbow bump, rainbow bump",
         description="Basic: PreK letter M on-level",
+        category="basic_generation",
+    ),
+    HandwritingGeneratorTestCase(
+        handwriting_params={
+            "grade": "PreK",
+            "letter": "Z",
+            "student_level": "on-level",
+        },
+        expected_sections=REQUIRED_SECTIONS,
+        expected_verbal_cues="Little line across, slant down, little line across",
+        description="Basic: PreK letter Z on-level",
         category="basic_generation",
     ),
 
