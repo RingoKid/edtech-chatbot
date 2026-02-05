@@ -176,6 +176,30 @@ specs/
 - `tests/evals/test_handwriting_generator.py` - Eval tests (10/11 passed)
 - `tests/datasets/handwriting_generator.py` - Test dataset (14 cases)
 
+### 014 - LLM Judge Evals — Scaffolding Sequencing
+**Status:** Implemented
+**Spec:** [014-llm-judge-evals/spec.md](./014-llm-judge-evals/spec.md)
+**Description:** LLM judge evaluations for scaffolding sequencing quality. Uses gpt-5.2 as judge model to assess whether generated handwriting lessons sequence activities logically within and across sections.
+
+**Features:**
+- Pre-generated lesson fixtures (12 param combos) for fast, deterministic eval runs
+- Within-section judge: activities ordered easier → harder within each section
+- Across-section judge: later sections build on skills from earlier sections
+- Structured output via Pydantic models for deterministic score computation
+- Markdown report with summary table + per-fixture pair-level detail with judge reasoning
+- Configurable judge model via `--model` flag
+
+**Related Files:**
+- `scripts/generate_eval_fixtures.py` - Fixture generation (runs full graph)
+- `scripts/run_scaffolding_evals.py` - Eval runner (judge calls + report)
+- `tests/evals/models.py` - Pydantic models for structured judge output
+- `tests/evals/rubrics/scaffolding_within_activity.md` - Within-section judge prompt
+- `tests/evals/rubrics/scaffolding_between_activity.md` - Across-section judge prompt
+- `app/langfuse/criteria.py` - Registry entries for both criteria
+
+**Decisions:**
+- [001-decoupled-fixtures.md](./014-llm-judge-evals/decisions/001-decoupled-fixtures.md) - Why fixtures are pre-generated rather than live
+
 ---
 
 ## How to Use This Structure

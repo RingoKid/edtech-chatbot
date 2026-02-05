@@ -46,6 +46,14 @@ CRITERIA_REGISTRY: dict[str, dict] = {
         "type": "rule-based",
         "description": "Checks if idea generation params match expected (exact match)",
     },
+    "scaffolding_within_activity": {
+        "type": "llm-judge",
+        "description": "Checks if activities within each section are ordered easier -> harder",
+    },
+    "scaffolding_between_activity": {
+        "type": "llm-judge",
+        "description": "Checks if activities across sections build on earlier skills",
+    },
 }
 
 

@@ -25,7 +25,17 @@ First, read the spec file at `$ARGUMENTS` to understand what needs to be impleme
 
 **Backend only:** Also read `backend/specs/000-project-common.md` for architectural rules.
 
-### 2. Implement
+### 2. Look Up Latest Docs (Context7)
+
+Before writing code, use **Context7 MCP tools** to pull up-to-date documentation for any libraries/frameworks referenced in the spec:
+
+1. Scan the spec for libraries (e.g., LangChain, LangGraph, Pydantic, React, etc.)
+2. Call `resolve-library-id` for each library
+3. Call `query-docs` with queries specific to what you need to implement
+
+This ensures you use current APIs, not outdated patterns from training data.
+
+### 3. Implement
 
 Write the code according to the spec.
 
@@ -41,7 +51,7 @@ Write the code according to the spec.
 - Use Tailwind CSS for styling
 - Use React Router for navigation
 
-### 3. Rebuild (MANDATORY)
+### 4. Rebuild (MANDATORY)
 
 After writing code, **you MUST rebuild** the containers:
 
@@ -52,39 +62,38 @@ docker compose down && docker compose up -d --build
 **Backend only** - Initialize the database:
 
 ```bash
-docker compose exec backend python init_db.py
+docker compose exec backend python scripts/init_db.py
 ```
 
-### 4. Test
+### 5. Verify
 
-Run the tests specified in the spec:
+Run the verification commands specified in the spec. Check the spec's **Verification** section for the exact commands.
 
-**Backend:**
-```bash
-docker compose exec backend pytest [path/to/test_file.py] -v
-```
+**Common patterns:**
 
-**Frontend:**
-```bash
-docker compose exec frontend npm run test
-```
+- **pytest:** `docker compose exec backend pytest [path/to/test_file.py] -v`
+- **Eval scripts:** `docker compose exec backend python scripts/[eval_script].py`
+- **Frontend tests:** `docker compose exec frontend npm run test`
+- **curl checks:** Run the curl commands listed in the spec
 
-### 5. Fix & Iterate
+Use whatever the spec says — not every feature uses pytest.
 
-If tests fail:
+### 6. Fix & Iterate
+
+If verification fails:
 1. Debug and fix the code
-2. **Return to Step 3 (Rebuild)** - this is mandatory after every code change
-3. Test again
-4. Repeat until all tests pass
+2. **Return to Step 4 (Rebuild)** - this is mandatory after every code change
+3. Verify again
+4. Repeat until all checks pass
 
-### 6. Spec Sync (MANDATORY FINAL STEP)
+### 7. Spec Sync (MANDATORY FINAL STEP)
 
-Once all tests pass, you **MUST** sync the spec and related docs with the final working code.
+Once all verification passes, you **MUST** sync the spec and related docs with the final working code.
 
 Tell the user:
-> "All tests pass. I'll now sync the spec and docs with the final implementation."
+> "All checks pass. I'll now sync the spec and docs with the final implementation."
 
-#### 6.1 Update the Spec File
+#### 7.1 Update the Spec File
 
 Ensure the spec includes these sections (add if missing):
 
@@ -131,7 +140,7 @@ curl -X POST http://localhost:8000/api/endpoint -d '{"key": "value"}'
 | 0.1 | YYYY-MM-DD | Initial implementation |
 ```
 
-#### 6.2 Update the Specs Index
+#### 7.2 Update the Specs Index
 
 Update the appropriate specs README:
 - **Backend:** `backend/specs/README.md`
@@ -142,7 +151,7 @@ Changes:
 - Add any new related files
 - Link to reviews/incidents if applicable
 
-#### 6.3 Record Key Decisions (if any)
+#### 7.3 Record Key Decisions (if any)
 
 If you made significant architectural decisions during implementation, create an ADR:
 
@@ -169,11 +178,12 @@ Save to: `[backend|frontend]/specs/XXX-feature/decisions/001-decision-name.md`
 Use this checklist to track progress:
 
 - [ ] Read and understand the spec
+- [ ] Look up latest docs via Context7
 - [ ] Implement the feature
 - [ ] Rebuild container
 - [ ] Initialize database
-- [ ] Run tests
-- [ ] All tests passing
+- [ ] Run verification (pytest, eval scripts, curl, etc.)
+- [ ] All checks passing
 - [ ] Spec has Implementation Status table
 - [ ] Spec has Implementation Files section
 - [ ] Spec has Verification section with test commands
@@ -184,7 +194,7 @@ Use this checklist to track progress:
 ## Important Reminders
 
 - **Never skip the rebuild step** - code changes won't take effect without it
-- **Always run tests inside Docker** - never run pytest directly on host
+- **Always run verification inside Docker** - never run pytest or scripts directly on host
 - **Spec sync is mandatory** - the spec must reflect the final implementation
 - **Specs are for future you** - write them like you'll forget everything in 6 months
 - **Testable > descriptive** - "run this curl, expect this output" beats "the system should work"

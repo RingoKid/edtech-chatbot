@@ -326,3 +326,6 @@ dist-ssr
 *.tsbuildinfo
 
 .DS_Store
+
+# Eval fixtures (LLM-generated, vary between runs)
+backend/tests/fixtures/handwriting_generator/*.json
