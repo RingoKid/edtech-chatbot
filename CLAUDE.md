@@ -10,16 +10,34 @@ All backend commands run inside the `backend` Docker container:
 - **Run tests:** `docker compose exec backend pytest [path/to/test]`
 - **Shell access:** `docker compose exec backend /bin/bash`
 
-### Evals
+### Running Tests and Assessments
 
-When asked to run evals:
+**Pytest-based checks** (routing, params, structure):
 
-1. **Discover** — List all eval files: `ls backend/tests/evals/test_*.py`
-2. **Present** — Show the available evals to the user
-3. **Ask** — Which eval(s) to run? (or "all")
+1. **Discover** — List all test files: `ls backend/tests/evals/test_*.py`
+2. **Present** — Show the available tests to the user
+3. **Ask** — Which test(s) to run? (or "all")
 4. **Run** — `docker compose exec backend pytest tests/evals/<selected_file> -v`
 
-To run all evals at once: `docker compose exec backend pytest tests/evals/ -v`
+To run all pytest checks at once: `docker compose exec backend pytest tests/evals/ -v`
+
+**Scaffolding assessments** (LLM judge — within, across, gradual release, decomposition):
+
+```bash
+# All 12 fixtures
+docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py
+
+# Single fixture
+docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --fixture k_letter_b_onlevel
+```
+
+**Regenerate fixtures** (only needed if generator code changes):
+
+```bash
+docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/generate_eval_fixtures.py
+```
+
+The `-e GIT_SHA=...` flag embeds the current commit hash in reports/fixtures for provenance tracking.
 
 After rebuilding, always initialize the database:
 

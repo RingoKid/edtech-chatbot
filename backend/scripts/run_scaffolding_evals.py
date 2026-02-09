@@ -18,6 +18,7 @@ Usage:
 import argparse
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime
 
@@ -36,6 +37,19 @@ RUBRICS_DIR = "tests/evals/rubrics"
 FORM_D_PATH = "prompt/Handwriting & Spelling (Transcription) AI Codes/Supplementary Forms/FORM D Scaffolded Activities .md"
 
 DEFAULT_JUDGE_MODEL = "gpt-5.2"
+
+
+def get_git_sha() -> str:
+    """Get current git commit SHA (short). Checks GIT_SHA env var first (for Docker), falls back to git command."""
+    sha = os.environ.get("GIT_SHA")
+    if sha:
+        return sha
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], text=True
+        ).strip()
+    except Exception:
+        return "unknown"
 
 
 def load_form_d() -> str:
@@ -288,12 +302,14 @@ def generate_report(
     results: list[dict],
     model_key: str,
     run_date: str,
+    git_sha: str,
 ) -> str:
     """Generate the full markdown report."""
     lines = [
         "# Scaffolding Eval Results",
         "",
         f"**Run date:** {run_date}",
+        f"**Git SHA:** {git_sha}",
         f"**Judge model:** {model_key}",
         f"**Generator model:** gpt-4o",
         f"**Fixtures evaluated:** {len(results)}",
@@ -490,7 +506,8 @@ def main():
 
     # Generate report
     run_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    report = generate_report(results, args.model, run_date)
+    git_sha = get_git_sha()
+    report = generate_report(results, args.model, run_date, git_sha)
 
     # Save report
     os.makedirs(RESULTS_DIR, exist_ok=True)

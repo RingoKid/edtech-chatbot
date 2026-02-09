@@ -72,7 +72,7 @@ Run the verification commands specified in the spec. Check the spec's **Verifica
 **Common patterns:**
 
 - **pytest:** `docker compose exec backend pytest [path/to/test_file.py] -v`
-- **Eval scripts:** `docker compose exec backend python scripts/[eval_script].py`
+- **Eval scripts:** `docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/[eval_script].py`
 - **Frontend tests:** `docker compose exec frontend npm run test`
 - **curl checks:** Run the curl commands listed in the spec
 

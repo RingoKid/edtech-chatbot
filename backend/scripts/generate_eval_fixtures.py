@@ -16,6 +16,7 @@ import asyncio
 import argparse
 import json
 import os
+import subprocess
 import uuid
 from datetime import datetime, timezone
 
@@ -42,6 +43,19 @@ FIXTURE_PARAMS = [
 ]
 
 FIXTURES_DIR = "tests/fixtures/handwriting_generator"
+
+
+def get_git_sha() -> str:
+    """Get current git commit SHA (short). Checks GIT_SHA env var first (for Docker), falls back to git command."""
+    sha = os.environ.get("GIT_SHA")
+    if sha:
+        return sha
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], text=True
+        ).strip()
+    except Exception:
+        return "unknown"
 
 
 async def run_handwriting_generator(graph, params: dict, thread_id: str) -> str | None:
@@ -140,6 +154,7 @@ async def generate_fixture(params: dict, force: bool = False) -> bool:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "generator_model": "gpt-4o",
         "generator_prompt_version": "handwriting-generator:production",
+        "generator_git_sha": get_git_sha(),
     }
 
     with open(fixture_path, "w") as f:
