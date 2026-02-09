@@ -54,6 +54,14 @@ CRITERIA_REGISTRY: dict[str, dict] = {
         "type": "llm-judge",
         "description": "Checks if activities across sections build on earlier skills",
     },
+    "scaffolding_gradual_release": {
+        "type": "llm-judge",
+        "description": "Checks if teacher support decreases across the lesson (I do → We do → You do)",
+    },
+    "scaffolding_decomposition": {
+        "type": "llm-judge",
+        "description": "Checks if complex tasks have prerequisite sub-skills taught in earlier sections",
+    },
 }
 
 

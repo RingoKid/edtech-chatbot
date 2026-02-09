@@ -25,6 +25,8 @@ from app.llm.client import get_chat_model
 from tests.evals.models import (
     WithinSectionOutput,
     AcrossSectionOutput,
+    GradualReleaseOutput,
+    DecompositionOutput,
 )
 
 
@@ -163,6 +165,125 @@ def format_across_detail(across_output: AcrossSectionOutput) -> str:
     return "\n".join(lines)
 
 
+def run_release_judge(lesson_output: str, model_key: str, form_d: str) -> GradualReleaseOutput:
+    """Run the gradual release scaffolding judge."""
+    rubric_template = load_rubric("scaffolding_gradual_release")
+    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0)
+    judge = model.with_structured_output(GradualReleaseOutput)
+    return judge.invoke(prompt)
+
+
+def run_decomposition_judge(lesson_output: str, model_key: str, form_d: str) -> DecompositionOutput:
+    """Run the decomposition scaffolding judge."""
+    rubric_template = load_rubric("scaffolding_decomposition")
+    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0)
+    judge = model.with_structured_output(DecompositionOutput)
+    return judge.invoke(prompt)
+
+
+def compute_release_score(output: GradualReleaseOutput) -> tuple[int, int, float]:
+    """Compute gradual release score. Returns (correct, total, percentage)."""
+    all_transitions = output.across_section_transitions + output.within_section_transitions
+    total = len(all_transitions)
+    correct = sum(1 for t in all_transitions if t.support_decreased)
+    score = (correct / total * 100) if total > 0 else 0.0
+    return correct, total, score
+
+
+def compute_decomposition_score(output: DecompositionOutput) -> tuple[int, int, float]:
+    """Compute decomposition score. Returns (covered, total, percentage)."""
+    total_components = sum(len(t.required_components) for t in output.complex_tasks)
+    covered = sum(
+        1 for t in output.complex_tasks for c in t.required_components if c.is_taught
+    )
+    score = (covered / total_components * 100) if total_components > 0 else 0.0
+    return covered, total_components, score
+
+
+def format_release_detail(output: GradualReleaseOutput) -> str:
+    """Format gradual release output as markdown tables."""
+    lines = []
+
+    # Across-section support levels
+    lines.append("**Across-Section Support Levels**")
+    lines.append("| Section | Support Level | Indicators |")
+    lines.append("|---------|-------------|------------|")
+    for level in output.across_section_levels:
+        indicators = "; ".join(
+            ind.replace("|", "\\|").replace("\n", " ") for ind in level.indicators
+        )
+        lines.append(f"| {level.section_or_step} | {level.support_level} | {indicators} |")
+    lines.append("")
+
+    # Across-section transitions
+    lines.append("**Across-Section Transitions**")
+    lines.append("| # | From | To | Released? | Reasoning |")
+    lines.append("|---|------|----|----------|-----------|")
+    for i, t in enumerate(output.across_section_transitions, 1):
+        mark = "+" if t.support_decreased else "-"
+        reasoning = t.reasoning.replace("|", "\\|").replace("\n", " ")
+        lines.append(f"| {i} | {t.from_step} | {t.to_step} | {mark} | {reasoning} |")
+    lines.append("")
+
+    # Within Section 3 levels
+    lines.append("**Within Section 3 (Guided Practice)**")
+    if output.within_section_levels:
+        lines.append("| # | Step | Support Level | Indicators |")
+        lines.append("|---|------|-------------|------------|")
+        for i, level in enumerate(output.within_section_levels, 1):
+            indicators = "; ".join(
+                ind.replace("|", "\\|").replace("\n", " ") for ind in level.indicators
+            )
+            lines.append(f"| {i} | {level.section_or_step} | {level.support_level} | {indicators} |")
+        lines.append("")
+
+    # Within Section 3 transitions
+    if output.within_section_transitions:
+        lines.append("| # | From | To | Released? | Reasoning |")
+        lines.append("|---|------|----|----------|-----------|")
+        for i, t in enumerate(output.within_section_transitions, 1):
+            mark = "+" if t.support_decreased else "-"
+            reasoning = t.reasoning.replace("|", "\\|").replace("\n", " ")
+            lines.append(f"| {i} | {t.from_step} | {t.to_step} | {mark} | {reasoning} |")
+        lines.append("")
+    else:
+        lines.append("_No within-section transitions (0 or 1 step)_\n")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
+def format_decomposition_detail(output: DecompositionOutput) -> str:
+    """Format decomposition output as markdown tables."""
+    lines = []
+
+    if not output.complex_tasks:
+        lines.append("_No complex tasks identified_\n")
+    else:
+        lines.append("| Complex Task (Section) | Component Skill | Taught? | Where | Reasoning |")
+        lines.append("|------------------------|----------------|---------|-------|-----------| ")
+        for task in output.complex_tasks:
+            for comp in task.required_components:
+                mark = "+" if comp.is_taught else "-"
+                where = (
+                    f"{comp.taught_via_activity} ({comp.taught_in_section})"
+                    if comp.is_taught and comp.taught_in_section
+                    else "—"
+                )
+                reasoning = comp.reasoning.replace("|", "\\|").replace("\n", " ")
+                task_label = f"{task.task_name} ({task.section})"
+                task_label = task_label.replace("|", "\\|")
+                lines.append(f"| {task_label} | {comp.skill_name} | {mark} | {where} | {reasoning} |")
+        lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
 def generate_report(
     results: list[dict],
     model_key: str,
@@ -181,24 +302,32 @@ def generate_report(
         "",
         "## Summary",
         "",
-        "| Fixture | Within | Across | Avg |",
-        "|---------|--------|--------|-----|",
+        "| Fixture | Within | Across | Release | Decomp | Avg |",
+        "|---------|--------|--------|---------|--------|-----|",
     ]
 
     total_within = 0.0
     total_across = 0.0
+    total_release = 0.0
+    total_decomp = 0.0
 
     for r in results:
         w = r["within_score"]
         a = r["across_score"]
-        avg = (w + a) / 2
+        rel = r["release_score"]
+        dec = r["decomp_score"]
+        avg = (w + a + rel + dec) / 4
         total_within += w
         total_across += a
+        total_release += rel
+        total_decomp += dec
 
         lines.append(
             f"| {r['fixture_id']} "
             f"| {w:.1f}% ({r['within_correct']}/{r['within_total']}) "
             f"| {a:.1f}% ({r['across_correct']}/{r['across_total']}) "
+            f"| {rel:.1f}% ({r['release_correct']}/{r['release_total']}) "
+            f"| {dec:.1f}% ({r['decomp_correct']}/{r['decomp_total']}) "
             f"| {avg:.1f}% |"
         )
 
@@ -206,9 +335,12 @@ def generate_report(
     if n > 0:
         avg_within = total_within / n
         avg_across = total_across / n
-        avg_overall = (avg_within + avg_across) / 2
+        avg_release = total_release / n
+        avg_decomp = total_decomp / n
+        avg_overall = (avg_within + avg_across + avg_release + avg_decomp) / 4
         lines.append(
-            f"| **Overall Average** | **{avg_within:.1f}%** | **{avg_across:.1f}%** | **{avg_overall:.1f}%** |"
+            f"| **Overall Average** | **{avg_within:.1f}%** | **{avg_across:.1f}%** "
+            f"| **{avg_release:.1f}%** | **{avg_decomp:.1f}%** | **{avg_overall:.1f}%** |"
         )
 
     lines.extend(["", "---", ""])
@@ -238,6 +370,20 @@ def generate_report(
             f"#### Across-Section Sequencing: {a:.1f}% ({r['across_correct']}/{r['across_total']} links)\n"
         )
         lines.append(r["across_detail"])
+
+        # Gradual release detail
+        rel = r["release_score"]
+        lines.append(
+            f"#### Gradual Release: {rel:.1f}% ({r['release_correct']}/{r['release_total']} transitions)\n"
+        )
+        lines.append(r["release_detail"])
+
+        # Decomposition detail
+        dec = r["decomp_score"]
+        lines.append(
+            f"#### Decomposition: {dec:.1f}% ({r['decomp_correct']}/{r['decomp_total']} components)\n"
+        )
+        lines.append(r["decomp_detail"])
 
         lines.extend(["---", ""])
 
@@ -288,18 +434,24 @@ def main():
         lesson_output = fixture["lesson_output"]
 
         try:
-            # Run both judges
+            # Run all 4 judges
             within_output = run_within_judge(lesson_output, args.model, form_d)
             across_output = run_across_judge(lesson_output, args.model, form_d)
+            release_output = run_release_judge(lesson_output, args.model, form_d)
+            decomp_output = run_decomposition_judge(lesson_output, args.model, form_d)
 
             # Compute scores
             w_correct, w_total, w_score = compute_within_score(within_output)
             a_correct, a_total, a_score = compute_across_score(across_output)
+            r_correct, r_total, r_score = compute_release_score(release_output)
+            d_correct, d_total, d_score = compute_decomposition_score(decomp_output)
 
-            avg = (w_score + a_score) / 2
+            avg = (w_score + a_score + r_score + d_score) / 4
             print(
                 f"    Within: {w_score:.1f}% ({w_correct}/{w_total}) | "
                 f"Across: {a_score:.1f}% ({a_correct}/{a_total}) | "
+                f"Release: {r_score:.1f}% ({r_correct}/{r_total}) | "
+                f"Decomp: {d_score:.1f}% ({d_correct}/{d_total}) | "
                 f"Avg: {avg:.1f}%"
             )
 
@@ -316,6 +468,16 @@ def main():
                 "across_total": a_total,
                 "across_score": a_score,
                 "across_detail": format_across_detail(across_output),
+                "release_output": release_output,
+                "release_correct": r_correct,
+                "release_total": r_total,
+                "release_score": r_score,
+                "release_detail": format_release_detail(release_output),
+                "decomp_output": decomp_output,
+                "decomp_correct": d_correct,
+                "decomp_total": d_total,
+                "decomp_score": d_score,
+                "decomp_detail": format_decomposition_detail(decomp_output),
             })
 
         except Exception as e:
@@ -344,8 +506,13 @@ def main():
     n = len(results)
     avg_within = sum(r["within_score"] for r in results) / n
     avg_across = sum(r["across_score"] for r in results) / n
-    avg_overall = (avg_within + avg_across) / 2
-    print(f"\nOverall: Within={avg_within:.1f}% | Across={avg_across:.1f}% | Avg={avg_overall:.1f}%")
+    avg_release = sum(r["release_score"] for r in results) / n
+    avg_decomp = sum(r["decomp_score"] for r in results) / n
+    avg_overall = (avg_within + avg_across + avg_release + avg_decomp) / 4
+    print(
+        f"\nOverall: Within={avg_within:.1f}% | Across={avg_across:.1f}% "
+        f"| Release={avg_release:.1f}% | Decomp={avg_decomp:.1f}% | Avg={avg_overall:.1f}%"
+    )
 
 
 if __name__ == "__main__":

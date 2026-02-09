@@ -200,6 +200,25 @@ specs/
 **Decisions:**
 - [001-decoupled-fixtures.md](./014-llm-judge-evals/decisions/001-decoupled-fixtures.md) - Why fixtures are pre-generated rather than live
 
+### 015 - Scaffolding Evals Phase 2 — Gradual Release & Decomposition
+**Status:** Implemented
+**Spec:** [015-scaffolding-evals-phase-2/spec.md](./015-scaffolding-evals-phase-2/spec.md)
+**Description:** Two new LLM judge evals for rubric criterion 2: gradual release of teacher support and decomposition of complex tasks into sub-skills. Extends the scaffolding eval suite from 2 to 4 evals.
+
+**Features:**
+- Gradual release eval: checks if teacher support decreases across sections (I do → We do → You do) and within Section 3
+- Decomposition eval: checks if complex tasks in Sections 3-4 have prerequisite sub-skills taught in earlier sections
+- Cognitive load trade-off handling in gradual release judge
+- Extended summary table with 4 eval columns + averages
+- Per-fixture detail with support level tables, transition tables, and component skill tables
+
+**Related Files:**
+- `tests/evals/models.py` - 6 new Pydantic models (SupportLevel, SupportTransition, GradualReleaseOutput, ComponentSkill, ComplexTask, DecompositionOutput)
+- `tests/evals/rubrics/scaffolding_gradual_release.md` - Gradual release judge prompt
+- `tests/evals/rubrics/scaffolding_decomposition.md` - Decomposition judge prompt
+- `scripts/run_scaffolding_evals.py` - Extended runner (4 judges, 4 compute, 4 format functions)
+- `app/langfuse/criteria.py` - 2 new registry entries
+
 ---
 
 ## How to Use This Structure
