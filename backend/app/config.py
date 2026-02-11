@@ -68,8 +68,13 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=30, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     refresh_token_expire_days: int = Field(default=7, alias="REFRESH_TOKEN_EXPIRE_DAYS")
 
-    # CORS
+    # CORS — comma-separated when multiple origins needed (e.g. bare domain + www)
     frontend_url: str = Field(default="http://localhost:3000", alias="FRONTEND_URL")
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        """Parse FRONTEND_URL into a list of origins (supports comma-separated)."""
+        return [o.strip() for o in self.frontend_url.split(",") if o.strip()]
 
     # Speechmatics configuration for voice transcription
     SPEECHMATICS_API_KEY: Optional[str] = Field(default=None, alias="SPEECHMATICS_API_KEY")

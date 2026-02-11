@@ -88,7 +88,7 @@ Using `DefaultConfiguration`:
 |----------|-------|
 | `APP_ENV` | `sandbox` |
 | `DYNAMODB_TABLE_NAME` | `EdTechChatbotTable` |
-| `FRONTEND_URL` | `https://develop.dyio3npn4doy2.amplifyapp.com` |
+| `FRONTEND_URL` | `https://composeearly.com,https://www.composeearly.com` |
 | `LANGSMITH_ENDPOINT` | `https://api.smith.langchain.com` |
 | `LANGSMITH_PROJECT` | `pr-formal-experiment-23` |
 | `LANGSMITH_TRACING` | `true` |
@@ -244,6 +244,19 @@ aws ecr get-login-password --region us-east-1 | \
 ### Secrets not loading
 
 Ensure `AppRunner-Service-Role-SecretsReadWrite` has `secretsmanager:GetSecretValue` permission for the secret ARNs.
+
+### CORS errors on login or API calls
+
+**Symptom:** Browser console shows `Access-Control-Allow-Origin` errors when calling the API from the deployed frontend.
+
+**Root cause:** The browser's `Origin` header (determined by the URL bar) must exactly match one of the origins in `FRONTEND_URL`. Common mismatches:
+- `https://www.composeearly.com` vs `https://composeearly.com` (www vs bare domain)
+- `https://develop.dyio3npn4doy2.amplifyapp.com` vs `https://composeearly.com` (Amplify default vs custom domain)
+
+**Fix:**
+1. `FRONTEND_URL` supports comma-separated origins (see `backend/app/config.py` `allowed_origins` property)
+2. Ensure Amplify has a 301 redirect from `www` → bare domain (see `amplify.md` redirect rules)
+3. Update the env var: `FRONTEND_URL=https://composeearly.com,https://www.composeearly.com`
 
 ## Security Note
 

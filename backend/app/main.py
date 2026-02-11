@@ -24,9 +24,10 @@ app = FastAPI(
 )
 
 # Add CORS middleware (for httpOnly cookies and credentials)
+# FRONTEND_URL supports comma-separated origins for bare + www domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],  # Frontend URL from config
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,  # REQUIRED for cookies
     allow_methods=["*"],
     allow_headers=["*"],

@@ -86,9 +86,11 @@ Applied to all files (`**/*`):
 
 | Source | Target | Status | Purpose |
 |--------|--------|--------|---------|
+| `https://www.composeearly.com` | `https://composeearly.com` | 301 | www → bare domain redirect |
+| `https://www.composeearly.com/<*>` | `https://composeearly.com/<*>` | 301 | www → bare domain (all paths) |
 | `/<*>` | `/index.html` | 404-200 | SPA routing (React Router) |
 
-This rule ensures client-side routing works — all paths serve `index.html`, letting React handle routing.
+The www redirects prevent CORS errors — without them, `www.composeearly.com` is a different origin than `composeearly.com`, and the backend would reject the request. The SPA rule ensures client-side routing works.
 
 ## Common Operations
 
