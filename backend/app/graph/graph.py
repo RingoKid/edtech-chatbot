@@ -21,6 +21,7 @@ from langchain_core.messages import AIMessage, ToolMessage
 
 from app.graph.state import (
     GraphState,
+    FeedbackData,
     HandwritingParams,
     VocabularySyntaxParams,
     IdeaGenerationParams,
@@ -38,6 +39,11 @@ from app.graph.agents.param import (
 from app.graph.agents.handwriting_generator import (
     create_handwriting_generator_agent,
     FINALIZE_TOOL_NAME,
+)
+from app.graph.agents.feedback_collector import (
+    create_feedback_collector_agent,
+    SUBMIT_FEEDBACK_TOOL_NAME,
+    SKIP_FEEDBACK_TOOL_NAME,
 )
 from app.graph.nodes.placeholders import (
     handwriting_placeholder,
@@ -304,13 +310,66 @@ def route_after_handwriting_generator(state: GraphState) -> str:
     """
     Routing function: decide where to go after the handwriting generator runs.
 
-    If finalize_lesson was called, go to END.
+    If finalize_lesson was called, route to feedback_collector.
     Otherwise, end this invocation and wait for user response.
     """
     if state.get("lesson_finalized"):
-        return END
+        return "feedback_collector"
 
     # Generator presented lesson or made modifications - wait for user feedback
+    return END
+
+
+def feedback_collector_node(state: GraphState) -> dict:
+    """
+    Node that runs the feedback collector ReAct agent.
+
+    The agent will either:
+    1. Ask the user for optional feedback (first run after finalize)
+    2. Parse user feedback and call submit_feedback or skip_feedback
+
+    Returns state updates including messages, feedback_submitted, and feedback_data.
+    """
+    agent = create_feedback_collector_agent()
+
+    result = agent.invoke({"messages": state["messages"]})
+
+    new_messages = result.get("messages", [])
+
+    # Check which feedback tool was called
+    feedback_submitted = False
+    feedback_data = None
+
+    for msg in reversed(new_messages):
+        if isinstance(msg, AIMessage) and hasattr(msg, 'tool_calls') and msg.tool_calls:
+            for tool_call in msg.tool_calls:
+                tool_name = tool_call.get('name')
+                if tool_name == SUBMIT_FEEDBACK_TOOL_NAME:
+                    args = tool_call.get('args', {})
+                    feedback_data = FeedbackData(
+                        category=args.get('category', 'general'),
+                        rating=args.get('rating', 0),
+                        text=args.get('text', ''),
+                    )
+                    feedback_submitted = True
+                    break
+                elif tool_name == SKIP_FEEDBACK_TOOL_NAME:
+                    feedback_submitted = True
+                    break
+        if feedback_submitted:
+            break
+
+    return {
+        "messages": new_messages,
+        "feedback_submitted": feedback_submitted,
+        "feedback_data": feedback_data,
+    }
+
+
+def route_after_feedback_collector(state: GraphState) -> str:
+    """
+    Routing function: after feedback collector, always go to END.
+    """
     return END
 
 
@@ -318,8 +377,10 @@ def entry_router(state: GraphState) -> str:
     """
     Entry point router: decide where to start based on current state.
 
-    If we're mid-generation (params set, not finalized), go directly to generator.
-    Otherwise, go through normal routing flow.
+    Priority:
+    1. Mid-feedback: finalized but feedback not yet submitted → feedback_collector
+    2. Mid-generation: params set, not finalized → generator
+    3. Default: routing_agent
     """
     # Check if we're in an active handwriting generation session
     if (
@@ -328,7 +389,12 @@ def entry_router(state: GraphState) -> str:
     ):
         return "handwriting_generator"
 
-    # TODO: Add similar checks for vocabulary and idea_generation when implemented
+    # Mid-feedback: lesson finalized but feedback not yet submitted
+    if (
+        state.get("lesson_finalized", False)
+        and not state.get("feedback_submitted", False)
+    ):
+        return "feedback_collector"
 
     # Default: go through routing
     return "routing_agent"
@@ -360,6 +426,7 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
     graph.add_node("param_agent", param_agent_node)
     graph.add_node("handwriting_placeholder", handwriting_placeholder)
     graph.add_node("handwriting_generator", handwriting_generator_node)
+    graph.add_node("feedback_collector", feedback_collector_node)
     graph.add_node("vocabulary_placeholder", vocabulary_placeholder)
     graph.add_node("vocabulary_generator_placeholder", vocabulary_generator_placeholder)
     graph.add_node("idea_generation_placeholder", idea_generation_placeholder)
@@ -371,6 +438,7 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
         {
             "routing_agent": "routing_agent",
             "handwriting_generator": "handwriting_generator",
+            "feedback_collector": "feedback_collector",
         }
     )
 
@@ -398,13 +466,21 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
         }
     )
 
-    # Handwriting generator can have multi-turn conversation
+    # Handwriting generator routes to feedback_collector after finalize
     graph.add_conditional_edges(
         "handwriting_generator",
         route_after_handwriting_generator,
         {
+            "feedback_collector": "feedback_collector",
             END: END,
         }
+    )
+
+    # Feedback collector always ends after collecting or skipping
+    graph.add_conditional_edges(
+        "feedback_collector",
+        route_after_feedback_collector,
+        {END: END}
     )
 
     # Placeholder nodes always end the conversation

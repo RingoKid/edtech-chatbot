@@ -219,6 +219,32 @@ specs/
 - `scripts/run_scaffolding_evals.py` - Extended runner (4 judges, 4 compute, 4 format functions)
 - `app/langfuse/criteria.py` - 2 new registry entries
 
+### 017 - Feedback Collector
+**Status:** Implemented
+**Spec:** [017-feedback-collector/spec.md](./017-feedback-collector/spec.md)
+**Description:** ReAct agent that collects optional user feedback after lesson generation. Parses feedback into structured data (category, rating, text) and persists to DynamoDB.
+
+**Features:**
+- ReAct agent with `create_agent` from `langchain.agents`
+- `submit_feedback(category, rating, text)` and `skip_feedback()` tools
+- FeedbackService for DynamoDB persistence (single-table design)
+- Graph routing: generator → feedback_collector → END
+- Entry router handles mid-feedback resumption
+- ChatService integration for auth-agnostic persistence
+
+**Related Files:**
+- `app/graph/agents/feedback_collector.py` - Feedback collector agent and tools
+- `app/services/feedback_service.py` - DynamoDB feedback read/write service
+- `app/graph/state.py` - `FeedbackData` TypedDict, `feedback_submitted` field
+- `app/graph/graph.py` - `feedback_collector_node`, routing updates
+- `app/services/chat_service.py` - Feedback persistence after graph invocation
+- `app/models.py` - `Feedback` Pydantic model
+- `app/db_schema.py` - `FEEDBACK_KEY_PATTERNS` documentation
+- `scripts/init_db.py` - `validate_table_support()` GSI1 check
+- `tests/unit/test_feedback_service.py` - Unit tests (4/4)
+- `tests/evals/test_feedback_collector.py` - Node evals (5/5)
+- `scripts/test_feedback_e2e.py` - E2E smoke test
+
 ---
 
 ## How to Use This Structure

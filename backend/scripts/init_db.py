@@ -100,6 +100,33 @@ def create_checkpoint_table(dynamodb_client, table_name):
         raise
 
 
+def validate_table_support(dynamodb_client, table_name):
+    """
+    Validate that the main table has the GSI1 index required for feedback queries.
+
+    Args:
+        dynamodb_client: Boto3 DynamoDB client
+        table_name: Name of the main table
+
+    Returns:
+        bool: True if GSI1 exists, False otherwise
+    """
+    try:
+        response = dynamodb_client.describe_table(TableName=table_name)
+        gsis = response['Table'].get('GlobalSecondaryIndexes', [])
+        gsi_names = [gsi['IndexName'] for gsi in gsis]
+
+        if 'GSI1' in gsi_names:
+            print(f"✅ Feedback support validated: GSI1 exists on {table_name}")
+            return True
+        else:
+            print(f"⚠️  GSI1 not found on {table_name} — feedback user queries will not work")
+            return False
+    except ClientError as e:
+        print(f"⚠️  Could not validate table support: {e}")
+        return False
+
+
 def main():
     """Initialize all DynamoDB tables."""
     print(f"🚀 Initializing DynamoDB tables for environment: {settings.app_env}")
@@ -133,6 +160,9 @@ def main():
     # Create checkpoint table
     checkpoint_table_name = settings.checkpoint_table_name
     create_checkpoint_table(dynamodb_client, checkpoint_table_name)
+
+    # Validate feedback support (GSI1 check)
+    validate_table_support(dynamodb_client, main_table_name)
 
     print("\n✨ Database initialization complete!")
     print(f"📊 Main table: {main_table_name}")

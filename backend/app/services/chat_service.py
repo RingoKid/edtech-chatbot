@@ -13,6 +13,7 @@ from langchain_core.messages import HumanMessage
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 from app.schemas.chat_history import MessageItem
 from app.services.chat_history_service import get_chat_history_service
+from app.services.feedback_service import get_feedback_service
 
 
 class ChatService:
@@ -183,6 +184,19 @@ class ChatService:
 
         # Update last_message_preview with the AI's response
         await chat_history_service.update_preview(user_id, thread_id, reply)
+
+        # Persist feedback if collected
+        feedback_data = result.get("feedback_data")
+        if feedback_data:
+            feedback_service = get_feedback_service()
+            await feedback_service.save_feedback(
+                thread_id=thread_id,
+                user_id=user_id,
+                task_type=result.get("task_type", "unknown"),
+                category=feedback_data["category"],
+                rating=feedback_data.get("rating"),
+                text=feedback_data["text"],
+            )
 
         response = {
             "reply": reply,

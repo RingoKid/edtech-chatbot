@@ -41,6 +41,15 @@ CHECKPOINT_TABLE_SCHEMA = {
     ]
 }
 
+# Feedback key patterns (documentation — no schema changes needed)
+# These patterns use the existing PK/SK + GSI1 on the main table.
+FEEDBACK_KEY_PATTERNS = {
+    'PK': 'THREAD#{thread_id}',
+    'SK': 'FEEDBACK#{feedback_id}',
+    'GSI1PK': 'USER#{user_id}',
+    'GSI1SK': 'FEEDBACK#{created_at}',
+}
+
 # TTL configuration for main table (for refresh token auto-deletion)
 MAIN_TABLE_TTL_CONFIG = {
     'Enabled': True,

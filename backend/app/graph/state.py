@@ -63,6 +63,13 @@ class IdeaGenerationParams(TypedDict):
     student_level: StudentLevel
 
 
+class FeedbackData(TypedDict):
+    """Structured feedback extracted by the feedback collector agent."""
+    category: str         # "lesson" | "platform" | "general"
+    rating: Optional[int] # 1-5 or None (0 means no rating)
+    text: str             # Free-text feedback
+
+
 class GraphState(TypedDict):
     """
     Unified state object for the routing agent graph.
@@ -73,6 +80,8 @@ class GraphState(TypedDict):
     - routing_complete: Signals successful handoff to task agent
     - handwriting_params: Set when param agent collects all handwriting params
     - lesson_finalized: Set when generator's finalize_lesson tool is called
+    - feedback_submitted: Set after feedback is collected or skipped
+    - feedback_data: Structured feedback for ChatService to persist
     """
     # Messages are handled with add_messages reducer (appends, not replaces)
     messages: Annotated[List[BaseMessage], add_messages]
@@ -94,3 +103,10 @@ class GraphState(TypedDict):
 
     # Signals that the lesson has been finalized by the generator
     lesson_finalized: bool
+
+    # Signals that feedback has been submitted or skipped
+    feedback_submitted: bool
+
+    # Structured feedback data extracted by the feedback collector
+    # Persisted to DynamoDB by ChatService after graph invocation
+    feedback_data: Optional[FeedbackData]
