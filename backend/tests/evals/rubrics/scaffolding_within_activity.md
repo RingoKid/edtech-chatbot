@@ -48,6 +48,14 @@ When an assessment-style activity (e.g., *Write that Sound*) is followed by targ
 
 **How to recognize this pattern:** The later activity explicitly addresses mistakes or confusions from the preceding activity, includes error analysis, partner discussion, or teacher-led comparison of confusable items.
 
+### 3. Brief Comprehension Check at the End of a Practice Block
+
+When the final step in a section is a short oral recall or comprehension check (e.g., "What is the sound?" or "Show me how to write it"), this is a **transition cue** that closes out the practice block — not a new activity at a lower difficulty level. Teachers routinely end practice with a quick check-for-understanding before moving to the next section.
+
+**Example:** After *Write without tracing* (high), the teacher asks *"And what is the sound, everyone?"* (children say /b/). This confirms the sound-letter connection before moving to Application.
+
+**How to recognize this pattern:** The step is brief (1-2 exchanges), oral-only, occurs at the very end of a section, and checks retention of something already practiced rather than introducing new content.
+
 ## Instructions
 
 For the lesson below:
