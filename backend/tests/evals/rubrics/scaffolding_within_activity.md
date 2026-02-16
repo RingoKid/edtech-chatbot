@@ -28,6 +28,26 @@ Use this as your authoritative reference for mapping activities to difficulty le
 
 {form_d}
 
+## Valid Non-Escalation Patterns
+
+The following patterns are **not** sequencing violations even if the second activity has a lower Form D difficulty label than the first. Mark these pairs as `correctly_ordered: true`.
+
+### 1. Skill Application in a Simpler Response Format
+
+When a harder activity teaches a technique (e.g., phoneme segmentation) and the next activity has students **apply that technique** in a structured game or simpler response mode (e.g., Sound Hunt with cards/manipulatives), this is intentional scaffolding — "learn the technique, then practice it." The response format is simpler, but the underlying skill is being reinforced.
+
+**Example:** *Stretch the Sounds* (full segmentation — high) followed by *Sound Hunt* (identify where the target sound is using a card — low per Form D). The Sound Hunt **depends on** the segmentation skill just taught, so it builds on it even though the response mode is simpler.
+
+**How to recognize this pattern:** The later activity requires children to *use* the skill from the earlier activity, but with a simpler output (e.g., hold up a card instead of producing all phonemes, slide a manipulative instead of writing).
+
+### 2. Corrective Feedback After Assessment
+
+When an assessment-style activity (e.g., *Write that Sound*) is followed by targeted corrective feedback or error-correction discussion (e.g., contrasting b vs d features), this is a **planned remediation interrupt** — not a difficulty drop. Assessment → feedback → continue is standard pedagogical practice.
+
+**Example:** *Write that Sound* (high) followed by *corrective feedback contrasting b and d* (middle). The feedback directly addresses errors from the assessment and prepares students for upcoming work.
+
+**How to recognize this pattern:** The later activity explicitly addresses mistakes or confusions from the preceding activity, includes error analysis, partner discussion, or teacher-led comparison of confusable items.
+
 ## Instructions
 
 For the lesson below:
@@ -35,8 +55,9 @@ For the lesson below:
 1. **Identify sections 1 through 4** (Review & Connect, Model Explain & Engage, Guided Practice, Application). Skip section 5 (Wrap-Up).
 2. **For each section**, identify all distinct activities or steps.
 3. **Map each activity** to a difficulty level (low, middle, high) using Form D above as your reference.
-4. **For each consecutive pair** of activities within a section, determine whether the second activity is equal or harder difficulty than the first.
-5. **Provide reasoning** for each difficulty assignment and each pair judgment.
+4. **Check valid non-escalation patterns** before marking any pair as incorrectly ordered. If a pair matches one of the patterns above, mark it as `correctly_ordered: true` and cite the pattern in your reasoning.
+5. **For each consecutive pair** of activities within a section, determine whether the second activity is equal or harder difficulty than the first (or matches a valid non-escalation pattern).
+6. **Provide reasoning** for each difficulty assignment and each pair judgment.
 
 ## Lesson to Evaluate
 

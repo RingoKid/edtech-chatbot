@@ -11,6 +11,9 @@ Usage:
     # Run on specific fixture
     docker compose exec backend python scripts/run_scaffolding_evals.py --fixture k_letter_b_onlevel
 
+    # Run on expert fixtures
+    docker compose exec backend python scripts/run_scaffolding_evals.py --fixtures-dir tests/fixtures/handwriting_expert
+
     # Use different judge model
     docker compose exec backend python scripts/run_scaffolding_evals.py --model gpt-4o
 """
@@ -65,20 +68,20 @@ def load_rubric(name: str) -> str:
         return f.read()
 
 
-def load_fixture(fixture_id: str) -> dict:
+def load_fixture(fixture_id: str, fixtures_dir: str = FIXTURES_DIR) -> dict:
     """Load a fixture JSON file."""
-    path = os.path.join(FIXTURES_DIR, f"{fixture_id}.json")
+    path = os.path.join(fixtures_dir, f"{fixture_id}.json")
     with open(path) as f:
         return json.load(f)
 
 
-def get_available_fixtures() -> list[str]:
+def get_available_fixtures(fixtures_dir: str = FIXTURES_DIR) -> list[str]:
     """List available fixture IDs from the fixtures directory."""
-    if not os.path.exists(FIXTURES_DIR):
+    if not os.path.exists(fixtures_dir):
         return []
     return sorted(
         f.replace(".json", "")
-        for f in os.listdir(FIXTURES_DIR)
+        for f in os.listdir(fixtures_dir)
         if f.endswith(".json")
     )
 
@@ -303,6 +306,7 @@ def generate_report(
     model_key: str,
     run_date: str,
     git_sha: str,
+    fixtures_dir: str = FIXTURES_DIR,
 ) -> str:
     """Generate the full markdown report."""
     lines = [
@@ -311,7 +315,7 @@ def generate_report(
         f"**Run date:** {run_date}",
         f"**Git SHA:** {git_sha}",
         f"**Judge model:** {model_key}",
-        f"**Generator model:** gpt-4o",
+        f"**Fixtures dir:** {os.path.basename(os.path.normpath(fixtures_dir))}",
         f"**Fixtures evaluated:** {len(results)}",
         "",
         "---",
@@ -415,12 +419,18 @@ def main():
         "--model", type=str, default=DEFAULT_JUDGE_MODEL,
         help=f"Judge model key (default: {DEFAULT_JUDGE_MODEL})"
     )
+    parser.add_argument(
+        "--fixtures-dir", type=str, default=FIXTURES_DIR,
+        help=f"Directory containing fixture JSON files (default: {FIXTURES_DIR})"
+    )
     args = parser.parse_args()
 
+    fixtures_dir = args.fixtures_dir
+
     # Determine which fixtures to evaluate
-    available = get_available_fixtures()
+    available = get_available_fixtures(fixtures_dir)
     if not available:
-        print(f"No fixtures found in {FIXTURES_DIR}/")
+        print(f"No fixtures found in {fixtures_dir}/")
         print("Run: python scripts/generate_eval_fixtures.py")
         sys.exit(1)
 
@@ -438,6 +448,7 @@ def main():
 
     print(f"Running scaffolding evals")
     print(f"  Judge model: {args.model}")
+    print(f"  Fixtures dir: {fixtures_dir}")
     print(f"  Fixtures: {len(fixture_ids)}")
     print(f"  Form D: loaded from {FORM_D_PATH}")
     print()
@@ -446,7 +457,7 @@ def main():
 
     for fixture_id in fixture_ids:
         print(f"  Evaluating {fixture_id}...")
-        fixture = load_fixture(fixture_id)
+        fixture = load_fixture(fixture_id, fixtures_dir)
         lesson_output = fixture["lesson_output"]
 
         try:
@@ -507,7 +518,7 @@ def main():
     # Generate report
     run_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     git_sha = get_git_sha()
-    report = generate_report(results, args.model, run_date, git_sha)
+    report = generate_report(results, args.model, run_date, git_sha, fixtures_dir)
 
     # Save report
     os.makedirs(RESULTS_DIR, exist_ok=True)
