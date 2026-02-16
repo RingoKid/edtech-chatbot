@@ -329,3 +329,6 @@ dist-ssr
 
 # Eval fixtures (LLM-generated, vary between runs)
 backend/tests/fixtures/handwriting_generator/*.json
+
+# Obsidian
+.obsidian/
