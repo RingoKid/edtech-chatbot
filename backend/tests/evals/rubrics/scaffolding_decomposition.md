@@ -49,6 +49,16 @@ Use Form D to understand what skills each activity requires. Higher-level activi
 
 A component skill is "taught" if there is a specific activity, teacher modeling, or structured practice in an earlier section that explicitly addresses it. Merely mentioning a skill in passing does not count — the lesson must give children an opportunity to practice or observe the skill.
 
+### Scope and Prior Knowledge
+
+Each lesson targets a specific letter and sound. Children have been taught other letters and sounds in prior lessons. Apply the following principles when evaluating decomposition:
+
+**Previously mastered skills count as taught.** When Section 1 (Review & Connect) reviews previously taught sounds or letters — even briefly via activities like Sound Sparks, Tap that Sound, or Write that Sound — those skills are available to the student. If the Application task requires writing a non-target letter (e.g., writing 'g' or 'c' in a CVC spelling task when the lesson's target is 'b'), and Section 1 reviews that letter's sound, mark the component as `is_taught: true`. The lesson does not need to re-teach formation of every previously mastered letter.
+
+**Trivial format transfer is not a missing component.** When a skill practiced in one format (e.g., writing letters on handwriting lines) is applied in a very similar format (e.g., writing letters in Elkonin boxes, or on a worksheet with dotted guides), this does NOT require a separate decomposition step. The motor and cognitive demands are essentially the same. Do not flag format or context variations as missing components.
+
+**Only include skills the task actually requires.** Identify component skills based on what the lesson script explicitly asks children to do — not what the task could theoretically involve. For example, if the Application task asks students to "stretch and spell" but does not ask them to read or blend the word afterward, do not include "blending/reading" as a required component. Stick to what the script describes.
+
 ## Form D — Activity Reference (Difficulty Labels)
 
 {form_d}
