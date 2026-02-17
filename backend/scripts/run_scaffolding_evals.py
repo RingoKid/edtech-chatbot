@@ -1,12 +1,15 @@
 """
-Run scaffolding evals (within-section + across-section) on pre-generated fixtures.
+Run scaffolding evals on pre-generated fixtures.
 
-Loads lesson fixtures from JSON, runs two LLM judge calls per fixture,
+Loads lesson fixtures from JSON, runs LLM judge calls per fixture,
 computes scores, and generates a detailed markdown report.
 
 Usage:
-    # Run evals on all fixtures
+    # Run all 6 evals on all fixtures
     docker compose exec backend python scripts/run_scaffolding_evals.py
+
+    # Run only the two new format evals
+    docker compose exec backend python scripts/run_scaffolding_evals.py --eval verbatim structure
 
     # Run on specific fixture
     docker compose exec backend python scripts/run_scaffolding_evals.py --fixture k_letter_b_onlevel
@@ -31,6 +34,8 @@ from tests.evals.models import (
     AcrossSectionOutput,
     GradualReleaseOutput,
     DecompositionOutput,
+    VerbatimOutput,
+    StructureOutput,
 )
 
 
@@ -38,8 +43,11 @@ FIXTURES_DIR = "tests/fixtures/handwriting_generator"
 RESULTS_DIR = "tests/evals/results"
 RUBRICS_DIR = "tests/evals/rubrics"
 FORM_D_PATH = "prompt/Handwriting & Spelling (Transcription) AI Codes/Supplementary Forms/FORM D Scaffolded Activities .md"
+FORM_B_PATH = "prompt/Handwriting & Spelling (Transcription) AI Codes/FORM B-Codes for Lesson Parts Handwriting & Spelling.md"
 
 DEFAULT_JUDGE_MODEL = "gpt-5.2"
+
+ALL_EVAL_NAMES = ["within", "across", "release", "decomposition", "verbatim", "structure"]
 
 
 def get_git_sha() -> str:
@@ -58,6 +66,12 @@ def get_git_sha() -> str:
 def load_form_d() -> str:
     """Load Form D from the source markdown file."""
     with open(FORM_D_PATH) as f:
+        return f.read()
+
+
+def load_form_b() -> str:
+    """Load Form B from the source markdown file."""
+    with open(FORM_B_PATH) as f:
         return f.read()
 
 
@@ -86,23 +100,9 @@ def get_available_fixtures(fixtures_dir: str = FIXTURES_DIR) -> list[str]:
     )
 
 
-def compute_within_score(output: WithinSectionOutput) -> tuple[int, int, float]:
-    """Compute within-section score. Returns (correct, total, percentage)."""
-    total_pairs = sum(len(s.pairs) for s in output.sections)
-    correct_pairs = sum(
-        1 for s in output.sections for p in s.pairs if p.correctly_ordered
-    )
-    score = (correct_pairs / total_pairs * 100) if total_pairs > 0 else 0.0
-    return correct_pairs, total_pairs, score
-
-
-def compute_across_score(output: AcrossSectionOutput) -> tuple[int, int, float]:
-    """Compute across-section score. Returns (correct, total, percentage)."""
-    total_links = len(output.links)
-    correct_links = sum(1 for link in output.links if link.builds_correctly)
-    score = (correct_links / total_links * 100) if total_links > 0 else 0.0
-    return correct_links, total_links, score
-
+# ---------------------------------------------------------------------------
+# Judge functions
+# ---------------------------------------------------------------------------
 
 def run_within_judge(lesson_output: str, model_key: str, form_d: str) -> WithinSectionOutput:
     """Run the within-section scaffolding judge."""
@@ -123,6 +123,109 @@ def run_across_judge(lesson_output: str, model_key: str, form_d: str) -> AcrossS
     judge = model.with_structured_output(AcrossSectionOutput)
     return judge.invoke(prompt)
 
+
+def run_release_judge(lesson_output: str, model_key: str, form_d: str) -> GradualReleaseOutput:
+    """Run the gradual release scaffolding judge."""
+    rubric_template = load_rubric("scaffolding_gradual_release")
+    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0)
+    judge = model.with_structured_output(GradualReleaseOutput)
+    return judge.invoke(prompt)
+
+
+def run_decomposition_judge(lesson_output: str, model_key: str, form_d: str) -> DecompositionOutput:
+    """Run the decomposition scaffolding judge."""
+    rubric_template = load_rubric("scaffolding_decomposition")
+    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0)
+    judge = model.with_structured_output(DecompositionOutput)
+    return judge.invoke(prompt)
+
+
+def run_verbatim_judge(lesson_output: str, model_key: str, form_b: str) -> VerbatimOutput:
+    """Run the verbatim explanations judge."""
+    rubric_template = load_rubric("verbatim_explanations")
+    prompt = rubric_template.replace("{form_b}", form_b).replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0)
+    judge = model.with_structured_output(VerbatimOutput)
+    return judge.invoke(prompt)
+
+
+def run_structure_judge(lesson_output: str, model_key: str, form_b: str) -> StructureOutput:
+    """Run the lesson structure judge."""
+    rubric_template = load_rubric("lesson_structure")
+    prompt = rubric_template.replace("{form_b}", form_b).replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0)
+    judge = model.with_structured_output(StructureOutput)
+    return judge.invoke(prompt)
+
+
+# ---------------------------------------------------------------------------
+# Score computation functions
+# ---------------------------------------------------------------------------
+
+def compute_within_score(output: WithinSectionOutput) -> tuple[int, int, float]:
+    """Compute within-section score. Returns (correct, total, percentage)."""
+    total_pairs = sum(len(s.pairs) for s in output.sections)
+    correct_pairs = sum(
+        1 for s in output.sections for p in s.pairs if p.correctly_ordered
+    )
+    score = (correct_pairs / total_pairs * 100) if total_pairs > 0 else 0.0
+    return correct_pairs, total_pairs, score
+
+
+def compute_across_score(output: AcrossSectionOutput) -> tuple[int, int, float]:
+    """Compute across-section score. Returns (correct, total, percentage)."""
+    total_links = len(output.links)
+    correct_links = sum(1 for link in output.links if link.builds_correctly)
+    score = (correct_links / total_links * 100) if total_links > 0 else 0.0
+    return correct_links, total_links, score
+
+
+def compute_release_score(output: GradualReleaseOutput) -> tuple[int, int, float]:
+    """Compute gradual release score. Returns (correct, total, percentage)."""
+    all_transitions = output.across_section_transitions + output.within_section_transitions
+    total = len(all_transitions)
+    correct = sum(1 for t in all_transitions if t.support_decreased)
+    score = (correct / total * 100) if total > 0 else 0.0
+    return correct, total, score
+
+
+def compute_decomposition_score(output: DecompositionOutput) -> tuple[int, int, float]:
+    """Compute decomposition score. Returns (covered, total, percentage)."""
+    total_components = sum(len(t.required_components) for t in output.complex_tasks)
+    covered = sum(
+        1 for t in output.complex_tasks for c in t.required_components if c.is_taught
+    )
+    score = (covered / total_components * 100) if total_components > 0 else 0.0
+    return covered, total_components, score
+
+
+def compute_verbatim_score(output: VerbatimOutput) -> tuple[int, int, float]:
+    """Compute verbatim explanations score. Returns (correct, total, percentage)."""
+    total = len(output.sections)
+    correct = sum(1 for s in output.sections if s.is_verbatim)
+    score = (correct / total * 100) if total > 0 else 0.0
+    return correct, total, score
+
+
+def compute_structure_score(output: StructureOutput) -> tuple[int, int, float]:
+    """Compute lesson structure score. Returns (correct, total, percentage)."""
+    found_sections = sum(1 for s in output.sections if s.found)
+    correct_markers = sum(1 for m in output.markers if m.is_correct)
+    total = len(output.sections) + len(output.markers)
+    correct = found_sections + correct_markers
+    score = (correct / total * 100) if total > 0 else 0.0
+    return correct, total, score
+
+
+# ---------------------------------------------------------------------------
+# Format functions
+# ---------------------------------------------------------------------------
 
 def format_within_detail(within_output: WithinSectionOutput) -> str:
     """Format within-section detail for the report."""
@@ -180,45 +283,6 @@ def format_across_detail(across_output: AcrossSectionOutput) -> str:
 
     lines.append(f"**Judge Summary:** {across_output.explanation}\n")
     return "\n".join(lines)
-
-
-def run_release_judge(lesson_output: str, model_key: str, form_d: str) -> GradualReleaseOutput:
-    """Run the gradual release scaffolding judge."""
-    rubric_template = load_rubric("scaffolding_gradual_release")
-    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
-
-    model = get_chat_model(model_key, temperature=0)
-    judge = model.with_structured_output(GradualReleaseOutput)
-    return judge.invoke(prompt)
-
-
-def run_decomposition_judge(lesson_output: str, model_key: str, form_d: str) -> DecompositionOutput:
-    """Run the decomposition scaffolding judge."""
-    rubric_template = load_rubric("scaffolding_decomposition")
-    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
-
-    model = get_chat_model(model_key, temperature=0)
-    judge = model.with_structured_output(DecompositionOutput)
-    return judge.invoke(prompt)
-
-
-def compute_release_score(output: GradualReleaseOutput) -> tuple[int, int, float]:
-    """Compute gradual release score. Returns (correct, total, percentage)."""
-    all_transitions = output.across_section_transitions + output.within_section_transitions
-    total = len(all_transitions)
-    correct = sum(1 for t in all_transitions if t.support_decreased)
-    score = (correct / total * 100) if total > 0 else 0.0
-    return correct, total, score
-
-
-def compute_decomposition_score(output: DecompositionOutput) -> tuple[int, int, float]:
-    """Compute decomposition score. Returns (covered, total, percentage)."""
-    total_components = sum(len(t.required_components) for t in output.complex_tasks)
-    covered = sum(
-        1 for t in output.complex_tasks for c in t.required_components if c.is_taught
-    )
-    score = (covered / total_components * 100) if total_components > 0 else 0.0
-    return covered, total_components, score
 
 
 def format_release_detail(output: GradualReleaseOutput) -> str:
@@ -301,20 +365,140 @@ def format_decomposition_detail(output: DecompositionOutput) -> str:
     return "\n".join(lines)
 
 
+def format_verbatim_detail(output: VerbatimOutput) -> str:
+    """Format verbatim explanations output as a markdown table."""
+    lines = []
+
+    lines.append("| # | Section | Found? | Verbatim? | Differences | Reasoning |")
+    lines.append("|---|---------|--------|-----------|-------------|-----------|")
+    for i, section in enumerate(output.sections, 1):
+        found_mark = "+" if section.found else "-"
+        verbatim_mark = "+" if section.is_verbatim else "-"
+        differences = section.differences.replace("|", "\\|").replace("\n", " ") if section.differences else "—"
+        reasoning = section.reasoning.replace("|", "\\|").replace("\n", " ")
+        lines.append(
+            f"| {i} | {section.section_name} | {found_mark} | {verbatim_mark} "
+            f"| {differences} | {reasoning} |"
+        )
+    lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
+def format_structure_detail(output: StructureOutput) -> str:
+    """Format lesson structure output as two markdown tables."""
+    lines = []
+
+    # Sections table
+    found_count = sum(1 for s in output.sections if s.found)
+    lines.append(f"**Sections ({found_count}/{len(output.sections)})**")
+    lines.append("| # | Expected | Found? | Actual Heading | Reasoning |")
+    lines.append("|---|----------|--------|----------------|-----------|")
+    for i, section in enumerate(output.sections, 1):
+        mark = "+" if section.found else "-"
+        actual = section.actual_heading if section.actual_heading else "—"
+        actual = actual.replace("|", "\\|").replace("\n", " ")
+        reasoning = section.reasoning.replace("|", "\\|").replace("\n", " ")
+        lines.append(f"| {i} | {section.expected_name} | {mark} | {actual} | {reasoning} |")
+    lines.append("")
+
+    # Markers table
+    correct_count = sum(1 for m in output.markers if m.is_correct)
+    lines.append(f"**Markers ({correct_count}/{len(output.markers)})**")
+    lines.append("| # | Marker | Symbol | Correct? | Consistency | Issues | Reasoning |")
+    lines.append("|---|--------|--------|----------|-------------|--------|-----------|")
+    for i, marker in enumerate(output.markers, 1):
+        mark = "+" if marker.is_correct else "-"
+        consistency = marker.consistency_note.replace("|", "\\|").replace("\n", " ")
+        issues = marker.issues.replace("|", "\\|").replace("\n", " ") if marker.issues else "—"
+        reasoning = marker.reasoning.replace("|", "\\|").replace("\n", " ")
+        lines.append(
+            f"| {i} | {marker.marker_name} | {marker.marker_symbol} | {mark} "
+            f"| {consistency} | {issues} | {reasoning} |"
+        )
+    lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Eval registry — maps eval name to its functions and form dependency
+# ---------------------------------------------------------------------------
+
+EVAL_REGISTRY = {
+    "within": {
+        "label": "Within",
+        "unit": "pairs",
+        "form": "form_d",
+        "judge_fn": run_within_judge,
+        "compute_fn": compute_within_score,
+        "format_fn": format_within_detail,
+    },
+    "across": {
+        "label": "Across",
+        "unit": "links",
+        "form": "form_d",
+        "judge_fn": run_across_judge,
+        "compute_fn": compute_across_score,
+        "format_fn": format_across_detail,
+    },
+    "release": {
+        "label": "Release",
+        "unit": "transitions",
+        "form": "form_d",
+        "judge_fn": run_release_judge,
+        "compute_fn": compute_release_score,
+        "format_fn": format_release_detail,
+    },
+    "decomposition": {
+        "label": "Decomp",
+        "unit": "components",
+        "form": "form_d",
+        "judge_fn": run_decomposition_judge,
+        "compute_fn": compute_decomposition_score,
+        "format_fn": format_decomposition_detail,
+    },
+    "verbatim": {
+        "label": "Verbatim",
+        "unit": "sections",
+        "form": "form_b",
+        "judge_fn": run_verbatim_judge,
+        "compute_fn": compute_verbatim_score,
+        "format_fn": format_verbatim_detail,
+    },
+    "structure": {
+        "label": "Structure",
+        "unit": "checks",
+        "form": "form_b",
+        "judge_fn": run_structure_judge,
+        "compute_fn": compute_structure_score,
+        "format_fn": format_structure_detail,
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Report generation
+# ---------------------------------------------------------------------------
+
 def generate_report(
     results: list[dict],
+    eval_names: list[str],
     model_key: str,
     run_date: str,
     git_sha: str,
     fixtures_dir: str = FIXTURES_DIR,
 ) -> str:
-    """Generate the full markdown report."""
+    """Generate the full markdown report. Only includes columns for evals that ran."""
     lines = [
         "# Scaffolding Eval Results",
         "",
         f"**Run date:** {run_date}",
         f"**Git SHA:** {git_sha}",
         f"**Judge model:** {model_key}",
+        f"**Evals:** {', '.join(eval_names)}",
         f"**Fixtures dir:** {os.path.basename(os.path.normpath(fixtures_dir))}",
         f"**Fixtures evaluated:** {len(results)}",
         "",
@@ -322,46 +506,44 @@ def generate_report(
         "",
         "## Summary",
         "",
-        "| Fixture | Within | Across | Release | Decomp | Avg |",
-        "|---------|--------|--------|---------|--------|-----|",
     ]
 
-    total_within = 0.0
-    total_across = 0.0
-    total_release = 0.0
-    total_decomp = 0.0
+    # Build dynamic summary table header
+    labels = [EVAL_REGISTRY[name]["label"] for name in eval_names]
+    header = "| Fixture | " + " | ".join(labels) + " | Avg |"
+    separator = "|---------|" + "|".join("-----" for _ in labels) + "|-----|"
+    lines.append(header)
+    lines.append(separator)
+
+    # Accumulate totals per eval
+    totals = {name: 0.0 for name in eval_names}
 
     for r in results:
-        w = r["within_score"]
-        a = r["across_score"]
-        rel = r["release_score"]
-        dec = r["decomp_score"]
-        avg = (w + a + rel + dec) / 4
-        total_within += w
-        total_across += a
-        total_release += rel
-        total_decomp += dec
+        scores = []
+        cells = []
+        for name in eval_names:
+            s = r[f"{name}_score"]
+            c = r[f"{name}_correct"]
+            t = r[f"{name}_total"]
+            scores.append(s)
+            totals[name] += s
+            cells.append(f"{s:.1f}% ({c}/{t})")
 
-        lines.append(
-            f"| {r['fixture_id']} "
-            f"| {w:.1f}% ({r['within_correct']}/{r['within_total']}) "
-            f"| {a:.1f}% ({r['across_correct']}/{r['across_total']}) "
-            f"| {rel:.1f}% ({r['release_correct']}/{r['release_total']}) "
-            f"| {dec:.1f}% ({r['decomp_correct']}/{r['decomp_total']}) "
-            f"| {avg:.1f}% |"
-        )
+        avg = sum(scores) / len(scores)
+        line = f"| {r['fixture_id']} | " + " | ".join(cells) + f" | {avg:.1f}% |"
+        lines.append(line)
 
     n = len(results)
     if n > 0:
-        avg_within = total_within / n
-        avg_across = total_across / n
-        avg_release = total_release / n
-        avg_decomp = total_decomp / n
-        avg_overall = (avg_within + avg_across + avg_release + avg_decomp) / 4
-        lines.append(
-            f"| **Overall Average** | **{avg_within:.1f}%** | **{avg_across:.1f}%** "
-            f"| **{avg_release:.1f}%** | **{avg_decomp:.1f}%** | **{avg_overall:.1f}%** |"
-        )
+        avg_cells = []
+        avg_scores = []
+        for name in eval_names:
+            avg_val = totals[name] / n
+            avg_scores.append(avg_val)
+            avg_cells.append(f"**{avg_val:.1f}%**")
+        avg_overall = sum(avg_scores) / len(avg_scores)
+        line = "| **Overall Average** | " + " | ".join(avg_cells) + f" | **{avg_overall:.1f}%** |"
+        lines.append(line)
 
     lines.extend(["", "---", ""])
 
@@ -377,33 +559,15 @@ def generate_report(
         )
         lines.append("")
 
-        # Within-section detail
-        w = r["within_score"]
-        lines.append(
-            f"#### Within-Section Sequencing: {w:.1f}% ({r['within_correct']}/{r['within_total']} pairs)\n"
-        )
-        lines.append(r["within_detail"])
-
-        # Across-section detail
-        a = r["across_score"]
-        lines.append(
-            f"#### Across-Section Sequencing: {a:.1f}% ({r['across_correct']}/{r['across_total']} links)\n"
-        )
-        lines.append(r["across_detail"])
-
-        # Gradual release detail
-        rel = r["release_score"]
-        lines.append(
-            f"#### Gradual Release: {rel:.1f}% ({r['release_correct']}/{r['release_total']} transitions)\n"
-        )
-        lines.append(r["release_detail"])
-
-        # Decomposition detail
-        dec = r["decomp_score"]
-        lines.append(
-            f"#### Decomposition: {dec:.1f}% ({r['decomp_correct']}/{r['decomp_total']} components)\n"
-        )
-        lines.append(r["decomp_detail"])
+        for name in eval_names:
+            entry = EVAL_REGISTRY[name]
+            s = r[f"{name}_score"]
+            c = r[f"{name}_correct"]
+            t = r[f"{name}_total"]
+            lines.append(
+                f"#### {entry['label']}: {s:.1f}% ({c}/{t} {entry['unit']})\n"
+            )
+            lines.append(r[f"{name}_detail"])
 
         lines.extend(["---", ""])
 
@@ -423,9 +587,14 @@ def main():
         "--fixtures-dir", type=str, default=FIXTURES_DIR,
         help=f"Directory containing fixture JSON files (default: {FIXTURES_DIR})"
     )
+    parser.add_argument(
+        "--eval", nargs="+", choices=ALL_EVAL_NAMES, dest="evals",
+        help="Which evals to run (default: all). Valid: " + ", ".join(ALL_EVAL_NAMES)
+    )
     args = parser.parse_args()
 
     fixtures_dir = args.fixtures_dir
+    eval_names = args.evals if args.evals else ALL_EVAL_NAMES
 
     # Determine which fixtures to evaluate
     available = get_available_fixtures(fixtures_dir)
@@ -443,14 +612,21 @@ def main():
     else:
         fixture_ids = available
 
-    # Load Form D once from source (single source of truth)
-    form_d = load_form_d()
+    # Load forms only when needed
+    needed_forms = set(EVAL_REGISTRY[name]["form"] for name in eval_names)
+    forms = {}
+    if "form_d" in needed_forms:
+        forms["form_d"] = load_form_d()
+        print(f"  Form D: loaded from {FORM_D_PATH}")
+    if "form_b" in needed_forms:
+        forms["form_b"] = load_form_b()
+        print(f"  Form B: loaded from {FORM_B_PATH}")
 
     print(f"Running scaffolding evals")
     print(f"  Judge model: {args.model}")
+    print(f"  Evals: {', '.join(eval_names)}")
     print(f"  Fixtures dir: {fixtures_dir}")
     print(f"  Fixtures: {len(fixture_ids)}")
-    print(f"  Form D: loaded from {FORM_D_PATH}")
     print()
 
     results = []
@@ -461,51 +637,42 @@ def main():
         lesson_output = fixture["lesson_output"]
 
         try:
-            # Run all 4 judges
-            within_output = run_within_judge(lesson_output, args.model, form_d)
-            across_output = run_across_judge(lesson_output, args.model, form_d)
-            release_output = run_release_judge(lesson_output, args.model, form_d)
-            decomp_output = run_decomposition_judge(lesson_output, args.model, form_d)
+            result = {"fixture_id": fixture_id, "fixture": fixture}
+            scores = []
 
-            # Compute scores
-            w_correct, w_total, w_score = compute_within_score(within_output)
-            a_correct, a_total, a_score = compute_across_score(across_output)
-            r_correct, r_total, r_score = compute_release_score(release_output)
-            d_correct, d_total, d_score = compute_decomposition_score(decomp_output)
+            for name in eval_names:
+                entry = EVAL_REGISTRY[name]
+                form_content = forms[entry["form"]]
 
-            avg = (w_score + a_score + r_score + d_score) / 4
-            print(
-                f"    Within: {w_score:.1f}% ({w_correct}/{w_total}) | "
-                f"Across: {a_score:.1f}% ({a_correct}/{a_total}) | "
-                f"Release: {r_score:.1f}% ({r_correct}/{r_total}) | "
-                f"Decomp: {d_score:.1f}% ({d_correct}/{d_total}) | "
-                f"Avg: {avg:.1f}%"
-            )
+                # Run judge
+                judge_output = entry["judge_fn"](lesson_output, args.model, form_content)
 
-            results.append({
-                "fixture_id": fixture_id,
-                "fixture": fixture,
-                "within_output": within_output,
-                "within_correct": w_correct,
-                "within_total": w_total,
-                "within_score": w_score,
-                "within_detail": format_within_detail(within_output),
-                "across_output": across_output,
-                "across_correct": a_correct,
-                "across_total": a_total,
-                "across_score": a_score,
-                "across_detail": format_across_detail(across_output),
-                "release_output": release_output,
-                "release_correct": r_correct,
-                "release_total": r_total,
-                "release_score": r_score,
-                "release_detail": format_release_detail(release_output),
-                "decomp_output": decomp_output,
-                "decomp_correct": d_correct,
-                "decomp_total": d_total,
-                "decomp_score": d_score,
-                "decomp_detail": format_decomposition_detail(decomp_output),
-            })
+                # Compute score
+                correct, total, score = entry["compute_fn"](judge_output)
+
+                # Format detail
+                detail = entry["format_fn"](judge_output)
+
+                result[f"{name}_output"] = judge_output
+                result[f"{name}_correct"] = correct
+                result[f"{name}_total"] = total
+                result[f"{name}_score"] = score
+                result[f"{name}_detail"] = detail
+                scores.append(score)
+
+            avg = sum(scores) / len(scores)
+            # Console output
+            parts = []
+            for name in eval_names:
+                label = EVAL_REGISTRY[name]["label"]
+                s = result[f"{name}_score"]
+                c = result[f"{name}_correct"]
+                t = result[f"{name}_total"]
+                parts.append(f"{label}: {s:.1f}% ({c}/{t})")
+            parts.append(f"Avg: {avg:.1f}%")
+            print(f"    {' | '.join(parts)}")
+
+            results.append(result)
 
         except Exception as e:
             print(f"    ERROR: {e}")
@@ -518,7 +685,7 @@ def main():
     # Generate report
     run_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     git_sha = get_git_sha()
-    report = generate_report(results, args.model, run_date, git_sha, fixtures_dir)
+    report = generate_report(results, eval_names, args.model, run_date, git_sha, fixtures_dir)
 
     # Save report
     os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -532,15 +699,16 @@ def main():
 
     # Print summary
     n = len(results)
-    avg_within = sum(r["within_score"] for r in results) / n
-    avg_across = sum(r["across_score"] for r in results) / n
-    avg_release = sum(r["release_score"] for r in results) / n
-    avg_decomp = sum(r["decomp_score"] for r in results) / n
-    avg_overall = (avg_within + avg_across + avg_release + avg_decomp) / 4
-    print(
-        f"\nOverall: Within={avg_within:.1f}% | Across={avg_across:.1f}% "
-        f"| Release={avg_release:.1f}% | Decomp={avg_decomp:.1f}% | Avg={avg_overall:.1f}%"
-    )
+    parts = []
+    avg_scores = []
+    for name in eval_names:
+        avg_val = sum(r[f"{name}_score"] for r in results) / n
+        avg_scores.append(avg_val)
+        label = EVAL_REGISTRY[name]["label"]
+        parts.append(f"{label}={avg_val:.1f}%")
+    avg_overall = sum(avg_scores) / len(avg_scores)
+    parts.append(f"Avg={avg_overall:.1f}%")
+    print(f"\nOverall: {' | '.join(parts)}")
 
 
 if __name__ == "__main__":

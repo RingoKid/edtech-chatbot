@@ -245,6 +245,26 @@ specs/
 - `tests/evals/test_feedback_collector.py` - Node evals (5/5)
 - `scripts/test_feedback_e2e.py` - E2E smoke test
 
+### 018 - Verbatim & Structure LLM Judge Evals
+**Status:** Implemented
+**Spec:** [018-verbatim-structure-evals/spec.md](./018-verbatim-structure-evals/spec.md)
+**Description:** Two new LLM judge evals for Form B format compliance. Checks whether generated lessons quote [Explanation] texts verbatim and include all required sections/markers. Also refactors the eval runner to a registry/dispatch pattern with selective `--eval` flag.
+
+**Features:**
+- Verbatim eval: checks if [Explanation] blocks quote Form B text word-for-word (5 sections)
+- Structure eval: checks if all 8 required sections and 7 required markers are present and used correctly (15 checks)
+- `--eval` CLI flag for selective eval execution (any combination of 6 evals)
+- `EVAL_REGISTRY` dispatch pattern — adding new evals requires only a dict entry + 3 functions
+- Dynamic report/summary adapts columns to whichever evals were selected
+- Lazy form loading (Form B only loaded when verbatim/structure evals selected)
+
+**Related Files:**
+- `tests/evals/models.py` - 5 new Pydantic models (VerbatimSection, VerbatimOutput, SectionPresence, MarkerCheck, StructureOutput)
+- `tests/evals/rubrics/verbatim_explanations.md` - Verbatim explanations judge prompt
+- `tests/evals/rubrics/lesson_structure.md` - Lesson structure judge prompt
+- `scripts/run_scaffolding_evals.py` - Refactored runner with EVAL_REGISTRY and --eval flag
+- `app/langfuse/criteria.py` - 2 new registry entries
+
 ---
 
 ## How to Use This Structure
