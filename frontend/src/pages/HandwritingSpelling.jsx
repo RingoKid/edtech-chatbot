@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { transcriptionVideos, categoryInfo } from '../data/videoData'
 import VideoCard from '../components/VideoCard'
+import { cn } from '../utils/cn'
 
 const HandwritingSpelling = () => {
   const category = categoryInfo.transcription
@@ -43,9 +44,17 @@ const HandwritingSpelling = () => {
             </h1>
 
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-              <p className="text-lg text-gray-700 leading-relaxed">
-                {category.description}
-              </p>
+              {Array.isArray(category.description) ? (
+                category.description.map((paragraph, i) => (
+                  <p key={i} className={cn('text-lg text-gray-700 leading-relaxed', i < category.description.length - 1 && 'mb-4')}>
+                    {paragraph}
+                  </p>
+                ))
+              ) : (
+                <p className="text-lg text-gray-700 leading-relaxed">
+                  {category.description}
+                </p>
+              )}
             </div>
           </motion.div>
         </div>

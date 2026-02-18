@@ -6,22 +6,22 @@ import { PenTool, BookOpen, Lightbulb, Play } from 'lucide-react'
 const BestPractices = () => {
   const practicesSections = [
     {
-      icon: PenTool,
-      title: "Handwriting and Spelling",
-      description: "Children learn to put their thoughts on paper using letters and words. When handwriting and spelling become automatic, it frees up brainpower to focus on what they want to say.",
-      videoLink: "/handwriting-spelling"
+      icon: Lightbulb,
+      title: "Idea Generation & Organization",
+      description: "Children pull ideas from what they know and have experienced (memory retrieval). They learn to organize those ideas to respond to a writing prompt or task.",
+      videoLink: "/idea-generation"
     },
     {
       icon: BookOpen,
-      title: "Vocabulary and Syntax",
+      title: "Language Construction",
       description: "Children use the words they know (vocabulary) to build sentences (syntax). This helps them express their thoughts clearly, using their foundational oral language skills.",
       videoLink: "/vocabulary-syntax"
     },
     {
-      icon: Lightbulb,
-      title: "Idea Organization and Generation",
-      description: "Children pull ideas from what they know and have experienced (memory retrieval). They learn to organize those ideas to respond to a writing prompt or task.",
-      videoLink: "/idea-generation"
+      icon: PenTool,
+      title: "Transcription",
+      description: "Children learn to put their thoughts on paper using letters and words. When handwriting and spelling become automatic, it frees up brainpower to focus on what they want to say.",
+      videoLink: "/handwriting-spelling"
     }
   ]
 
@@ -37,20 +37,20 @@ const BestPractices = () => {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display mb-8 text-gray-900">
-              Research-Backed Practices Modeled
+              Best Practices Modeled
             </h1>
-            
+
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Navigate through these three strategies to find various examples of real teacher examples
+              To compose text children need to generate ideas for a specific purpose (idea generation & organization), translate those ideas into language forms (language construction), and transcribe those ideas into printed text (transcription).
             </p>
-            
+
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 mb-12">
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                Research shows that when teachers embed direct instruction in <strong>handwriting & spelling</strong>, <strong>vocabulary & syntax</strong>, and <strong>idea generation & organization</strong> within authentic writing tasks, children make faster gains in literacy, language, and executive functioning.
+                Research shows that when teachers embed direct instruction in <strong>idea generation & organization</strong>, <strong>language construction</strong>, and <strong>transcription</strong> within authentic writing tasks, children make faster gains in literacy, language, and early writing ability.
               </p>
-              
+
               <p className="text-base text-gray-600">
-                Click on each component to explore how it supports young writers' development.
+                Find out the early language and literacy skills to target and best practices associated with helping kids learn those skills.
               </p>
             </div>
           </motion.div>

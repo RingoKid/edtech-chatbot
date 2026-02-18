@@ -2,12 +2,12 @@ const S3_BASE_URL = 'https://l4c-videos.s3.amazonaws.com/videos/'
 
 const encodeVideoUrl = (filename) => S3_BASE_URL + encodeURIComponent(filename)
 
-// TRANSCRIPTION (Handwriting & Spelling) - 9 Practices
+// TRANSCRIPTION (Handwriting & Spelling) - 10 Practices
 export const transcriptionVideos = [
   {
     id: 'hold-pencil-correctly',
     title: 'Hold Pencil Correctly',
-    description: 'Teaching proper pencil grip for comfortable, effective writing.',
+    description: 'Teach the proper way to hold a pencil.',
     videos: [
       { url: encodeVideoUrl('hold pen 2.mp4'), label: 'Demonstration 1' },
       { url: encodeVideoUrl('Hold Pencil2.mp4'), label: 'Demonstration 2' }
@@ -16,7 +16,7 @@ export const transcriptionVideos = [
   {
     id: 'directionality',
     title: 'Directionality',
-    description: 'Building left-to-right and top-to-bottom writing habits.',
+    description: 'Support writing within lines from left to right.',
     videos: [
       { url: encodeVideoUrl('Directionality Left to Right.mp4'), label: 'Left to Right' },
       { url: encodeVideoUrl('Directionality 2 (1).mp4'), label: 'Practice Example' }
@@ -25,16 +25,23 @@ export const transcriptionVideos = [
   {
     id: 'pronounce-identify-isolate-phonemes',
     title: 'Pronounce, Identify, & Isolate Phonemes',
-    description: 'Helping children hear and distinguish individual sounds in words.',
+    description: 'Help children pronounce, identify, and isolate phonemes correctly.',
     videos: [
       { url: encodeVideoUrl('Correct Pronunciation.mp4'), label: 'Correct Pronunciation' },
       { url: encodeVideoUrl('sound iso.mp4'), label: 'Sound Isolation' }
     ]
   },
   {
+    id: 'sequenced-segmentation',
+    title: 'Sequenced Segmentation',
+    description: 'Have children pull apart the individual sounds in spoken words in a systematic sequence from easier to more complex forms.',
+    noVideoYet: true,
+    videos: []
+  },
+  {
     id: 'correct-letter-sequence-strokes',
     title: 'Correct Letter Sequence of Strokes',
-    description: 'Teaching the proper order of strokes for forming letters.',
+    description: 'Teach how to form each letter representing a phoneme step by step, showing the exact order and direction of the strokes.',
     videos: [
       { url: encodeVideoUrl('strokes.mp4'), label: 'Strokes Practice' },
       { url: encodeVideoUrl('Sequence of Strokes.mp4'), label: 'Sequence Demo' }
@@ -43,7 +50,7 @@ export const transcriptionVideos = [
   {
     id: 'compare-contrast-letter-forms',
     title: 'Compare and Contrast Letter Forms',
-    description: 'Helping children distinguish between similar-looking letters.',
+    description: 'Talk with children about how letters look—compare their shapes and the strokes used to write them.',
     videos: [
       { url: encodeVideoUrl('comp graph.mp4'), label: 'Compare Graphemes' }
     ]
@@ -51,7 +58,7 @@ export const transcriptionVideos = [
   {
     id: 'retrieve-connect-phoneme-grapheme',
     title: 'Retrieve and Connect Phoneme-Grapheme Patterns',
-    description: 'Strengthening the connection between sounds and their written forms.',
+    description: 'Have children retrieve prior phoneme-grapheme knowledge and connect to new phoneme-grapheme patterns.',
     videos: [
       { url: encodeVideoUrl('Review Phoneme-Grapheme (1).mp4'), label: 'Review Practice' }
     ]
@@ -59,7 +66,7 @@ export const transcriptionVideos = [
   {
     id: 'apply-phoneme-grapheme-patterns',
     title: 'Apply Phoneme Grapheme Patterns',
-    description: 'Practicing the application of sound-letter patterns in writing.',
+    description: 'Cue children to apply phoneme-grapheme patterns during activities.',
     videos: [
       { url: encodeVideoUrl('phoneme grapgheme pattern.mp4'), label: 'Pattern Application' }
     ]
@@ -67,7 +74,7 @@ export const transcriptionVideos = [
   {
     id: 'corrective-feedback',
     title: 'Corrective Feedback',
-    description: 'Providing effective feedback to improve spelling and handwriting.',
+    description: 'Provide corrective and confirmatory feedback explaining what part is incorrect and showing them how to fix it.',
     videos: [
       { url: encodeVideoUrl('corrective feedback.mp4'), label: 'Feedback Example' }
     ]
@@ -75,7 +82,7 @@ export const transcriptionVideos = [
   {
     id: 'encourage-invented-spelling',
     title: 'Encourage Invented Spelling',
-    description: 'Supporting early spelling attempts to build confidence and phonemic awareness.',
+    description: "Encourage children to use what they've learned about sounds, spelling patterns, and word parts to try spelling new words—even if they're not sure (invented spelling).",
     videos: [
       { url: encodeVideoUrl('Encourage Invented Spelling.mp4'), label: 'Invented Spelling' }
     ]
@@ -237,12 +244,15 @@ export const getRelatedVideos = (currentId, category, limit = 3) => {
 // Category metadata
 export const categoryInfo = {
   transcription: {
-    title: 'Handwriting & Spelling',
+    title: 'Transcription',
     route: '/handwriting-spelling',
-    description: 'These practices help children strengthen their recall of sound–letter correspondences and develop the skills to segment spoken words into individual phonemes.'
+    description: [
+      'To transcribe language into text, children coordinate phoneme–grapheme correspondences with the motor processes required for handwriting and spelling. Instructional targets include letter knowledge, accurate letter formation, phonemic awareness, sound–letter correspondences, directionality, and print conventions.',
+      'The following practices help teachers optimize instruction to strengthen children\'s recall and written production of sound–letter correspondences, supporting their ability to write words and sentences with increasing accuracy and fluency.'
+    ]
   },
   'language-construction': {
-    title: 'Vocabulary & Syntax',
+    title: 'Language Construction',
     route: '/vocabulary-syntax',
     description: 'These practices help children develop syntax, vocabulary, and morphology, enabling them to build language more fluidly.'
   },
