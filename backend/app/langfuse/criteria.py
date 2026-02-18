@@ -62,6 +62,14 @@ CRITERIA_REGISTRY: dict[str, dict] = {
         "type": "llm-judge",
         "description": "Checks if complex tasks have prerequisite sub-skills taught in earlier sections",
     },
+    "verbatim_explanations": {
+        "type": "llm-judge",
+        "description": "Checks if [Explanation] blocks quote Form B text word-for-word in each section",
+    },
+    "lesson_structure": {
+        "type": "llm-judge",
+        "description": "Checks if all 8 required sections and 7 required markers are present and used correctly",
+    },
 }
 
 

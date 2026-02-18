@@ -173,3 +173,61 @@ class DecompositionOutput(BaseModel):
         description="All complex tasks identified in Sections 3-4"
     )
     explanation: str = Field(description="Overall summary of decomposition quality")
+
+
+# --- Verbatim Explanations Eval Models ---
+
+
+class VerbatimSection(BaseModel):
+    """Evaluation of a single [Explanation] block against Form B verbatim text."""
+
+    section_name: str = Field(description="e.g., 'Review & Connect'")
+    found: bool = Field(description="Was an [Explanation] block found?")
+    is_verbatim: bool = Field(description="Exact match to Form B?")
+    actual_text: str = Field(description="The text found (or empty string if missing)")
+    differences: str = Field(
+        description="What changed — empty if exact match"
+    )
+    reasoning: str = Field(description="Full judgment")
+
+
+class VerbatimOutput(BaseModel):
+    """Complete structured output from the verbatim explanations judge."""
+
+    sections: list[VerbatimSection] = Field(description="Always 5 entries")
+    explanation: str = Field(description="Overall summary")
+
+
+# --- Lesson Structure Eval Models ---
+
+
+class SectionPresence(BaseModel):
+    """Whether a required section is present in the lesson."""
+
+    expected_name: str = Field(description="e.g., 'Model, Explain & Engage'")
+    found: bool = Field(description="Is section present?")
+    actual_heading: Optional[str] = Field(
+        default=None, description="What the section was actually labeled"
+    )
+    reasoning: str = Field(description="Noting any naming variations")
+
+
+class MarkerCheck(BaseModel):
+    """Whether a required marker is present and used correctly."""
+
+    marker_name: str = Field(description="e.g., 'Teacher Does'")
+    marker_symbol: str = Field(description="e.g., '{...}'")
+    is_correct: bool = Field(
+        description="Present AND used for intended purpose"
+    )
+    consistency_note: str = Field(description="Where it's used/missing")
+    issues: str = Field(description="What's wrong — empty if correct")
+    reasoning: str = Field(description="Full judgment")
+
+
+class StructureOutput(BaseModel):
+    """Complete structured output from the lesson structure judge."""
+
+    sections: list[SectionPresence] = Field(description="Always 8 entries")
+    markers: list[MarkerCheck] = Field(description="Always 7 entries")
+    explanation: str = Field(description="Overall summary")
