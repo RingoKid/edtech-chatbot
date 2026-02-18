@@ -46,6 +46,8 @@ FORM_D_PATH = "prompt/Handwriting & Spelling (Transcription) AI Codes/Supplement
 FORM_B_PATH = "prompt/Handwriting & Spelling (Transcription) AI Codes/FORM B-Codes for Lesson Parts Handwriting & Spelling.md"
 
 DEFAULT_JUDGE_MODEL = "gpt-5.2"
+JUDGE_TIMEOUT = 120  # seconds per API call before raising an exception
+JUDGE_MAX_RETRIES = 2  # retry transient failures (network errors, rate limits)
 
 ALL_EVAL_NAMES = ["within", "across", "release", "decomposition", "verbatim", "structure"]
 
@@ -109,7 +111,7 @@ def run_within_judge(lesson_output: str, model_key: str, form_d: str) -> WithinS
     rubric_template = load_rubric("scaffolding_within_activity")
     prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
 
-    model = get_chat_model(model_key, temperature=0)
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(WithinSectionOutput)
     return judge.invoke(prompt)
 
@@ -119,7 +121,7 @@ def run_across_judge(lesson_output: str, model_key: str, form_d: str) -> AcrossS
     rubric_template = load_rubric("scaffolding_between_activity")
     prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
 
-    model = get_chat_model(model_key, temperature=0)
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(AcrossSectionOutput)
     return judge.invoke(prompt)
 
@@ -129,7 +131,7 @@ def run_release_judge(lesson_output: str, model_key: str, form_d: str) -> Gradua
     rubric_template = load_rubric("scaffolding_gradual_release")
     prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
 
-    model = get_chat_model(model_key, temperature=0)
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(GradualReleaseOutput)
     return judge.invoke(prompt)
 
@@ -139,7 +141,7 @@ def run_decomposition_judge(lesson_output: str, model_key: str, form_d: str) -> 
     rubric_template = load_rubric("scaffolding_decomposition")
     prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
 
-    model = get_chat_model(model_key, temperature=0)
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(DecompositionOutput)
     return judge.invoke(prompt)
 
@@ -149,7 +151,7 @@ def run_verbatim_judge(lesson_output: str, model_key: str, form_b: str) -> Verba
     rubric_template = load_rubric("verbatim_explanations")
     prompt = rubric_template.replace("{form_b}", form_b).replace("{lesson_output}", lesson_output)
 
-    model = get_chat_model(model_key, temperature=0)
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(VerbatimOutput)
     return judge.invoke(prompt)
 
@@ -159,7 +161,7 @@ def run_structure_judge(lesson_output: str, model_key: str, form_b: str) -> Stru
     rubric_template = load_rubric("lesson_structure")
     prompt = rubric_template.replace("{form_b}", form_b).replace("{lesson_output}", lesson_output)
 
-    model = get_chat_model(model_key, temperature=0)
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(StructureOutput)
     return judge.invoke(prompt)
 

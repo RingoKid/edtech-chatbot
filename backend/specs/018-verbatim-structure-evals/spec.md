@@ -327,7 +327,8 @@ Do not set score thresholds. Review the results manually after implementation.
 | Structure rubric | ✅ Done | `tests/evals/rubrics/lesson_structure.md` |
 | Runner script refactor (`--eval` flag + registry) | ✅ Done | `scripts/run_scaffolding_evals.py` |
 | Criteria registry | ✅ Done | `app/langfuse/criteria.py` |
-| End-to-end verification | ✅ Done | Verbatim: 60.0% (3/5), Structure: 60.0% (9/15) on expert fixture |
+| End-to-end verification | ✅ Done | Verbatim: 100% (5/5), Structure: 93.3% (14/15) on expert fixture |
+| Judge timeout + retries | ✅ Done | `JUDGE_TIMEOUT=120s`, `JUDGE_MAX_RETRIES=2` on all judge calls |
 
 ## Implementation Files
 
@@ -353,3 +354,4 @@ Do not set score thresholds. Review the results manually after implementation.
 | 0.1 | 2026-02-17 | Initial draft |
 | 0.2 | 2026-02-17 | Add `--eval` flag refactor, verify against expert fixture only, remove score thresholds |
 | 1.0 | 2026-02-17 | Implementation complete — all components verified |
+| 1.1 | 2026-02-17 | Add `timeout=120s` and `max_retries=2` to all judge API calls to prevent indefinite hangs |
