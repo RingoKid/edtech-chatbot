@@ -55,12 +55,9 @@ const Navigation = () => {
       name: "Best Practices Modeled",
       href: "/best-practices",
       dropdown: [
-        { name: "Handwriting and Spelling", href: "/handwriting-spelling" },
-        { name: "Vocabulary and Syntax", href: "/videos/vocabulary" },
-        {
-          name: "Idea Organization and Generation",
-          href: "/videos/idea-generation",
-        },
+        { name: "Idea Generation & Organization", href: "/idea-generation" },
+        { name: "Language Construction", href: "/vocabulary-syntax" },
+        { name: "Transcription", href: "/handwriting-spelling" },
       ],
     },
     { name: "AI Teaching Assistant", href: "/ai-teaching-assistant" },
