@@ -231,3 +231,180 @@ class StructureOutput(BaseModel):
     sections: list[SectionPresence] = Field(description="Always 8 entries")
     markers: list[MarkerCheck] = Field(description="Always 7 entries")
     explanation: str = Field(description="Overall summary")
+
+
+# --- Think-Aloud Eval Models ---
+
+
+class ThinkAloudInstance(BaseModel):
+    """Evaluation of a single section where students perform independent work."""
+
+    section: str = Field(description="Which section (e.g., 'Guided Practice', 'Application')")
+    task_description: str = Field(description="What students are asked to do independently")
+    worked_example_present: bool = Field(
+        description="Does the teacher do a full worked example before students try?"
+    )
+    uses_specific_word: bool = Field(
+        description="Does the example use a specific word (e.g., 'zebra'), not a generic placeholder?"
+    )
+    narrates_reasoning: bool = Field(
+        description="Does the teacher narrate internal thinking ('I am thinking...', 'So I know...', 'I hear...')?"
+    )
+    shows_steps_sequentially: bool = Field(
+        description="Does the teacher walk through each step of the process one at a time?"
+    )
+    connects_sound_to_letter: bool = Field(
+        description="Does the teacher explicitly link the sound to its letter ('the /z/ sound is written with letter z')?"
+    )
+    evidence: str = Field(description="Quoted text from the lesson supporting the judgment")
+
+
+class ThinkAloudOutput(BaseModel):
+    """Complete structured output from the think-aloud judge."""
+
+    instances: list[ThinkAloudInstance] = Field(
+        description="One entry per section requiring independent student work (expect 1-2)"
+    )
+    explanation: str = Field(description="Overall summary")
+
+
+# --- Corrective Feedback Eval Models ---
+
+
+class CorrectiveFeedbackBlock(BaseModel):
+    """A single corrective feedback block found in the lesson."""
+
+    location: str = Field(description="Which section it appears in")
+    anticipated_error: str = Field(
+        description="What error is described (e.g., 'children may write s instead of z')"
+    )
+    is_plausible: bool = Field(
+        description="Is this a realistic error for this letter/sound/grade level?"
+    )
+    has_scripted_response: bool = Field(
+        description="Does the teacher correction include actual dialogue (not just 'correct if needed')?"
+    )
+    explains_difference: bool = Field(
+        description="Does the correction explain WHY the student's answer is wrong or how to distinguish correct from incorrect?"
+    )
+    engages_students: bool = Field(
+        description="Does the correction involve students (e.g., 'try both sounds', 'what's different?') rather than just telling them?"
+    )
+    evidence: str = Field(description="Quoted text from the lesson")
+
+
+class CorrectiveFeedbackOutput(BaseModel):
+    """Complete structured output from the corrective feedback judge."""
+
+    blocks: list[CorrectiveFeedbackBlock] = Field(
+        description="All corrective feedback found (empty list if none)"
+    )
+    explanation: str = Field(description="Overall summary")
+
+
+# --- Post-Response Explanation Eval Models ---
+
+
+class StudentResponse(BaseModel):
+    """A single student response and what follows it."""
+
+    response_text: str = Field(
+        description="What students said/did (e.g., 'children say /z/')"
+    )
+    followed_by: Literal["explanation", "confirmation_only", "nothing"] = Field(
+        description="What the teacher says after"
+    )
+    teacher_text: str = Field(description="The actual teacher response text")
+
+
+class ActivityResponses(BaseModel):
+    """Student responses within a single activity."""
+
+    section: str = Field(description="Which section")
+    activity_name: str = Field(description="Name of the activity")
+    first_two_responses: list[StudentResponse] = Field(
+        description="The first 1-2 student responses in this activity (max 2)"
+    )
+
+
+class PostResponseOutput(BaseModel):
+    """Complete structured output from the post-response explanation judge."""
+
+    activities: list[ActivityResponses] = Field(
+        description="All activities with student responses in Sections 1-4"
+    )
+    explanation: str = Field(description="Overall summary")
+
+
+# --- Sound/Letter Comparison Eval Models ---
+
+
+class ComparisonBlock(BaseModel):
+    """A comparison between target and confusable sound/letter."""
+
+    location: str = Field(description="Which section")
+    target: str = Field(description="Target sound/letter (e.g., '/z/' or 'letter z')")
+    compared_with: str = Field(
+        description="The confusable partner (e.g., '/s/' or 'letter s')"
+    )
+    describes_similarity: bool = Field(
+        description="Does the lesson describe how the two are similar?"
+    )
+    describes_difference: bool = Field(
+        description="Does the lesson describe how the two differ?"
+    )
+    includes_articulatory_detail: bool = Field(
+        description="Does the comparison include mouth/lip/tongue/voicing descriptions?"
+    )
+    students_produce_both: bool = Field(
+        description="Do students actively try producing or writing both sounds/letters?"
+    )
+    evidence: str = Field(description="Quoted text from the lesson")
+
+
+class SoundLetterComparisonOutput(BaseModel):
+    """Complete structured output from the sound/letter comparison judge."""
+
+    comparisons: list[ComparisonBlock] = Field(
+        description="All comparison blocks found (empty list if none)"
+    )
+    explanation: str = Field(description="Overall summary")
+
+
+# --- Script Specificity Eval Models ---
+
+
+class SectionSpecificity(BaseModel):
+    """Specificity analysis for a single lesson section."""
+
+    section: str = Field(description="Which section")
+    dialogue_lines: int = Field(
+        description="Count of lines with actual quoted/scripted teacher speech"
+    )
+    stage_directions: int = Field(
+        description="Count of summarized descriptions (e.g., '{Teacher reads words...}')"
+    )
+    specific_example_words: list[str] = Field(
+        description="Specific words used as examples in sound activities (e.g., ['zebra', 'tiger'])"
+    )
+    specific_child_responses: int = Field(
+        description="Child responses with actual content (e.g., 'children say /z/')"
+    )
+    generic_child_responses: int = Field(
+        description="Generic child responses (e.g., 'children respond', 'children answer')"
+    )
+    has_pacing_cues: bool = Field(
+        description="Does the section include pacing/management cues (e.g., 'Ready. Go.', 'My turn. Your turn.')?"
+    )
+    evidence_sample: str = Field(
+        description="Representative excerpt showing the section's specificity level"
+    )
+
+
+class ScriptSpecificityOutput(BaseModel):
+    """Complete structured output from the script specificity judge."""
+
+    sections: list[SectionSpecificity] = Field(
+        description="One entry per section (1-4)"
+    )
+    explanation: str = Field(description="Overall summary")

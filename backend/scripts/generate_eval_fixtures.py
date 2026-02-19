@@ -26,20 +26,24 @@ from langgraph.checkpoint.memory import MemorySaver
 from app.graph.graph import create_graph
 
 
-# Fixture param matrix — 12 combos covering grades, letters, and levels
+# Fixture param matrix — 10 combos: 3×3 grid (grade × level) + expert mirror
+# Every grade × student_level cell covered, each with a unique letter.
+# Fixture #1 mirrors the expert fixture (PreK/Z/on-level) for reproducibility comparison.
 FIXTURE_PARAMS = [
+    # Expert mirror — same params as expert_prek_letter_z_onlevel
     {"id": "prek_letter_z_onlevel", "grade": "PreK", "letter": "Z", "student_level": "on-level"},
-    {"id": "k_letter_b_struggling", "grade": "K", "letter": "B", "student_level": "struggling"},
-    {"id": "k_letter_b_onlevel", "grade": "K", "letter": "B", "student_level": "on-level"},
-    {"id": "k_letter_b_advanced", "grade": "K", "letter": "B", "student_level": "advanced"},
-    {"id": "k_letter_t_onlevel", "grade": "K", "letter": "T", "student_level": "on-level"},
-    {"id": "k_letter_w_advanced", "grade": "K", "letter": "W", "student_level": "advanced"},
+    # PreK
     {"id": "prek_letter_a_onlevel", "grade": "PreK", "letter": "A", "student_level": "on-level"},
-    {"id": "prek_letter_m_struggling", "grade": "PreK", "letter": "M", "student_level": "struggling"},
-    {"id": "first_letter_e_onlevel", "grade": "1st", "letter": "E", "student_level": "on-level"},
+    {"id": "prek_letter_s_struggling", "grade": "PreK", "letter": "S", "student_level": "struggling"},
+    {"id": "prek_letter_m_advanced", "grade": "PreK", "letter": "M", "student_level": "advanced"},
+    # K
+    {"id": "k_letter_t_onlevel", "grade": "K", "letter": "T", "student_level": "on-level"},
+    {"id": "k_letter_c_struggling", "grade": "K", "letter": "C", "student_level": "struggling"},
+    {"id": "k_letter_w_advanced", "grade": "K", "letter": "W", "student_level": "advanced"},
+    # 1st
+    {"id": "first_letter_p_onlevel", "grade": "1st", "letter": "P", "student_level": "on-level"},
     {"id": "first_letter_r_struggling", "grade": "1st", "letter": "R", "student_level": "struggling"},
-    {"id": "first_letter_d_advanced", "grade": "1st", "letter": "D", "student_level": "advanced"},
-    {"id": "k_letter_p_onlevel", "grade": "K", "letter": "P", "student_level": "on-level"},
+    {"id": "first_letter_q_advanced", "grade": "1st", "letter": "Q", "student_level": "advanced"},
 ]
 
 FIXTURES_DIR = "tests/fixtures/handwriting_generator"

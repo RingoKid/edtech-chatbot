@@ -36,6 +36,11 @@ from tests.evals.models import (
     DecompositionOutput,
     VerbatimOutput,
     StructureOutput,
+    ThinkAloudOutput,
+    CorrectiveFeedbackOutput,
+    PostResponseOutput,
+    SoundLetterComparisonOutput,
+    ScriptSpecificityOutput,
 )
 
 
@@ -49,7 +54,10 @@ DEFAULT_JUDGE_MODEL = "gpt-5.2"
 JUDGE_TIMEOUT = 120  # seconds per API call before raising an exception
 JUDGE_MAX_RETRIES = 2  # retry transient failures (network errors, rate limits)
 
-ALL_EVAL_NAMES = ["within", "across", "release", "decomposition", "verbatim", "structure"]
+ALL_EVAL_NAMES = [
+    "within", "across", "release", "decomposition", "verbatim", "structure",
+    "think_aloud", "corrective_feedback", "post_response", "sound_comparison", "script_specificity",
+]
 
 
 def get_git_sha() -> str:
@@ -166,6 +174,56 @@ def run_structure_judge(lesson_output: str, model_key: str, form_b: str) -> Stru
     return judge.invoke(prompt)
 
 
+def run_think_aloud_judge(lesson_output: str, model_key: str, form_content: None = None) -> ThinkAloudOutput:
+    """Run the think-aloud detailed modeling judge."""
+    rubric_template = load_rubric("think_aloud")
+    prompt = rubric_template.replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
+    judge = model.with_structured_output(ThinkAloudOutput)
+    return judge.invoke(prompt)
+
+
+def run_corrective_feedback_judge(lesson_output: str, model_key: str, form_content: None = None) -> CorrectiveFeedbackOutput:
+    """Run the corrective feedback judge."""
+    rubric_template = load_rubric("corrective_feedback")
+    prompt = rubric_template.replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
+    judge = model.with_structured_output(CorrectiveFeedbackOutput)
+    return judge.invoke(prompt)
+
+
+def run_post_response_judge(lesson_output: str, model_key: str, form_content: None = None) -> PostResponseOutput:
+    """Run the post-response explanation judge."""
+    rubric_template = load_rubric("post_response_explanation")
+    prompt = rubric_template.replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
+    judge = model.with_structured_output(PostResponseOutput)
+    return judge.invoke(prompt)
+
+
+def run_sound_comparison_judge(lesson_output: str, model_key: str, form_content: None = None) -> SoundLetterComparisonOutput:
+    """Run the sound/letter comparison judge."""
+    rubric_template = load_rubric("sound_letter_comparison")
+    prompt = rubric_template.replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
+    judge = model.with_structured_output(SoundLetterComparisonOutput)
+    return judge.invoke(prompt)
+
+
+def run_script_specificity_judge(lesson_output: str, model_key: str, form_content: None = None) -> ScriptSpecificityOutput:
+    """Run the script specificity judge."""
+    rubric_template = load_rubric("script_specificity")
+    prompt = rubric_template.replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
+    judge = model.with_structured_output(ScriptSpecificityOutput)
+    return judge.invoke(prompt)
+
+
 # ---------------------------------------------------------------------------
 # Score computation functions
 # ---------------------------------------------------------------------------
@@ -223,6 +281,143 @@ def compute_structure_score(output: StructureOutput) -> tuple[int, int, float]:
     correct = found_sections + correct_markers
     score = (correct / total * 100) if total > 0 else 0.0
     return correct, total, score
+
+
+def compute_think_aloud_score(output: ThinkAloudOutput) -> tuple[int, int, float]:
+    """Compute think-aloud score. Returns (correct, total, percentage).
+
+    Per instance: count True among 5 checklist items. If worked_example_present
+    is False, the other 4 are automatically False. Average across instances.
+    """
+    if not output.instances:
+        return 0, 5, 0.0
+
+    total_true = 0
+    total_items = 0
+    for inst in output.instances:
+        if not inst.worked_example_present:
+            # No example → all 5 items are False
+            total_items += 5
+        else:
+            items = [
+                inst.worked_example_present,
+                inst.uses_specific_word,
+                inst.narrates_reasoning,
+                inst.shows_steps_sequentially,
+                inst.connects_sound_to_letter,
+            ]
+            total_true += sum(items)
+            total_items += 5
+
+    score = (total_true / total_items * 100) if total_items > 0 else 0.0
+    return total_true, total_items, score
+
+
+def compute_corrective_feedback_score(output: CorrectiveFeedbackOutput) -> tuple[int, int, float]:
+    """Compute corrective feedback score. Returns (correct, total, percentage).
+
+    If no blocks found: 0/4. Otherwise: best block's True count / 4.
+    """
+    if not output.blocks:
+        return 0, 4, 0.0
+
+    best_count = 0
+    for block in output.blocks:
+        count = sum([
+            block.is_plausible,
+            block.has_scripted_response,
+            block.explains_difference,
+            block.engages_students,
+        ])
+        best_count = max(best_count, count)
+
+    score = (best_count / 4 * 100)
+    return best_count, 4, score
+
+
+def compute_post_response_score(output: PostResponseOutput) -> tuple[int, int, float]:
+    """Compute post-response explanation score. Returns (correct, total, percentage).
+
+    Count responses with followed_by == "explanation" / total responses.
+    Uses a minimum response floor of 3 to prevent sparse lessons from scoring
+    artificially high (e.g., 1/1 = 100%).
+    """
+    MIN_RESPONSE_FLOOR = 3
+
+    all_responses = [
+        resp
+        for act in output.activities
+        for resp in act.first_two_responses
+    ]
+    found = len(all_responses)
+    if found == 0:
+        return 0, MIN_RESPONSE_FLOOR, 0.0
+
+    explanations = sum(1 for r in all_responses if r.followed_by == "explanation")
+    denominator = max(found, MIN_RESPONSE_FLOOR)
+    score = (explanations / denominator * 100)
+    return explanations, denominator, score
+
+
+def compute_sound_comparison_score(output: SoundLetterComparisonOutput) -> tuple[int, int, float]:
+    """Compute sound/letter comparison score. Returns (correct, total, percentage).
+
+    If no comparisons found: 0/4. Otherwise: best block's True count / 4.
+    """
+    if not output.comparisons:
+        return 0, 4, 0.0
+
+    best_count = 0
+    for comp in output.comparisons:
+        count = sum([
+            comp.describes_similarity,
+            comp.describes_difference,
+            comp.includes_articulatory_detail,
+            comp.students_produce_both,
+        ])
+        best_count = max(best_count, count)
+
+    score = (best_count / 4 * 100)
+    return best_count, 4, score
+
+
+def compute_script_specificity_score(output: ScriptSpecificityOutput) -> tuple[int, int, float]:
+    """Compute script specificity composite score. Returns (correct, total, percentage).
+
+    Composite = volume_adjusted_dialogue × 0.5 + response_specificity × 0.3 + pacing_score × 0.2
+
+    The dialogue sub-metric uses per-section volume scaling: each section's dialogue
+    ratio is multiplied by min(1.0, dialogue_lines / VOLUME_FLOOR) to penalize sections
+    with very few scripted lines. This prevents a lesson with 2 dialogue lines and
+    0 directions from scoring the same as one with 30 dialogue lines and 5 directions.
+    """
+    VOLUME_FLOOR = 10  # minimum expected dialogue lines per section
+
+    total_specific_resp = sum(s.specific_child_responses for s in output.sections)
+    total_generic_resp = sum(s.generic_child_responses for s in output.sections)
+    pacing_sections = sum(1 for s in output.sections if s.has_pacing_cues)
+
+    # Per-section volume-adjusted dialogue ratio
+    section_scores = []
+    for s in output.sections:
+        section_total = s.dialogue_lines + s.stage_directions
+        ratio = (s.dialogue_lines / section_total) if section_total > 0 else 0.0
+        volume_scale = min(1.0, s.dialogue_lines / VOLUME_FLOOR)
+        section_scores.append(ratio * volume_scale)
+
+    num_sections = len(output.sections) if output.sections else 4
+    dialogue_score = (sum(section_scores) / num_sections) if num_sections > 0 else 0.0
+
+    resp_denom = total_specific_resp + total_generic_resp
+    response_specificity = (total_specific_resp / resp_denom) if resp_denom > 0 else 0.0
+
+    pacing_score = pacing_sections / num_sections
+
+    composite = (dialogue_score * 0.5) + (response_specificity * 0.3) + (pacing_score * 0.2)
+    score = composite * 100
+
+    # Use composite percentage as correct out of 100
+    return round(score, 1), 100, score
 
 
 # ---------------------------------------------------------------------------
@@ -425,6 +620,175 @@ def format_structure_detail(output: StructureOutput) -> str:
     return "\n".join(lines)
 
 
+def format_think_aloud_detail(output: ThinkAloudOutput) -> str:
+    """Format think-aloud output as a markdown table."""
+    lines = []
+
+    if not output.instances:
+        lines.append("_No sections with independent student work identified_\n")
+    else:
+        lines.append("| Section | Task | Example? | Specific Word? | Narrates? | Steps? | Sound→Letter? | Evidence |")
+        lines.append("|---------|------|----------|----------------|-----------|--------|---------------|----------|")
+        for inst in output.instances:
+            evidence = inst.evidence.replace("|", "\\|").replace("\n", " ")[:120]
+            lines.append(
+                f"| {inst.section} | {inst.task_description.replace('|', '\\|')} "
+                f"| {'+'if inst.worked_example_present else '-'} "
+                f"| {'+'if inst.uses_specific_word else '-'} "
+                f"| {'+'if inst.narrates_reasoning else '-'} "
+                f"| {'+'if inst.shows_steps_sequentially else '-'} "
+                f"| {'+'if inst.connects_sound_to_letter else '-'} "
+                f'| "{evidence}" |'
+            )
+        lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
+def format_corrective_feedback_detail(output: CorrectiveFeedbackOutput) -> str:
+    """Format corrective feedback output as a markdown table."""
+    lines = []
+
+    if not output.blocks:
+        lines.append("_No corrective feedback blocks found_\n")
+    else:
+        lines.append("| Location | Error Anticipated | Plausible? | Scripted? | Explains? | Engages? | Evidence |")
+        lines.append("|----------|-------------------|------------|-----------|-----------|----------|----------|")
+        for block in output.blocks:
+            evidence = block.evidence.replace("|", "\\|").replace("\n", " ")[:120]
+            error = block.anticipated_error.replace("|", "\\|")
+            lines.append(
+                f"| {block.location} | {error} "
+                f"| {'+'if block.is_plausible else '-'} "
+                f"| {'+'if block.has_scripted_response else '-'} "
+                f"| {'+'if block.explains_difference else '-'} "
+                f"| {'+'if block.engages_students else '-'} "
+                f'| "{evidence}" |'
+            )
+        lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
+def format_post_response_detail(output: PostResponseOutput) -> str:
+    """Format post-response explanation output as a markdown table."""
+    lines = []
+
+    if not output.activities:
+        lines.append("_No activities with student responses identified_\n")
+    else:
+        lines.append("| Section | Activity | Response | Followed By | Teacher Text |")
+        lines.append("|---------|----------|----------|-------------|--------------|")
+        for act in output.activities:
+            for resp in act.first_two_responses:
+                response_text = resp.response_text.replace("|", "\\|").replace("\n", " ")
+                teacher_text = resp.teacher_text.replace("|", "\\|").replace("\n", " ")[:120]
+                lines.append(
+                    f"| {act.section} | {act.activity_name.replace('|', '\\|')} "
+                    f"| {response_text} | {resp.followed_by} "
+                    f'| "{teacher_text}" |'
+                )
+        lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
+def format_sound_comparison_detail(output: SoundLetterComparisonOutput) -> str:
+    """Format sound/letter comparison output as a markdown table."""
+    lines = []
+
+    if not output.comparisons:
+        lines.append("_No sound/letter comparisons found_\n")
+    else:
+        lines.append("| Location | Target | Compared With | Similarity? | Difference? | Articulatory? | Students Produce? | Evidence |")
+        lines.append("|----------|--------|---------------|-------------|-------------|---------------|-------------------|----------|")
+        for comp in output.comparisons:
+            evidence = comp.evidence.replace("|", "\\|").replace("\n", " ")[:120]
+            lines.append(
+                f"| {comp.location} | {comp.target} | {comp.compared_with} "
+                f"| {'+'if comp.describes_similarity else '-'} "
+                f"| {'+'if comp.describes_difference else '-'} "
+                f"| {'+'if comp.includes_articulatory_detail else '-'} "
+                f"| {'+'if comp.students_produce_both else '-'} "
+                f'| "{evidence}" |'
+            )
+        lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
+def format_script_specificity_detail(output: ScriptSpecificityOutput) -> str:
+    """Format script specificity output as a markdown table with sub-metrics."""
+    lines = []
+
+    if not output.sections:
+        lines.append("_No sections analyzed_\n")
+    else:
+        lines.append("| Section | Dialogue | Directions | Examples | Specific Resp. | Generic Resp. | Pacing? |")
+        lines.append("|---------|----------|------------|----------|----------------|---------------|---------|")
+
+        total_dialogue = 0
+        total_directions = 0
+        total_examples = 0
+        all_example_words = []
+        total_specific = 0
+        total_generic = 0
+        pacing_count = 0
+
+        for s in output.sections:
+            example_list = ", ".join(s.specific_example_words) if s.specific_example_words else "—"
+            example_list = example_list.replace("|", "\\|")
+            word_count = len(s.specific_example_words)
+            lines.append(
+                f"| {s.section} | {s.dialogue_lines} | {s.stage_directions} "
+                f"| {word_count} ({example_list}) | {s.specific_child_responses} "
+                f"| {s.generic_child_responses} | {'+'if s.has_pacing_cues else '-'} |"
+            )
+            total_dialogue += s.dialogue_lines
+            total_directions += s.stage_directions
+            total_examples += word_count
+            all_example_words.extend(s.specific_example_words)
+            total_specific += s.specific_child_responses
+            total_generic += s.generic_child_responses
+            if s.has_pacing_cues:
+                pacing_count += 1
+
+        num_sections = len(output.sections)
+        lines.append(
+            f"| **Totals** | **{total_dialogue}** | **{total_directions}** "
+            f"| **{total_examples} words** | **{total_specific}** "
+            f"| **{total_generic}** | **{pacing_count}/{num_sections}** |"
+        )
+        lines.append("")
+
+        # Sub-metrics (volume-adjusted dialogue matches compute function)
+        VOLUME_FLOOR = 10
+        section_scores = []
+        for s in output.sections:
+            sec_total = s.dialogue_lines + s.stage_directions
+            ratio = (s.dialogue_lines / sec_total) if sec_total > 0 else 0.0
+            vol_scale = min(1.0, s.dialogue_lines / VOLUME_FLOOR)
+            section_scores.append(ratio * vol_scale)
+        dialogue_adj = (sum(section_scores) / num_sections * 100) if num_sections > 0 else 0.0
+
+        resp_denom = total_specific + total_generic
+        resp_ratio = (total_specific / resp_denom * 100) if resp_denom > 0 else 0.0
+        pacing_pct = (pacing_count / num_sections * 100) if num_sections > 0 else 0.0
+
+        lines.append(
+            f"Sub-metrics: Dialogue (vol-adj): {dialogue_adj:.1f}% | Examples: {total_examples} words "
+            f"| Responses: {resp_ratio:.1f}% | Pacing: {pacing_pct:.1f}%"
+        )
+        lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # Eval registry — maps eval name to its functions and form dependency
 # ---------------------------------------------------------------------------
@@ -477,6 +841,46 @@ EVAL_REGISTRY = {
         "judge_fn": run_structure_judge,
         "compute_fn": compute_structure_score,
         "format_fn": format_structure_detail,
+    },
+    "think_aloud": {
+        "label": "ThinkAloud",
+        "unit": "items",
+        "form": "none",
+        "judge_fn": run_think_aloud_judge,
+        "compute_fn": compute_think_aloud_score,
+        "format_fn": format_think_aloud_detail,
+    },
+    "corrective_feedback": {
+        "label": "Corrective",
+        "unit": "items",
+        "form": "none",
+        "judge_fn": run_corrective_feedback_judge,
+        "compute_fn": compute_corrective_feedback_score,
+        "format_fn": format_corrective_feedback_detail,
+    },
+    "post_response": {
+        "label": "PostResp",
+        "unit": "responses",
+        "form": "none",
+        "judge_fn": run_post_response_judge,
+        "compute_fn": compute_post_response_score,
+        "format_fn": format_post_response_detail,
+    },
+    "sound_comparison": {
+        "label": "SoundComp",
+        "unit": "items",
+        "form": "none",
+        "judge_fn": run_sound_comparison_judge,
+        "compute_fn": compute_sound_comparison_score,
+        "format_fn": format_sound_comparison_detail,
+    },
+    "script_specificity": {
+        "label": "Specificity",
+        "unit": "composite",
+        "form": "none",
+        "judge_fn": run_script_specificity_judge,
+        "compute_fn": compute_script_specificity_score,
+        "format_fn": format_script_specificity_detail,
     },
 }
 
@@ -623,6 +1027,8 @@ def main():
     if "form_b" in needed_forms:
         forms["form_b"] = load_form_b()
         print(f"  Form B: loaded from {FORM_B_PATH}")
+    if "none" in needed_forms:
+        forms["none"] = None  # Self-contained rubrics, no form needed
 
     print(f"Running scaffolding evals")
     print(f"  Judge model: {args.model}")
