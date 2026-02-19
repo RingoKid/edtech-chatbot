@@ -70,6 +70,26 @@ CRITERIA_REGISTRY: dict[str, dict] = {
         "type": "llm-judge",
         "description": "Checks if all 8 required sections and 7 required markers are present and used correctly",
     },
+    "think_aloud": {
+        "type": "llm-judge",
+        "description": "Checks if sections with independent student work include a teacher think-aloud with visible reasoning",
+    },
+    "corrective_feedback": {
+        "type": "llm-judge",
+        "description": "Checks if the lesson anticipates specific student errors and scripts corrective teacher responses",
+    },
+    "post_response_explanation": {
+        "type": "llm-judge",
+        "description": "Checks if the teacher explains WHY answers are correct after student responses, not just confirming",
+    },
+    "sound_letter_comparison": {
+        "type": "llm-judge",
+        "description": "Checks if the lesson compares the target sound/letter with a confusable partner for deeper processing",
+    },
+    "script_specificity": {
+        "type": "llm-judge",
+        "description": "Measures the ratio of verbatim teacher dialogue to summarized stage directions across sections",
+    },
 }
 
 
