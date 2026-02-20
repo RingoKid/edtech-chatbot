@@ -408,3 +408,149 @@ class ScriptSpecificityOutput(BaseModel):
         description="One entry per section (1-4)"
     )
     explanation: str = Field(description="Overall summary")
+
+
+# --- Grade Standards Eval Models ---
+
+
+class StandardItem(BaseModel):
+    """A single standard code found in the lesson's Standards section."""
+
+    code: str = Field(
+        description="The standard code as written in the lesson (e.g., 'CLL7.4a' or 'ELAGSEKRF3a')"
+    )
+    correct_system: bool = Field(
+        description="Does this code belong to the correct standards system for the grade? (PreK=GELDS, K=K-12 ELA, 1st=K-12 ELA)"
+    )
+    valid_code: bool = Field(
+        description="Is this code a real standard from the reference list (not fabricated)?"
+    )
+    relevant_to_handwriting: bool = Field(
+        description="Is this standard relevant to handwriting/spelling instruction?"
+    )
+    reasoning: str = Field(description="Explanation of the judgment")
+
+
+class DevelopmentalCheck(BaseModel):
+    """A developmental appropriateness check for the lesson."""
+
+    criterion: str = Field(
+        description="What is being checked (e.g., 'vocabulary level', 'motor expectations')"
+    )
+    appropriate: bool = Field(
+        description="Is this aspect appropriate for the grade?"
+    )
+    evidence: str = Field(
+        description="Quoted text from the lesson supporting the judgment"
+    )
+    reasoning: str = Field(description="Explanation")
+
+
+class GradeStandardsOutput(BaseModel):
+    """Complete structured output from the grade-appropriate standards judge."""
+
+    grade: str = Field(
+        description="The grade level being evaluated (from fixture params)"
+    )
+    standards: list[StandardItem] = Field(
+        description="Each standard listed in the lesson's Standards section"
+    )
+    developmental_checks: list[DevelopmentalCheck] = Field(
+        description="Grade-appropriateness checks across the lesson"
+    )
+    explanation: str = Field(description="Overall summary")
+
+
+# --- Activity Naming Eval Models ---
+
+
+class SectionActivityCheck(BaseModel):
+    """Check for named Form D activities in a single lesson section."""
+
+    section: str = Field(description="Which section (e.g., 'Review & Connect')")
+    named_activities: list[str] = Field(
+        description="Form D activity names found in this section (e.g., ['Sound Spark', 'Sound Hunt'])"
+    )
+    has_named_activity: bool = Field(
+        description="Does this section reference at least one Form D activity by name?"
+    )
+    generic_descriptions: list[str] = Field(
+        description="Generic action descriptions found instead of named activities (e.g., ['teacher reviews previously learned sounds'])"
+    )
+    evidence: str = Field(
+        description="Quoted text showing how the activity is referenced"
+    )
+    reasoning: str = Field(description="Explanation")
+
+
+class MaterialsCheck(BaseModel):
+    """Check whether the Materials section lists the activities used in the lesson."""
+
+    activities_listed: list[str] = Field(
+        description="Activity names found in the Materials section"
+    )
+    activities_in_lesson: list[str] = Field(
+        description="Activity names found across all scripted sections"
+    )
+    missing_from_materials: list[str] = Field(
+        description="Activities used in the lesson but not listed in Materials"
+    )
+    reasoning: str = Field(description="Explanation")
+
+
+class ActivityNamingOutput(BaseModel):
+    """Complete structured output from the activity naming judge."""
+
+    sections: list[SectionActivityCheck] = Field(
+        description="One entry per scripted section (1-4)"
+    )
+    materials_check: MaterialsCheck = Field(
+        description="Whether Materials lists the activities used"
+    )
+    explanation: str = Field(description="Overall summary")
+
+
+# --- Child Response Coverage Eval Models ---
+
+
+class InteractionPoint(BaseModel):
+    """A single teacher-child interaction point in the lesson."""
+
+    section: str = Field(description="Which section")
+    teacher_prompt: str = Field(
+        description="What the teacher says/asks/directs (abbreviated)"
+    )
+    prompt_type: Literal["question", "directive", "practice_task"] = Field(
+        description="Type of interaction: question expects a verbal answer, directive expects an action, practice_task expects both"
+    )
+    has_response: bool = Field(
+        description="Is there ANY child response indicated?"
+    )
+    response_text: str = Field(
+        description="The child response as written (or 'none' if missing)"
+    )
+    is_specific: bool = Field(
+        description="Is the response specific enough for a teacher to verify? (vs. generic '(Children respond)')"
+    )
+    has_verbal_component: bool = Field(
+        description="Does the response include what children SAY?"
+    )
+    has_action_component: bool = Field(
+        description="Does the response include what children DO physically?"
+    )
+    needs_verbal: bool = Field(
+        description="Should this interaction have a verbal component? (True for questions and choral responses)"
+    )
+    needs_action: bool = Field(
+        description="Should this interaction have an action component? (True for directives and practice tasks)"
+    )
+    reasoning: str = Field(description="Explanation")
+
+
+class ChildResponseOutput(BaseModel):
+    """Complete structured output from the child response coverage judge."""
+
+    interactions: list[InteractionPoint] = Field(
+        description="All interaction points found in Sections 1-4"
+    )
+    explanation: str = Field(description="Overall summary")

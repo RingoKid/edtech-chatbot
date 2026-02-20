@@ -11,11 +11,19 @@ from langchain_core.tools import tool
 from langchain.agents import create_agent
 
 from app.llm.client import get_chat_model
-from app.langfuse.client import get_langfuse_client
 
 
 # Path to reference materials
-REFERENCE_MATERIALS_PATH = Path(__file__).parent.parent.parent.parent / "prompt" / "reference_materials" / "handwriting_reference.md"
+REFERENCE_MATERIALS_DIR = Path(__file__).parent.parent.parent.parent / "prompt" / "reference_materials"
+REFERENCE_MATERIALS_PATH = REFERENCE_MATERIALS_DIR / "handwriting_reference.md"
+STANDARDS_PATH = REFERENCE_MATERIALS_DIR / "handwriting-spelling-standards.md"
+
+# Map grade parameter to section header in standards doc
+GRADE_TO_STANDARDS_HEADER = {
+    "PreK": "PreK",
+    "K": "Kindergarten",
+    "1st": "1st Grade",
+}
 
 
 # Default prompt used when Langfuse is unavailable or prompt doesn't exist
@@ -46,6 +54,9 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - struggling → Use LOW-LEVEL activities from Form D
    - on-level → Use MIDDLE-LEVEL activities from Form D
    - advanced → Use HIGH-LEVEL activities from Form D
+   - **Name every activity by its Form D name** in the teacher script (e.g., "Let's play Sound Spark", "Time for Magic Finger Write"). Do NOT describe activities generically.
+   - **Every section** (1-4) MUST include at least one named Form D activity.
+   - **Materials section** MUST list all Form D activities used in the lesson by name.
 
 4. **Notation Conventions** (MUST use these exactly):
    - [Explanation] → AI explains the parts of the lesson (use brackets)
@@ -57,7 +68,11 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - *Modification → End-of-lesson prompt (use asterisk)
 
 5. **Complete Structure**: Your output MUST include ALL of these sections:
-   - A. Standards (1-3 Georgia Standards of Excellence)
+   - A. Standards (1-3 standards from the Grade-Specific Standards Reference below)
+     - **PreK**: MUST use GELDS codes (CLL/PDM format, e.g., CLL6.4c, CLL9.4d). Do NOT use Georgia K-12 ELA codes for PreK.
+     - **K**: MUST use Georgia K-12 ELA codes (K.F.* format, e.g., K.F.H.1.a, K.F.PA.6.a).
+     - **1st**: MUST use Georgia K-12 ELA codes (1.F.* format, e.g., 1.F.H.1.a, 1.F.PA.6.a).
+     - Only select codes that are relevant to the lesson's handwriting/spelling/phonological focus.
    - B. Objectives (scaffolded objectives)
    - C. Materials (list of materials)
    - D. Scripted Lesson Plan:
@@ -117,15 +132,39 @@ Generate the lesson in clean markdown format following Form C as your example.
 
 ---
 
+## Grade-Specific Standards Reference
+
+{grade_standards}
+
+---
+
 ## Reference Materials
 
 {reference_materials}
 """
 
 
-# Langfuse configuration for prompt management
-LANGFUSE_PROMPT_NAME = "handwriting-generator"
-LANGFUSE_PROMPT_LABEL = "production"
+
+def load_grade_standards(grade: str) -> str:
+    """
+    Load grade-specific standards from the standards reference doc.
+
+    Extracts only the section matching the given grade level so the LLM
+    only sees the correct standards system (GELDS for PreK, K-12 ELA for K/1st).
+    """
+    try:
+        content = STANDARDS_PATH.read_text()
+    except FileNotFoundError:
+        return "ERROR: Standards reference not found."
+
+    header_key = GRADE_TO_STANDARDS_HEADER.get(grade, grade)
+    sections = content.split("\n## ")
+
+    for section in sections:
+        if section.startswith(header_key):
+            return f"## {section}".strip()
+
+    return f"ERROR: No standards found for grade '{grade}'."
 
 
 def load_reference_materials() -> str:
@@ -147,12 +186,13 @@ def get_handwriting_generator_prompt(
     student_level: str,
 ) -> str:
     """
-    Fetch and compile the handwriting generator prompt.
+    Compile the handwriting generator prompt.
 
     Combines:
-    1. Langfuse prompt (or default if unavailable)
+    1. Default prompt template
     2. Reference materials from local file
-    3. Parameter substitution for grade, letter, student_level
+    3. Grade-specific standards
+    4. Parameter substitution for grade, letter, student_level
 
     Args:
         grade: Grade level (PreK, K, 1st)
@@ -162,30 +202,17 @@ def get_handwriting_generator_prompt(
     Returns:
         str: The complete system prompt with reference materials
     """
-    client = get_langfuse_client()
-
-    # Try to get prompt from Langfuse
-    base_prompt = None
-    if client is not None:
-        try:
-            prompt = client.get_prompt(LANGFUSE_PROMPT_NAME, label=LANGFUSE_PROMPT_LABEL)
-            base_prompt = prompt.compile()
-        except Exception:
-            pass
-
-    # Fall back to default if Langfuse unavailable
-    if base_prompt is None:
-        base_prompt = DEFAULT_HANDWRITING_GENERATOR_PROMPT
-
-    # Load reference materials
+    # Load reference materials and grade-specific standards
     reference_materials = load_reference_materials()
+    grade_standards = load_grade_standards(grade)
 
     # Substitute parameters
-    return base_prompt.format(
+    return DEFAULT_HANDWRITING_GENERATOR_PROMPT.format(
         grade=grade,
         letter=letter.upper(),
         student_level=student_level,
         reference_materials=reference_materials,
+        grade_standards=grade_standards,
     )
 
 
