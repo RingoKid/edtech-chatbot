@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Mic, MicOff, Image, Camera, Plus, X, Menu, MessageSquare } from 'lucide-react'
 import { cn } from '../utils/cn'
-import { chat2, handwriting } from '../api'
+import { chat2, handwriting, createChatWsClient } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
 import useAudioRecorder from '../hooks/useAudioRecorder'
 import TranscriptionWebSocket from '../api/transcriptionWebSocket'
@@ -35,6 +35,9 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const accumulatedTranscriptRef = useRef('') // Accumulate all transcripts during recording session
   const fileInputRef = useRef(null) // Reference for file input
   const textareaRef = useRef(null) // Reference for textarea to restore focus
+  const chatWsRef = useRef(null) // Chat WebSocket client for streaming
+  const placeholderIdRef = useRef(null) // Tracks streaming bot message ID
+  const chunkTimeoutRef = useRef(null) // Idle timeout for stream completion
 
   // Initialize audio recorder hook
   const { isRecording, error: recorderError, startRecording, stopRecording, clearError } = useAudioRecorder()
@@ -87,6 +90,49 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     initChat()
   }, [])
 
+  // Connect chat WebSocket for streaming responses
+  useEffect(() => {
+    const client = createChatWsClient()
+    chatWsRef.current = client
+
+    const unsub = client.subscribe((evt) => {
+      if (evt.type !== 'message') return
+      const data = evt.data || {}
+
+      // Extract chunk content (server sends as `reply`)
+      const chunk = data.reply ?? data.response ?? data.message ?? data.content ?? null
+
+      if (chunk && placeholderIdRef.current) {
+        const pid = placeholderIdRef.current
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === pid ? { ...m, content: (m.content || '') + chunk } : m
+          )
+        )
+      }
+
+      // Update thread ID if present in chunk
+      if (data.thread_id) {
+        setThreadId(data.thread_id)
+      }
+
+      // Reset idle timeout — 800ms of silence means stream is done
+      if (chunkTimeoutRef.current) clearTimeout(chunkTimeoutRef.current)
+      chunkTimeoutRef.current = setTimeout(() => {
+        setIsTyping(false)
+        placeholderIdRef.current = null
+        chunkTimeoutRef.current = null
+      }, 800)
+    })
+
+    client.connect().catch(err => console.warn('Chat WS connect failed:', err))
+
+    return () => {
+      if (chunkTimeoutRef.current) clearTimeout(chunkTimeoutRef.current)
+      try { client.close() } catch (e) { /* ignore */ }
+      if (typeof unsub === 'function') unsub()
+    }
+  }, [])
 
 
 
@@ -174,6 +220,58 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
       return responses.parent
     } else {
       return responses.default
+    }
+  }
+
+  // Send a text message via WebSocket (streaming) with HTTP fallback
+  const sendTextMessage = async (text) => {
+    const client = chatWsRef.current
+    if (client && client.isConnected()) {
+      // Create empty placeholder for streaming chunks
+      const placeholderId = Date.now() + Math.floor(Math.random() * 1000)
+      placeholderIdRef.current = placeholderId
+      setMessages(prev => [...prev, {
+        id: placeholderId,
+        type: 'bot',
+        content: '',
+        timestamp: new Date()
+      }])
+      setIsTyping(true)
+
+      try {
+        client.send({ message: text, thread_id: threadId })
+      } catch (err) {
+        console.warn('WS send failed, falling back to HTTP:', err)
+        placeholderIdRef.current = null
+        setMessages(prev => prev.filter(m => m.id !== placeholderId))
+        await sendTextMessageHttp(text)
+      }
+    } else {
+      await sendTextMessageHttp(text)
+    }
+  }
+
+  // HTTP fallback for text messages
+  const sendTextMessageHttp = async (text) => {
+    setIsTyping(true)
+    try {
+      const res = await chat2.send(text, threadId)
+      if (res?.thread_id) setThreadId(res.thread_id)
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: res?.reply ?? generateResponse(text),
+        timestamp: new Date()
+      }])
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: generateResponse(text),
+        timestamp: new Date()
+      }])
+    } finally {
+      setIsTyping(false)
     }
   }
 
@@ -424,10 +522,11 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
       }
     } else {
       // No image, send regular text message
+      const currentInput = inputValue
       const newUserMessage = {
         id: Date.now(),
         type: 'user',
-        content: inputValue,
+        content: currentInput,
         timestamp: new Date()
       }
 
@@ -439,37 +538,8 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
         onNewMessage()
       }
 
-      // First try backend chat endpoint; if it fails fall back to local generator
-      setIsTyping(true)
-      try {
-        // Pass the thread_id to maintain conversation context
-        const res = await chat2.send(inputValue, threadId)
-
-        // Store the thread_id from response for next request
-        if (res?.thread_id) {
-          setThreadId(res.thread_id)
-        }
-
-        const botResponse = {
-          id: Date.now() + 1,
-          type: 'bot',
-          content: res?.reply ?? generateResponse(inputValue),
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, botResponse])
-      } catch (err) {
-        // fallback to local response
-        const response = generateResponse(inputValue)
-        const botResponse = {
-          id: Date.now() + 1,
-          type: 'bot',
-          content: response,
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, botResponse])
-      } finally {
-        setIsTyping(false)
-      }
+      // Send via WebSocket (streaming) with HTTP fallback
+      await sendTextMessage(currentInput)
     }
   }
 
@@ -712,37 +782,8 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           onNewMessage()
         }
 
-        // Send transcript to chat API and get bot response
-        setIsTyping(true)
-        try {
-          // Pass the thread_id to maintain conversation context
-          const res = await chat2.send(transcriptContent, threadId)
-
-          // Store the thread_id from response for next request
-          if (res?.thread_id) {
-            setThreadId(res.thread_id)
-          }
-
-          const botResponse = {
-            id: Date.now() + 1,
-            type: 'bot',
-            content: res?.reply ?? generateResponse(transcriptContent),
-            timestamp: new Date()
-          }
-          setMessages(prev => [...prev, botResponse])
-        } catch (err) {
-          // fallback to local response
-          const response = generateResponse(transcriptContent)
-          const botResponse = {
-            id: Date.now() + 1,
-            type: 'bot',
-            content: response,
-            timestamp: new Date()
-          }
-          setMessages(prev => [...prev, botResponse])
-        } finally {
-          setIsTyping(false)
-        }
+        // Send transcript via WebSocket (streaming) with HTTP fallback
+        await sendTextMessage(transcriptContent)
       }
 
       // Reset accumulated transcript
@@ -1051,8 +1092,8 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           </motion.div>
         )}
 
-        {/* Typing indicator */}
-        {isTyping && (
+        {/* Typing indicator — hidden once streaming chunks start filling placeholder */}
+        {isTyping && !messages.some(m => m.id === placeholderIdRef.current && m.content) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

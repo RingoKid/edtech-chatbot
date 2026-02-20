@@ -275,7 +275,7 @@ class ChatService:
                 # Handle thread_id logic
                 thread_id = request.thread_id
                 if thread_id is None:
-                    thread_id = self.create_new_thread(user_id)
+                    thread_id = self.create_new_thread()
 
                 # Create config with thread_id for graph execution
                 config = {"configurable": {"thread_id": thread_id}}

@@ -4,7 +4,7 @@ Contains HTTP and WebSocket endpoints for chat functionality.
 Production logic is delegated to `ChatService`.
 """
 from functools import lru_cache
-from fastapi import APIRouter, HTTPException, Depends, WebSocket, status
+from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
@@ -192,13 +192,7 @@ async def websocket_info():
     })
 
 
-@router.websocket("/ws/message")
-async def websocket_message(
-    websocket: WebSocket,
-    chat_service: ChatService = Depends(get_chat_service)
-):
-    """
-    WebSocket endpoint for real-time chat communication.
-    Accepts WebSocket connections and handles bidirectional chat messages.
-    """
-    await chat_service.handle_websocket_connection(websocket)
+
+# NOTE: WebSocket endpoint /ws/message has been moved to chat_ws.py
+# because WebSocket connections can't use OAuth2PasswordBearer auth
+# (which protected_router applies to all routes in this router).
