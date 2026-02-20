@@ -56,6 +56,9 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - struggling → Use LOW-LEVEL activities from Form D
    - on-level → Use MIDDLE-LEVEL activities from Form D
    - advanced → Use HIGH-LEVEL activities from Form D
+   - **Name every activity by its Form D name** in the teacher script (e.g., "Let's play Sound Spark", "Time for Magic Finger Write"). Do NOT describe activities generically.
+   - **Every section** (1-4) MUST include at least one named Form D activity.
+   - **Materials section** MUST list all Form D activities used in the lesson by name.
 
 4. **Notation Conventions** (MUST use these exactly):
    - [Explanation] → AI explains the parts of the lesson (use brackets)
