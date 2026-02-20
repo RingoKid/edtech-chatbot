@@ -48,7 +48,7 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - advanced → Use HIGH-LEVEL activities from Form D
 
 4. **Notation Conventions** (MUST use these exactly):
-   - [Explanation] → AI explains the parts of the lesson (use brackets)
+   - [Explanation] → Copy the EXACT explanation text from Form B for each section (use brackets)
    - #Teacher Script → What the teacher says (use single #)
    - (Child Response) → Expected student responses (use parentheses)
    - {{Teacher Does}} → Teacher actions (use curly braces)
