@@ -10,9 +10,9 @@
 
 **A. Standards **
 
-**ELAGSEKRF3a: **Demonstrate basic knowledge of letter-sound correspondences by producing the primary sound for each consonant.
-**ELAGSEKL1a: **Print many upper- and lowercase letters.
-**ELAGSEKL2c: **Write a letter or letters for most consonant and short-vowel sounds (phonemes).
+**CLL6.4c: **Isolates the initial (beginning) sounds in words with adult guidance.
+**CLL7.4a: **With prompting and support, recognizes and names some upper and lower case letters of the alphabet.
+**CLL9.4d: **Writes some letters of the alphabet.
 
 **B. Objectives **
 Pronounce the /z/ sound correctly
