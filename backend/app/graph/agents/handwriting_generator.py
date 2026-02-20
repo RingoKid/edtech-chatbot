@@ -6,13 +6,11 @@ The agent generates lessons following the L4C methodology and can iterate
 based on user feedback before finalizing.
 """
 
-import os
 from pathlib import Path
 from langchain_core.tools import tool
 from langchain.agents import create_agent
 
 from app.llm.client import get_chat_model
-from app.langfuse.client import get_langfuse_client
 
 
 # Path to reference materials
@@ -146,10 +144,6 @@ Generate the lesson in clean markdown format following Form C as your example.
 """
 
 
-# Langfuse configuration for prompt management
-LANGFUSE_PROMPT_NAME = "handwriting-generator"
-LANGFUSE_PROMPT_LABEL = "production"
-
 
 def load_grade_standards(grade: str) -> str:
     """
@@ -192,12 +186,13 @@ def get_handwriting_generator_prompt(
     student_level: str,
 ) -> str:
     """
-    Fetch and compile the handwriting generator prompt.
+    Compile the handwriting generator prompt.
 
     Combines:
-    1. Langfuse prompt (or default if unavailable)
+    1. Default prompt template
     2. Reference materials from local file
-    3. Parameter substitution for grade, letter, student_level
+    3. Grade-specific standards
+    4. Parameter substitution for grade, letter, student_level
 
     Args:
         grade: Grade level (PreK, K, 1st)
@@ -207,27 +202,12 @@ def get_handwriting_generator_prompt(
     Returns:
         str: The complete system prompt with reference materials
     """
-    client = get_langfuse_client()
-
-    # Try to get prompt from Langfuse (skip if FORCE_LOCAL_PROMPT is set)
-    base_prompt = None
-    if client is not None and not os.getenv("FORCE_LOCAL_PROMPT"):
-        try:
-            prompt = client.get_prompt(LANGFUSE_PROMPT_NAME, label=LANGFUSE_PROMPT_LABEL)
-            base_prompt = prompt.compile()
-        except Exception:
-            pass
-
-    # Fall back to default if Langfuse unavailable
-    if base_prompt is None:
-        base_prompt = DEFAULT_HANDWRITING_GENERATOR_PROMPT
-
     # Load reference materials and grade-specific standards
     reference_materials = load_reference_materials()
     grade_standards = load_grade_standards(grade)
 
     # Substitute parameters
-    return base_prompt.format(
+    return DEFAULT_HANDWRITING_GENERATOR_PROMPT.format(
         grade=grade,
         letter=letter.upper(),
         student_level=student_level,
