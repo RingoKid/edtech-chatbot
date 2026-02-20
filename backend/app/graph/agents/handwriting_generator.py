@@ -6,6 +6,7 @@ The agent generates lessons following the L4C methodology and can iterate
 based on user feedback before finalizing.
 """
 
+import os
 from pathlib import Path
 from langchain_core.tools import tool
 from langchain.agents import create_agent
@@ -15,7 +16,16 @@ from app.langfuse.client import get_langfuse_client
 
 
 # Path to reference materials
-REFERENCE_MATERIALS_PATH = Path(__file__).parent.parent.parent.parent / "prompt" / "reference_materials" / "handwriting_reference.md"
+REFERENCE_MATERIALS_DIR = Path(__file__).parent.parent.parent.parent / "prompt" / "reference_materials"
+REFERENCE_MATERIALS_PATH = REFERENCE_MATERIALS_DIR / "handwriting_reference.md"
+STANDARDS_PATH = REFERENCE_MATERIALS_DIR / "handwriting-spelling-standards.md"
+
+# Map grade parameter to section header in standards doc
+GRADE_TO_STANDARDS_HEADER = {
+    "PreK": "PreK",
+    "K": "Kindergarten",
+    "1st": "1st Grade",
+}
 
 
 # Default prompt used when Langfuse is unavailable or prompt doesn't exist
@@ -57,7 +67,11 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - *Modification → End-of-lesson prompt (use asterisk)
 
 5. **Complete Structure**: Your output MUST include ALL of these sections:
-   - A. Standards (1-3 Georgia Standards of Excellence)
+   - A. Standards (1-3 standards from the Grade-Specific Standards Reference below)
+     - **PreK**: MUST use GELDS codes (CLL/PDM format, e.g., CLL6.4c, CLL9.4d). Do NOT use Georgia K-12 ELA codes for PreK.
+     - **K**: MUST use Georgia K-12 ELA codes (K.F.* format, e.g., K.F.H.1.a, K.F.PA.6.a).
+     - **1st**: MUST use Georgia K-12 ELA codes (1.F.* format, e.g., 1.F.H.1.a, 1.F.PA.6.a).
+     - Only select codes that are relevant to the lesson's handwriting/spelling/phonological focus.
    - B. Objectives (scaffolded objectives)
    - C. Materials (list of materials)
    - D. Scripted Lesson Plan:
@@ -117,6 +131,12 @@ Generate the lesson in clean markdown format following Form C as your example.
 
 ---
 
+## Grade-Specific Standards Reference
+
+{grade_standards}
+
+---
+
 ## Reference Materials
 
 {reference_materials}
@@ -126,6 +146,28 @@ Generate the lesson in clean markdown format following Form C as your example.
 # Langfuse configuration for prompt management
 LANGFUSE_PROMPT_NAME = "handwriting-generator"
 LANGFUSE_PROMPT_LABEL = "production"
+
+
+def load_grade_standards(grade: str) -> str:
+    """
+    Load grade-specific standards from the standards reference doc.
+
+    Extracts only the section matching the given grade level so the LLM
+    only sees the correct standards system (GELDS for PreK, K-12 ELA for K/1st).
+    """
+    try:
+        content = STANDARDS_PATH.read_text()
+    except FileNotFoundError:
+        return "ERROR: Standards reference not found."
+
+    header_key = GRADE_TO_STANDARDS_HEADER.get(grade, grade)
+    sections = content.split("\n## ")
+
+    for section in sections:
+        if section.startswith(header_key):
+            return f"## {section}".strip()
+
+    return f"ERROR: No standards found for grade '{grade}'."
 
 
 def load_reference_materials() -> str:
@@ -164,9 +206,9 @@ def get_handwriting_generator_prompt(
     """
     client = get_langfuse_client()
 
-    # Try to get prompt from Langfuse
+    # Try to get prompt from Langfuse (skip if FORCE_LOCAL_PROMPT is set)
     base_prompt = None
-    if client is not None:
+    if client is not None and not os.getenv("FORCE_LOCAL_PROMPT"):
         try:
             prompt = client.get_prompt(LANGFUSE_PROMPT_NAME, label=LANGFUSE_PROMPT_LABEL)
             base_prompt = prompt.compile()
@@ -177,8 +219,9 @@ def get_handwriting_generator_prompt(
     if base_prompt is None:
         base_prompt = DEFAULT_HANDWRITING_GENERATOR_PROMPT
 
-    # Load reference materials
+    # Load reference materials and grade-specific standards
     reference_materials = load_reference_materials()
+    grade_standards = load_grade_standards(grade)
 
     # Substitute parameters
     return base_prompt.format(
@@ -186,6 +229,7 @@ def get_handwriting_generator_prompt(
         letter=letter.upper(),
         student_level=student_level,
         reference_materials=reference_materials,
+        grade_standards=grade_standards,
     )
 
 
