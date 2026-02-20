@@ -41,6 +41,9 @@ from tests.evals.models import (
     PostResponseOutput,
     SoundLetterComparisonOutput,
     ScriptSpecificityOutput,
+    GradeStandardsOutput,
+    ActivityNamingOutput,
+    ChildResponseOutput,
 )
 
 
@@ -57,6 +60,7 @@ JUDGE_MAX_RETRIES = 2  # retry transient failures (network errors, rate limits)
 ALL_EVAL_NAMES = [
     "within", "across", "release", "decomposition", "verbatim", "structure",
     "think_aloud", "corrective_feedback", "post_response", "sound_comparison", "script_specificity",
+    "grade_standards", "activity_naming", "child_response_coverage",
 ]
 
 
@@ -221,6 +225,37 @@ def run_script_specificity_judge(lesson_output: str, model_key: str, form_conten
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(ScriptSpecificityOutput)
+    return judge.invoke(prompt)
+
+
+def run_grade_standards_judge(lesson_output: str, model_key: str, form_content: None = None, params: dict = None) -> GradeStandardsOutput:
+    """Run the grade-appropriate standards judge."""
+    rubric_template = load_rubric("grade_standards")
+    grade = params.get("grade", "PreK") if params else "PreK"
+    prompt = rubric_template.replace("{grade}", grade).replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
+    judge = model.with_structured_output(GradeStandardsOutput)
+    return judge.invoke(prompt)
+
+
+def run_activity_naming_judge(lesson_output: str, model_key: str, form_d: str) -> ActivityNamingOutput:
+    """Run the activity naming judge."""
+    rubric_template = load_rubric("activity_naming")
+    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
+    judge = model.with_structured_output(ActivityNamingOutput)
+    return judge.invoke(prompt)
+
+
+def run_child_response_judge(lesson_output: str, model_key: str, form_content: None = None) -> ChildResponseOutput:
+    """Run the child response coverage judge."""
+    rubric_template = load_rubric("child_response_coverage")
+    prompt = rubric_template.replace("{lesson_output}", lesson_output)
+
+    model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
+    judge = model.with_structured_output(ChildResponseOutput)
     return judge.invoke(prompt)
 
 
@@ -418,6 +453,108 @@ def compute_script_specificity_score(output: ScriptSpecificityOutput) -> tuple[i
 
     # Use composite percentage as correct out of 100
     return round(score, 1), 100, score
+
+
+def compute_grade_standards_score(output: GradeStandardsOutput) -> tuple[int, int, float]:
+    """Compute grade standards composite score. Returns (correct, total, percentage).
+
+    Composite = standards_accuracy × 0.5 + developmental_appropriateness × 0.5
+    """
+    # Standards accuracy: all three bools must be True
+    total_standards = len(output.standards)
+    if total_standards > 0:
+        correct_standards = sum(
+            1 for s in output.standards
+            if s.correct_system and s.valid_code and s.relevant_to_handwriting
+        )
+        standards_accuracy = correct_standards / total_standards
+    else:
+        correct_standards = 0
+        standards_accuracy = 0.0
+
+    # Developmental appropriateness
+    total_dev = len(output.developmental_checks)
+    if total_dev > 0:
+        appropriate_dev = sum(1 for d in output.developmental_checks if d.appropriate)
+        dev_score = appropriate_dev / total_dev
+    else:
+        appropriate_dev = 0
+        dev_score = 0.0
+
+    composite = (standards_accuracy * 0.5 + dev_score * 0.5) * 100
+
+    # For the summary row, report composite as "correct" out of 100
+    return round(composite, 1), 100, composite
+
+
+def _activity_name_match(name: str, candidates: list[str]) -> bool:
+    """Check if an activity name matches any candidate using normalized substring matching."""
+    name_lower = name.lower().strip()
+    for candidate in candidates:
+        c_lower = candidate.lower().strip()
+        if name_lower == c_lower or name_lower in c_lower or c_lower in name_lower:
+            return True
+    return False
+
+
+def compute_activity_naming_score(output: ActivityNamingOutput) -> tuple[int, int, float]:
+    """Compute activity naming composite score. Returns (correct, total, percentage).
+
+    Composite = section_naming × 0.6 + materials_coverage × 0.4
+    """
+    # Section naming: sections with has_named_activity / 4
+    named_sections = sum(1 for s in output.sections if s.has_named_activity)
+    section_score = named_sections / 4 if output.sections else 0.0
+
+    # Materials coverage: activities in lesson that appear in materials / total in lesson
+    activities_in_lesson = output.materials_check.activities_in_lesson
+    activities_listed = output.materials_check.activities_listed
+    if activities_in_lesson:
+        covered = sum(1 for a in activities_in_lesson if _activity_name_match(a, activities_listed))
+        materials_score = covered / len(activities_in_lesson)
+    else:
+        covered = 0
+        materials_score = 0.0
+
+    composite = (section_score * 0.6 + materials_score * 0.4) * 100
+
+    return round(composite, 1), 100, composite
+
+
+def compute_child_response_score(output: ChildResponseOutput) -> tuple[int, int, float]:
+    """Compute child response coverage composite score. Returns (correct, total, percentage).
+
+    Composite = presence × 0.3 + specificity × 0.3 + completeness × 0.4
+    """
+    interactions = output.interactions
+    total = len(interactions)
+
+    if total == 0:
+        return 0, 0, 0.0
+
+    # Presence
+    with_response = sum(1 for i in interactions if i.has_response)
+    presence = with_response / total
+
+    # Specificity (of those that have a response)
+    if with_response > 0:
+        specific = sum(1 for i in interactions if i.has_response and i.is_specific)
+        specificity = specific / with_response
+    else:
+        specificity = 0.0
+
+    # Component completeness
+    complete = 0
+    for i in interactions:
+        verbal_ok = (not i.needs_verbal) or i.has_verbal_component
+        action_ok = (not i.needs_action) or i.has_action_component
+        if verbal_ok and action_ok:
+            complete += 1
+    completeness = complete / total
+
+    composite = (presence * 0.3 + specificity * 0.3 + completeness * 0.4) * 100
+
+    return round(composite, 1), 100, composite
 
 
 # ---------------------------------------------------------------------------
@@ -789,6 +926,192 @@ def format_script_specificity_detail(output: ScriptSpecificityOutput) -> str:
     return "\n".join(lines)
 
 
+def format_grade_standards_detail(output: GradeStandardsOutput) -> str:
+    """Format grade standards output as markdown tables."""
+    lines = []
+
+    # Standards table
+    total_standards = len(output.standards)
+    correct_standards = sum(
+        1 for s in output.standards
+        if s.correct_system and s.valid_code and s.relevant_to_handwriting
+    )
+    lines.append(f"**Standards ({correct_standards}/{total_standards})**")
+
+    if not output.standards:
+        lines.append("_No standards found in lesson_\n")
+    else:
+        lines.append("| Code | System? | Valid? | Relevant? | Reasoning |")
+        lines.append("|------|---------|--------|-----------|-----------|")
+        for s in output.standards:
+            reasoning = s.reasoning.replace("|", "\\|").replace("\n", " ")
+            lines.append(
+                f"| {s.code} "
+                f"| {'+'if s.correct_system else '-'} "
+                f"| {'+'if s.valid_code else '-'} "
+                f"| {'+'if s.relevant_to_handwriting else '-'} "
+                f"| {reasoning} |"
+            )
+        lines.append("")
+
+    # Developmental checks table
+    total_dev = len(output.developmental_checks)
+    appropriate_dev = sum(1 for d in output.developmental_checks if d.appropriate)
+    lines.append(f"**Developmental Appropriateness ({appropriate_dev}/{total_dev})**")
+
+    if not output.developmental_checks:
+        lines.append("_No developmental checks performed_\n")
+    else:
+        lines.append("| Criterion | Appropriate? | Evidence | Reasoning |")
+        lines.append("|-----------|-------------|----------|-----------|")
+        for d in output.developmental_checks:
+            evidence = d.evidence.replace("|", "\\|").replace("\n", " ")[:120]
+            reasoning = d.reasoning.replace("|", "\\|").replace("\n", " ")
+            lines.append(
+                f"| {d.criterion} "
+                f"| {'+'if d.appropriate else '-'} "
+                f'| "{evidence}" '
+                f"| {reasoning} |"
+            )
+        lines.append("")
+
+    # Sub-scores
+    std_pct = (correct_standards / total_standards * 100) if total_standards > 0 else 0.0
+    dev_pct = (appropriate_dev / total_dev * 100) if total_dev > 0 else 0.0
+    lines.append(
+        f"Sub-metrics: Standards: {std_pct:.1f}% {correct_standards}/{total_standards} "
+        f"| Dev: {dev_pct:.1f}% {appropriate_dev}/{total_dev}"
+    )
+    lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
+def format_activity_naming_detail(output: ActivityNamingOutput) -> str:
+    """Format activity naming output as markdown tables."""
+    lines = []
+
+    # Section activity coverage table
+    named_count = sum(1 for s in output.sections if s.has_named_activity)
+    lines.append(f"**Section Activity Coverage ({named_count}/{len(output.sections)})**")
+
+    if not output.sections:
+        lines.append("_No sections analyzed_\n")
+    else:
+        lines.append("| Section | Named? | Named Activities | Generic Descriptions | Evidence |")
+        lines.append("|---------|--------|-----------------|---------------------|----------|")
+        for s in output.sections:
+            named = ", ".join(s.named_activities) if s.named_activities else "—"
+            named = named.replace("|", "\\|")
+            generic = "; ".join(s.generic_descriptions) if s.generic_descriptions else "—"
+            generic = generic.replace("|", "\\|").replace("\n", " ")[:120]
+            evidence = s.evidence.replace("|", "\\|").replace("\n", " ")[:120]
+            lines.append(
+                f"| {s.section} "
+                f"| {'+'if s.has_named_activity else '-'} "
+                f"| {named} "
+                f"| {generic} "
+                f'| "{evidence}" |'
+            )
+        lines.append("")
+
+    # Materials coverage table
+    mc = output.materials_check
+    activities_in_lesson = mc.activities_in_lesson
+    activities_listed = mc.activities_listed
+    if activities_in_lesson:
+        covered = sum(1 for a in activities_in_lesson if _activity_name_match(a, activities_listed))
+    else:
+        covered = 0
+
+    lines.append(f"**Materials Coverage ({covered}/{len(activities_in_lesson)})**")
+    if activities_in_lesson:
+        lines.append("| Activity | In Materials? |")
+        lines.append("|----------|--------------|")
+        for a in activities_in_lesson:
+            in_mat = "+" if _activity_name_match(a, activities_listed) else "-"
+            lines.append(f"| {a} | {in_mat} |")
+        lines.append("")
+    else:
+        lines.append("_No named activities found in lesson_\n")
+
+    if mc.missing_from_materials:
+        lines.append(f"Missing from Materials: {', '.join(mc.missing_from_materials)}")
+        lines.append("")
+
+    # Sub-scores
+    section_pct = (named_count / 4 * 100) if output.sections else 0.0
+    mat_pct = (covered / len(activities_in_lesson) * 100) if activities_in_lesson else 0.0
+    lines.append(
+        f"Sub-metrics: Sections: {section_pct:.1f}% {named_count}/4 "
+        f"| Materials: {mat_pct:.1f}% {covered}/{len(activities_in_lesson)}"
+    )
+    lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
+def format_child_response_detail(output: ChildResponseOutput) -> str:
+    """Format child response coverage output as a markdown table."""
+    lines = []
+
+    interactions = output.interactions
+    total = len(interactions)
+
+    if not interactions:
+        lines.append("_No interaction points identified_\n")
+    else:
+        lines.append("| Section | Teacher Prompt | Type | Response? | Specific? | Verbal? | Action? | Needs V? | Needs A? | Response Text |")
+        lines.append("|---------|---------------|------|-----------|-----------|---------|---------|----------|----------|---------------|")
+        for i in interactions:
+            prompt = i.teacher_prompt.replace("|", "\\|").replace("\n", " ")[:60]
+            resp = i.response_text.replace("|", "\\|").replace("\n", " ")[:80]
+            lines.append(
+                f"| {i.section} "
+                f"| {prompt} "
+                f"| {i.prompt_type} "
+                f"| {'+'if i.has_response else '-'} "
+                f"| {'+'if i.is_specific else '-'} "
+                f"| {'+'if i.has_verbal_component else '-'} "
+                f"| {'+'if i.has_action_component else '-'} "
+                f"| {'+'if i.needs_verbal else '-'} "
+                f"| {'+'if i.needs_action else '-'} "
+                f'| "{resp}" |'
+            )
+        lines.append("")
+
+    # Sub-scores
+    if total > 0:
+        with_response = sum(1 for i in interactions if i.has_response)
+        presence_pct = with_response / total * 100
+        if with_response > 0:
+            specific = sum(1 for i in interactions if i.has_response and i.is_specific)
+            specificity_pct = specific / with_response * 100
+        else:
+            specific = 0
+            specificity_pct = 0.0
+
+        complete = 0
+        for i in interactions:
+            verbal_ok = (not i.needs_verbal) or i.has_verbal_component
+            action_ok = (not i.needs_action) or i.has_action_component
+            if verbal_ok and action_ok:
+                complete += 1
+        completeness_pct = complete / total * 100
+
+        lines.append(
+            f"Sub-metrics: Present: {presence_pct:.1f}% {with_response}/{total} "
+            f"| Specific: {specificity_pct:.1f}% {specific}/{with_response} "
+            f"| Complete: {completeness_pct:.1f}% {complete}/{total}"
+        )
+        lines.append("")
+
+    lines.append(f"**Judge Summary:** {output.explanation}\n")
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # Eval registry — maps eval name to its functions and form dependency
 # ---------------------------------------------------------------------------
@@ -881,6 +1204,31 @@ EVAL_REGISTRY = {
         "judge_fn": run_script_specificity_judge,
         "compute_fn": compute_script_specificity_score,
         "format_fn": format_script_specificity_detail,
+    },
+    "grade_standards": {
+        "label": "GradeStd",
+        "unit": "composite",
+        "form": "none",
+        "uses_params": True,
+        "judge_fn": run_grade_standards_judge,
+        "compute_fn": compute_grade_standards_score,
+        "format_fn": format_grade_standards_detail,
+    },
+    "activity_naming": {
+        "label": "ActName",
+        "unit": "composite",
+        "form": "form_d",
+        "judge_fn": run_activity_naming_judge,
+        "compute_fn": compute_activity_naming_score,
+        "format_fn": format_activity_naming_detail,
+    },
+    "child_response_coverage": {
+        "label": "ChildResp",
+        "unit": "composite",
+        "form": "none",
+        "judge_fn": run_child_response_judge,
+        "compute_fn": compute_child_response_score,
+        "format_fn": format_child_response_detail,
     },
 }
 
@@ -1052,8 +1400,11 @@ def main():
                 entry = EVAL_REGISTRY[name]
                 form_content = forms[entry["form"]]
 
-                # Run judge
-                judge_output = entry["judge_fn"](lesson_output, args.model, form_content)
+                # Run judge — pass params when eval needs them (e.g., grade_standards)
+                if entry.get("uses_params"):
+                    judge_output = entry["judge_fn"](lesson_output, args.model, form_content, params=fixture.get("params", {}))
+                else:
+                    judge_output = entry["judge_fn"](lesson_output, args.model, form_content)
 
                 # Compute score
                 correct, total, score = entry["compute_fn"](judge_output)
