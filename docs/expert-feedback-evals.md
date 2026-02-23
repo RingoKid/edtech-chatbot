@@ -6,11 +6,116 @@ New evaluation dimensions based on expert review of a PreK sound-letter B lesson
 
 ---
 
-## New Evals
+## Dr. Farrow Clarifications (2026-02-22)
+
+Answers from follow-up conversations about standards, grade-level differences, and notation.
+
+### Standards System
+
+- **Confirmed:** The old ELAGSE codes (e.g., ELAGSEKRF3a) are deprecated. Use the new systems:
+  - **PreK** → GELDS 48-60 month indicators (CLL/PDM codes)
+  - **K** → Georgia K-12 ELA Standards SY2025-2026 (K.F.* codes)
+  - **1st** → Georgia K-12 ELA Standards SY2025-2026 (1.F.* codes)
+
+- **PreK valid codes narrowed to 6.** Dr. Farrow specified only these GELDS codes are relevant to handwriting/spelling lessons:
+
+  | Code | Description |
+  |------|-------------|
+  | CLL6.4c | Isolates the initial (beginning) sounds in words with adult guidance |
+  | CLL6.4e | Segments words into syllables |
+  | CLL6.4f | Manipulates and blends sounds (phonemes) with adult guidance |
+  | CLL7.4a | With prompting and support, recognizes and names some upper/lowercase letters |
+  | CLL8.4b | Understands that letters form words. Words are separated by spaces in print |
+  | CLL9.4d | Writes some letters of the alphabet |
+
+  The remaining 8 codes in the reference file (CLL6.4a, CLL6.4b, CLL6.4d, CLL9.4a, CLL9.4b, PDM6.4a-c) are NOT relevant to handwriting/spelling lessons.
+
+- **K and 1st grade require at least 4 standards**, one from each of these categories:
+
+  | Category | K codes | 1st codes |
+  |----------|---------|-----------|
+  | Phonemic Awareness | K.F.PA.* | 1.F.PA.* |
+  | Phoneme-Grapheme Correspondence | K.F.P.1.* | 1.F.P.1.* |
+  | Encoding | K.F.P.3.* | 1.F.P.3.* |
+  | Handwriting | K.F.H.* | 1.F.H.* |
+
+  **Excluded:** Decoding standards (K.F.P.2.*, 1.F.P.2.*) — these are reading standards, not handwriting/spelling.
+
+- **Standards selection depends on lesson content.** The AI should pick codes based on what the teacher is working on, not just the grade level.
+
+### Form C Code Replacement (Confirmed Correct)
+
+The PreK letter Z example (Form C) originally had old Kindergarten ELAGSE codes. Replaced with GELDS codes, confirmed correct by Dr. Farrow:
+
+| Old (ELAGSE) | New (GELDS) |
+|-------------|-------------|
+| ELAGSEKRF3a — Produce primary sound for each consonant | CLL6.4c — Isolates initial sounds in words |
+| ELAGSEKL1a — Print upper/lowercase letters | CLL7.4a — Recognizes and names upper/lowercase letters |
+| ELAGSEKL2c — Write letters for consonant/short-vowel sounds | CLL9.4d — Writes some letters of the alphabet |
+
+### Skill Focus Question (Approved)
+
+Dr. Farrow approved adding a new intake question: **"What skill are you focusing on?"** Currently the teacher only provides grade, letter, and student level. Adding a skill focus (e.g., isolating sounds, blending, letter formation, spelling) would help the AI select the right standards. Not yet implemented.
+
+### Grade-Level Differences
+
+Dr. Farrow's explanation of what changes between PreK, K, and 1st grade:
+
+1. **Standards scope** — Different grades have different standards available. PreK has print concepts (CLL8.4b), 1st grade doesn't.
+
+2. **Prior knowledge accumulation:**
+   - **PreK:** Teaching individual sounds/letters from scratch. Guided practice = finger tracing on lines, finding top/middle/bottom.
+   - **K:** Building on some prior sound knowledge.
+   - **1st:** All consonant and vowel sounds already known, including corresponding graphemes. Focus shifts to handwriting fluency, spelling patterns, and cementing orthographic representations. Teacher can increase letter amount. Guided practice targets key letters/patterns kids will use to spell words in Application.
+
+3. **Cognitive load capacity** — A 6-year-old has more working memory than a 4-year-old:
+   - **PreK:** More breaking down, more scaffolds, simpler steps.
+   - **1st:** Less scaffolding needed, activities can be more complex.
+   - This applies between grades AND within grades by ability level.
+
+**Pending:** Dr. Farrow offered to provide a developmental chart with concrete rules per grade level. Will integrate into the system prompt once received.
+
+### Notation Conventions (Approved to Change)
+
+The current notation markers (#, *, ##) use markdown characters that break formatting in the chatbot. Dr. Farrow approved finding alternatives that display cleanly. Current markers that need replacement:
+
+| Current | Used for | Problem |
+|---------|----------|---------|
+| `#Teacher Script` | What the teacher says | Renders as heading |
+| `##Sequence Verbal Cues` | Letter formation cues | Renders as heading |
+| `*Modification` | End-of-lesson prompt | Renders as italic |
+
+These don't break: `[Explanation]`, `(Child Response)`, `{{Teacher Does}}`, `+Gesture`
+
+### Pending Items
+
+- [ ] K-level example lessons with Standards and Objectives sections (Dr. Farrow sending tonight 2026-02-22)
+- [ ] Complete Form C-style examples for K and 1st grade (requested)
+- [ ] Developmental chart for grade-level differences (Dr. Farrow will provide, no rush)
+- [ ] Implement skill focus intake question
+- [ ] Replace notation conventions with markdown-safe alternatives
+
+---
+
+## Eval Status
+
+| # | Eval | Priority | Status | Expert Feedback |
+|---|------|----------|--------|-----------------|
+| 1 | `grade_standards` | P0 | Implemented — needs recalibration | #1, #2 |
+| 2 | `activity_naming` | P0 | Implemented | #4, #5 |
+| 3 | `child_response_coverage` | P0 | Implemented | #9 |
+| 4 | `letter_case` | P1 | Not started | #8 |
+| 5 | `verbal_cue_age` | P1 | Not started | #10 |
+| 6 | `objective_alignment` | P1 | Not started | #3 |
+| 7 | `verbatim` (tighten) | P2 | Recalibrate | #6 |
+| 8 | `within` (tighten) | P2 | Recalibrate | #7 |
+| 9 | Difficulty adjustment | P2 | Not started (multi-turn) | #11 |
+
+---
+
+## Evals Detail
 
 ### P0 — High Priority
-
-These address the biggest quality gaps. Wrong standards cascade into everything else, missing activity names make lessons generic, and missing child responses force teachers to improvise.
 
 #### 1. `grade_standards`
 
@@ -18,12 +123,23 @@ These address the biggest quality gaps. Wrong standards cascade into everything 
 
 | Field | Value |
 |-------|-------|
-| **What it checks** | Standards match the grade level. PreK must use GELDS 48-60 month indicators (e.g., CLL7.4a, CLL9.4d, PDM6.4a). K and 1st must use Georgia Standards of Excellence (ELAGSE). Activities and language are developmentally appropriate for the grade. |
-| **Form dependency** | None (needs a grade-standards reference embedded in rubric) |
-| **Scoring unit** | Checklist items |
-| **Score formula** | `correct_items / total_items * 100` |
-| **Checklist items** | (1) Correct standards system for grade, (2) Standards are real/valid codes, (3) Vocabulary is age-appropriate, (4) Motor expectations match grade, (5) Activity complexity matches grade |
+| **What it checks** | Standards match the grade level. PreK must use GELDS 48-60 month indicators (only the 6 approved codes). K and 1st must use Georgia K-12 ELA Standards SY2025-2026 (K.F.* / 1.F.* codes). Activities and language are developmentally appropriate for the grade. |
+| **Form dependency** | None (grade-standards reference embedded in rubric) |
+| **Scoring** | Composite: 50% standards accuracy + 50% developmental appropriateness |
 | **Fixture params used** | `grade` |
+| **Status** | Implemented in spec 020. Rubric needs recalibration (see below). |
+
+**Recalibration needed:**
+
+1. **PreK valid codes too broad.** Rubric currently lists 14 GELDS codes. Must be narrowed to the 6 Dr. Farrow approved. The 8 excluded codes (CLL6.4a, CLL6.4b, CLL6.4d, CLL9.4a, CLL9.4b, PDM6.4a-c) should fail `relevant_to_handwriting`.
+
+2. **K/1st decoding codes should be excluded.** Rubric currently lists K.F.P.2.* and 1.F.P.2.* as valid. These are reading/decoding standards and should fail `relevant_to_handwriting`.
+
+3. **No category coverage check.** K/1st lessons must have at least 4 standards, one from each category (PA, P.1, P.3, H). Current eval only checks each standard individually — no way to detect missing categories. Options:
+   - Add category coverage to the scoring function (classify valid codes by pattern, check 4 categories are present)
+   - Or add a new Pydantic field for category coverage
+
+4. **Standards selection accuracy.** Currently the eval checks if codes are valid and from the right system, but not whether the specific codes match the lesson content. Full accuracy requires knowing the target skill (pending skill focus intake question). For now, can only check system + validity + relevance.
 
 #### 2. `activity_naming`
 
@@ -31,12 +147,11 @@ These address the biggest quality gaps. Wrong standards cascade into everything 
 
 | Field | Value |
 |-------|-------|
-| **What it checks** | Each lesson section names specific Form D activities (e.g., "Sound Spark", "Magic Finger Write", "Sound-Letter Hunt") rather than generic descriptions. Materials section lists the named activities with brief summaries. Review & Connect section has a named activity. |
+| **What it checks** | Each lesson section names specific Form D activities (e.g., "Sound Spark", "Magic Finger Write", "Sound-Letter Hunt") rather than generic descriptions. Materials section lists the named activities. |
 | **Form dependency** | Form D |
-| **Scoring unit** | Sections |
-| **Score formula** | `sections_with_named_activity / total_sections * 100` |
-| **Per-section check** | (1) Named Form D activity present, (2) Activity name matches Form D repertoire, (3) Materials section references the activity |
+| **Scoring** | Composite: 60% section naming + 40% materials coverage |
 | **Fixture params used** | `student_level` (determines low/middle/high activity tier) |
+| **Status** | Implemented in spec 020. |
 
 #### 3. `child_response_coverage`
 
@@ -44,18 +159,15 @@ These address the biggest quality gaps. Wrong standards cascade into everything 
 
 | Field | Value |
 |-------|-------|
-| **What it checks** | Every teacher prompt, question, or directed activity has a specific child response. Responses must include both **verbal** (what children say) AND **action** (what children physically do) where appropriate. No bare "(Children respond)" or "(Children do as instructed)". |
+| **What it checks** | Every teacher prompt/question/directed activity has a specific child response. Responses must include both verbal (what children say) AND action (what children do) where appropriate. No bare "(Children respond)". |
 | **Form dependency** | None |
-| **Scoring unit** | Interaction points |
-| **Score formula** | `specific_responses / total_interaction_points * 100` |
-| **Per-response check** | (1) Response is specific (not generic), (2) Verbal component present where expected, (3) Action/motor component present where expected |
+| **Scoring** | Composite: 30% presence + 30% specificity + 40% completeness |
 | **Fixture params used** | None |
+| **Status** | Implemented in spec 020. |
 
 ---
 
 ### P1 — Medium Priority
-
-Important but more targeted. These catch specific pedagogical rules that matter most for PreK but affect all grade levels.
 
 #### 4. `letter_case`
 
@@ -63,13 +175,13 @@ Important but more targeted. These catch specific pedagogical rules that matter 
 
 | Field | Value |
 |-------|-------|
-| **What it checks** | PreK lessons focus on lowercase letter formation only. Uppercase is optional and presented as a teacher-choice extension, not the primary instruction. K and 1st grade lessons teach both cases. |
+| **What it checks** | PreK lessons focus on lowercase letter formation only. Uppercase is optional extension. K and 1st teach both cases. |
 | **Form dependency** | None |
-| **Scoring unit** | Checklist items |
-| **Score formula** | `correct_items / total_items * 100` |
-| **Checklist items (PreK)** | (1) Primary instruction is lowercase, (2) Uppercase is optional/linked not mandatory, (3) Guided Practice focuses on lowercase, (4) Application uses lowercase |
-| **Checklist items (K/1st)** | (1) Both cases are taught, (2) Both cases appear in Guided Practice |
+| **Scoring** | Checklist: `correct_items / total_items * 100` |
+| **Checklist (PreK)** | (1) Primary instruction is lowercase, (2) Uppercase is optional not mandatory, (3) Guided Practice focuses on lowercase, (4) Application uses lowercase |
+| **Checklist (K/1st)** | (1) Both cases are taught, (2) Both cases appear in Guided Practice |
 | **Fixture params used** | `grade` |
+| **Status** | Not started. |
 
 #### 5. `verbal_cue_age`
 
@@ -77,12 +189,11 @@ Important but more targeted. These catch specific pedagogical rules that matter 
 
 | Field | Value |
 |-------|-------|
-| **What it checks** | Stroke verbal cues use child-friendly, metaphorical language (e.g., "straight line down, put a bubble on it") rather than literal/technical terms. Cues should be consistent with Form F but adapted for the developmental register of the grade. |
+| **What it checks** | Stroke verbal cues use child-friendly, metaphorical language rather than literal/technical terms. Cues should match Form F but adapted for grade level. |
 | **Form dependency** | Form F (verbal cues reference) |
-| **Scoring unit** | Cue instances |
-| **Score formula** | `kid_friendly_cues / total_cues * 100` |
-| **Per-cue check** | (1) Uses concrete/visual metaphors, (2) Avoids technical jargon, (3) Consistent across uppercase and lowercase, (4) Matches Form F where applicable |
+| **Scoring** | `kid_friendly_cues / total_cues * 100` |
 | **Fixture params used** | `letter`, `grade` |
+| **Status** | Not started. |
 
 #### 6. `objective_alignment`
 
@@ -90,18 +201,15 @@ Important but more targeted. These catch specific pedagogical rules that matter 
 
 | Field | Value |
 |-------|-------|
-| **What it checks** | Each listed objective (a) traces back to a listed standard, and (b) describes a specific, observable behavior that children actually perform in one of the scripted activities. Objectives should be testable, not aspirational. |
+| **What it checks** | Each objective (a) traces back to a listed standard, (b) describes observable behavior children actually perform in the lesson. |
 | **Form dependency** | None |
-| **Scoring unit** | Objectives |
-| **Score formula** | `aligned_objectives / total_objectives * 100` |
-| **Per-objective check** | (1) Maps to a listed standard, (2) Describes observable child behavior, (3) Matches an activity in the scripted lesson |
+| **Scoring** | `aligned_objectives / total_objectives * 100` |
 | **Fixture params used** | `grade` |
+| **Status** | Not started. |
 
 ---
 
 ### P2 — Existing Eval Recalibration
-
-These scored well (100%) but the expert disagrees. The rubrics may be too lenient.
 
 #### 7. Tighten `verbatim` rubric
 
@@ -110,8 +218,8 @@ These scored well (100%) but the expert disagrees. The rubrics may be too lenien
 | Field | Value |
 |-------|-------|
 | **Current score** | 100% (5/5 sections) |
-| **Issue** | Eval checks that [Explanation] text matches Form B, and it passes. Expert says explanations are missing. Possible causes: (a) explanations exist but aren't clearly labeled/formatted in output, (b) rubric is too lenient on formatting, (c) expert is applying a different standard for "stating" the explanation. |
-| **Action** | Investigate rubric. Add checks for explanation visibility/formatting, not just content match. |
+| **Issue** | Eval passes but expert says explanations are missing. Possible: explanations exist but aren't clearly labeled/formatted, or rubric is too lenient on formatting. |
+| **Action** | Add checks for explanation visibility/formatting, not just content match. |
 
 #### 8. Tighten `within` rubric
 
@@ -120,8 +228,8 @@ These scored well (100%) but the expert disagrees. The rubrics may be too lenien
 | Field | Value |
 |-------|-------|
 | **Current score** | 100% (11/11 pairs) |
-| **Issue** | Eval judges activity ordering within sections and passes. Expert says ordering is wrong. Possible causes: (a) judge is too generous with "valid non-escalation patterns", (b) rubric allows too many exceptions, (c) expert applies stricter pedagogical sequencing rules. |
-| **Action** | Investigate rubric exemption clauses. Compare expert's expected ordering against judge's reasoning. May need stricter escalation requirements. |
+| **Issue** | Eval passes but expert says ordering is wrong. Judge may be too generous with exceptions. |
+| **Action** | Investigate rubric exemption clauses. Compare expert's expected ordering against judge's reasoning. |
 
 ---
 
@@ -133,22 +241,7 @@ These scored well (100%) but the expert disagrees. The rubrics may be too lenien
 
 | Field | Value |
 |-------|-------|
-| **Issue** | This tests multi-turn conversational behavior: user requests a modification, agent should re-generate with lower-difficulty Form D activities. |
-| **Why it's hard** | Fixtures are single-shot lesson outputs. This requires a live conversation eval that sends a follow-up message and checks the re-generated lesson. |
-| **Possible approach** | Create a separate `conversation_eval` script that runs the agent with a 2-turn sequence: (1) generate lesson, (2) "make it easier for struggling students" → check that activities shift to lower Form D tier. |
-
----
-
-## Summary
-
-| # | Eval | Priority | Type | Expert Feedback |
-|---|------|----------|------|-----------------|
-| 1 | `grade_standards` | P0 | New | #1, #2 |
-| 2 | `activity_naming` | P0 | New | #4, #5 |
-| 3 | `child_response_coverage` | P0 | New | #9 |
-| 4 | `letter_case` | P1 | New | #8 |
-| 5 | `verbal_cue_age` | P1 | New | #10 |
-| 6 | `objective_alignment` | P1 | New | #3 |
-| 7 | `verbatim` (tighten) | P2 | Recalibrate | #6 |
-| 8 | `within` (tighten) | P2 | Recalibrate | #7 |
-| 9 | Difficulty adjustment | P2 | New script | #11 |
+| **Issue** | Multi-turn conversational behavior: user requests a modification, agent should re-generate with lower-difficulty Form D activities. |
+| **Why it's hard** | Fixtures are single-shot. Requires live conversation eval. |
+| **Possible approach** | Separate script with 2-turn sequence: (1) generate lesson, (2) "make it easier" → check activities shift to lower Form D tier. |
+| **Status** | Not started. |

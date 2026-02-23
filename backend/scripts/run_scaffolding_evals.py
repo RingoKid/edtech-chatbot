@@ -455,10 +455,55 @@ def compute_script_specificity_score(output: ScriptSpecificityOutput) -> tuple[i
     return round(score, 1), 100, score
 
 
+# Category patterns for K/1st standards coverage check
+_CATEGORY_PATTERNS: dict[str, dict[str, str]] = {
+    "K": {
+        "Phonemic Awareness (PA)": r"K\.F\.PA\.",
+        "Phoneme-Grapheme (P.1)": r"K\.F\.P\.1\.",
+        "Encoding (P.3)": r"K\.F\.P\.3\.",
+        "Handwriting (H)": r"K\.F\.H\.",
+    },
+    "1st": {
+        "Phonemic Awareness (PA)": r"1\.F\.PA\.",
+        "Phoneme-Grapheme (P.1)": r"1\.F\.P\.1\.",
+        "Encoding (P.3)": r"1\.F\.P\.3\.",
+        "Handwriting (H)": r"1\.F\.H\.",
+    },
+}
+
+
+def compute_category_coverage(output: GradeStandardsOutput) -> tuple[int, int, dict[str, bool]]:
+    """Check if K/1st lessons cover all 4 required standard categories.
+
+    Returns (categories_covered, total_categories, {category_name: covered_bool}).
+    For PreK, returns (0, 0, {}) since category coverage doesn't apply.
+    """
+    import re
+
+    grade = output.grade
+    patterns = _CATEGORY_PATTERNS.get(grade)
+    if not patterns:
+        return 0, 0, {}
+
+    # Only count codes that passed all three checks
+    valid_codes = [
+        s.code for s in output.standards
+        if s.correct_system and s.valid_code and s.relevant_to_handwriting
+    ]
+
+    coverage: dict[str, bool] = {}
+    for category, pattern in patterns.items():
+        coverage[category] = any(re.search(pattern, code) for code in valid_codes)
+
+    covered = sum(1 for v in coverage.values() if v)
+    return covered, len(patterns), coverage
+
+
 def compute_grade_standards_score(output: GradeStandardsOutput) -> tuple[int, int, float]:
     """Compute grade standards composite score. Returns (correct, total, percentage).
 
-    Composite = standards_accuracy × 0.5 + developmental_appropriateness × 0.5
+    PreK:  50% standards accuracy + 50% developmental appropriateness
+    K/1st: 40% standards accuracy + 10% category coverage + 50% developmental
     """
     # Standards accuracy: all three bools must be True
     total_standards = len(output.standards)
@@ -472,6 +517,13 @@ def compute_grade_standards_score(output: GradeStandardsOutput) -> tuple[int, in
         correct_standards = 0
         standards_accuracy = 0.0
 
+    # Category coverage (K/1st only)
+    covered, total_cats, _ = compute_category_coverage(output)
+    if total_cats > 0:
+        category_score = covered / total_cats
+    else:
+        category_score = 1.0  # N/A for PreK — doesn't penalize
+
     # Developmental appropriateness
     total_dev = len(output.developmental_checks)
     if total_dev > 0:
@@ -481,7 +533,11 @@ def compute_grade_standards_score(output: GradeStandardsOutput) -> tuple[int, in
         appropriate_dev = 0
         dev_score = 0.0
 
-    composite = (standards_accuracy * 0.5 + dev_score * 0.5) * 100
+    # Composite — weight category coverage only for K/1st
+    if total_cats > 0:
+        composite = (standards_accuracy * 0.4 + category_score * 0.1 + dev_score * 0.5) * 100
+    else:
+        composite = (standards_accuracy * 0.5 + dev_score * 0.5) * 100
 
     # For the summary row, report composite as "correct" out of 100
     return round(composite, 1), 100, composite
@@ -975,12 +1031,23 @@ def format_grade_standards_detail(output: GradeStandardsOutput) -> str:
             )
         lines.append("")
 
+    # Category coverage (K/1st only)
+    covered, total_cats, coverage = compute_category_coverage(output)
+    if total_cats > 0:
+        lines.append(f"**Category Coverage ({covered}/{total_cats})**")
+        lines.append("| Category | Covered? |")
+        lines.append("|----------|----------|")
+        for cat, has_it in coverage.items():
+            lines.append(f"| {cat} | {'+'if has_it else 'MISSING'} |")
+        lines.append("")
+
     # Sub-scores
     std_pct = (correct_standards / total_standards * 100) if total_standards > 0 else 0.0
     dev_pct = (appropriate_dev / total_dev * 100) if total_dev > 0 else 0.0
+    cat_str = f" | Cat: {covered}/{total_cats}" if total_cats > 0 else ""
     lines.append(
         f"Sub-metrics: Standards: {std_pct:.1f}% {correct_standards}/{total_standards} "
-        f"| Dev: {dev_pct:.1f}% {appropriate_dev}/{total_dev}"
+        f"| Dev: {dev_pct:.1f}% {appropriate_dev}/{total_dev}{cat_str}"
     )
     lines.append("")
 
