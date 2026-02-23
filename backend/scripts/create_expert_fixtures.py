@@ -19,10 +19,11 @@ import subprocess
 from datetime import datetime, timezone
 
 PROMPT_DIR = "prompt/Handwriting & Spelling (Transcription) AI Codes"
+RESOURCES_DIR = "resources/expert-feedback"
 FIXTURES_DIR = "tests/fixtures/handwriting_expert"
 
 FORM_C_PATH = os.path.join(PROMPT_DIR, "FORM C_ Example Handwriting & Spelling Lesson for Output .md")
-FURTHER_PATH = os.path.join(PROMPT_DIR, "Further example lesson plans Transcription.md")
+FURTHER_PATH = os.path.join(RESOURCES_DIR, "example-lesson-plans-high-low.md")
 
 
 def get_git_sha() -> str:
@@ -40,13 +41,11 @@ def get_git_sha() -> str:
 def split_further_lessons(text: str) -> list[str]:
     """Split the 'Further example lesson plans' file into 3 separate lessons.
 
-    Each lesson starts with '**1. Review & Connect**' (the section 1 heading).
-    We split on that boundary.
+    Each lesson starts with a bare 'Standards' line (the new structure includes
+    Standards and Objectives sections before the scripted lesson sections).
     """
-    # Pattern: bold "1. Review & Connect" (with possible trailing bold asterisks)
-    pattern = r"(?=\*\*1\. Review & Connec)"
+    pattern = r"(?m)(?=^Standards$)"
     parts = re.split(pattern, text)
-    # First element is empty (before the first match), drop it
     lessons = [p.strip() for p in parts if p.strip()]
     return lessons
 
@@ -143,7 +142,7 @@ def main():
             lesson_output=lessons[i],
             git_sha=git_sha,
         )
-        fixture["source_file"] = "Further example lesson plans Transcription.md"
+        fixture["source_file"] = "example-lesson-plans-high-low.md"
         fixture["source_note"] = meta["source_note"]
 
         path = os.path.join(FIXTURES_DIR, f"{meta['id']}.json")
