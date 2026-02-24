@@ -6,7 +6,7 @@
 **Status:** Implemented
 **Last Updated:** 2026-01-13
 
-Backend APIs for running prompts against multiple models and evaluating outputs. Uses Langfuse Cloud for experiment tracking and cost calculation. Triggered by n8n workflows.
+Backend APIs for running prompts against multiple models and evaluating outputs. Uses Langfuse Cloud for experiment tracking and cost calculation.
 
 **Scope:** Model runner + Compare API + Langfuse integration + Dataset auto-save
 
@@ -269,64 +269,6 @@ Checks if lesson output contains required sections and markers.
 **Scoring:** `passed_checks / total_checks` (0.0 to 1.0)
 
 **Implementation:** Pure Python string matching. No LLM call.
-
----
-
-## n8n Integration
-
-### Task
-
-Create a **new workflow (v02)** that uses the Langfuse eval API. Keep the existing v01 workflow intact.
-
-| File | Purpose |
-|------|---------|
-| `n8n/workflows/lesson-generator-v01.json` | Original workflow (keep as-is) |
-| `n8n/workflows/lesson-generator-v02.json` | New workflow with Langfuse integration |
-
-### Workflow Structure
-
-```
-┌──────────┐    ┌──────────┐    ┌──────────────────┐    ┌──────────┐
-│ Webhook  │───►│  Build   │───►│  HTTP Request    │───►│ Respond  │
-│ Trigger  │    │  Prompt  │    │  POST /compare   │    │  JSON    │
-└──────────┘    └──────────┘    └──────────────────┘    └──────────┘
-```
-
-### Steps
-
-1. Copy the Build Prompt logic from v01
-2. Replace the OpenAI HTTP Request node with a call to `/api/v1/evals/compare`
-3. Return the comparison results (scores, outputs, trace URLs)
-
-### HTTP Request Node Configuration
-
-```
-Method: POST
-URL: http://backend:8000/api/v1/evals/compare
-Headers: Content-Type: application/json
-Body:
-{
-  "prompt": "{{ $json.userPrompt }}",
-  "system_prompt": "{{ $json.systemPrompt }}",
-  "models": ["gpt-4o", "gpt-4o-mini"],
-  "criteria": ["structure_complete"],
-  "save_to_dataset": "handwriting-lessons",
-  "metadata": {
-    "workflow_version": "2.0",
-    "workflow_file": "lesson-generator-v02.json",
-    "grade": "{{ $json.grade }}",
-    "letter": "{{ $json.letter }}"
-  }
-}
-```
-
-Model selection is in the JSON body. Change anytime without modifying workflow structure.
-
-### After Creating Workflow
-
-1. Export from n8n UI → Save as `n8n/workflows/lesson-generator-v02.json`
-2. Test with: `curl -X POST http://localhost:5678/webhook/generate -H "Content-Type: application/json" -d '{"grade": "PreK", "letter": "A"}'`
-3. Verify traces appear in Langfuse Cloud
 
 ---
 

@@ -14,10 +14,6 @@ def test_individual_env_variables():
         ("aws_region", settings.aws_region),
         ("dynamodb_table_name", settings.dynamodb_table_name),
         ("dynamodb_endpoint_url", settings.dynamodb_endpoint_url),
-        ("langsmith_tracing", settings.langsmith_tracing),
-        ("langsmith_api_key", settings.langsmith_api_key),
-        ("langsmith_endpoint", settings.langsmith_endpoint),
-        ("langsmith_project", settings.langsmith_project),
     ]
 
     for setting_name, setting_value in required_settings:

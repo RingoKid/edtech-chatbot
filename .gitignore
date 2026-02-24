@@ -222,9 +222,6 @@ __marimo__/
 .langgraph_api/
 langgraph_*
 *.langgraph
-.langsmith/
-langsmith_*
-*.langsmith
 .langserve/
 langserve_*
 checkpoints/

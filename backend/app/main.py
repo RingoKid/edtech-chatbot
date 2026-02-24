@@ -13,9 +13,6 @@ from app.dependencies.auth import get_current_user
 # Configuration
 API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
 
-# Initialize LangSmith tracing
-settings.initialize_langsmith()
-
 # Initialize the FastAPI application
 app = FastAPI(
     title="EdTech Chatbot API",
@@ -37,7 +34,7 @@ app.add_middleware(
 public_router = APIRouter(prefix=API_PREFIX)
 public_router.include_router(auth.router)  # /api/v1/auth/*
 public_router.include_router(health.router)  # /api/v1/health (public for health checks)
-public_router.include_router(evals_router)  # /api/v1/evals/* (no auth for n8n calls)
+public_router.include_router(evals_router)  # /api/v1/evals/*
 
 # --- Protected Routes (require authentication globally) ---
 protected_router = APIRouter(

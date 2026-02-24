@@ -11,7 +11,7 @@ Secure storage for API keys and sensitive credentials used by App Runner.
 │  ┌───────────────────────────┐    ┌──────────────────────────┐  │
 │  │ edtech-chatbot/test/      │    │      App Runner          │  │
 │  │         openai            │───▶│                          │  │
-│  │         langsmith         │    │  Injects as env vars     │  │
+│  │                           │    │  Injects as env vars     │  │
 │  └───────────────────────────┘    │  at container startup    │  │
 │                                   └──────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
@@ -22,7 +22,6 @@ Secure storage for API keys and sensitive credentials used by App Runner.
 | Secret Name | ARN | Last Accessed |
 |-------------|-----|---------------|
 | `edtech-chatbot/test/openai` | `arn:aws:secretsmanager:us-east-1:522534289122:secret:edtech-chatbot/test/openai-UEeWSK` | 2026-01-06 |
-| `edtech-chatbot/test/langsmith` | `arn:aws:secretsmanager:us-east-1:522534289122:secret:edtech-chatbot/test/langsmith-VEYJ8f` | 2026-01-06 |
 
 ## Naming Convention
 
@@ -32,7 +31,6 @@ edtech-chatbot/{environment}/{service}
 
 Examples:
 - `edtech-chatbot/test/openai` — OpenAI API key for test/sandbox
-- `edtech-chatbot/test/langsmith` — LangSmith API key for test/sandbox
 - `edtech-chatbot/prod/openai` — (future) OpenAI key for production
 
 ## App Runner Integration
@@ -42,8 +40,7 @@ Secrets are injected via `RuntimeEnvironmentSecrets` in App Runner:
 ```json
 {
   "RuntimeEnvironmentSecrets": {
-    "OPENAI_API_KEY": "arn:aws:secretsmanager:us-east-1:522534289122:secret:edtech-chatbot/test/openai-UEeWSK",
-    "LANGSMITH_API_KEY": "arn:aws:secretsmanager:us-east-1:522534289122:secret:edtech-chatbot/test/langsmith-VEYJ8f"
+    "OPENAI_API_KEY": "arn:aws:secretsmanager:us-east-1:522534289122:secret:edtech-chatbot/test/openai-UEeWSK"
   }
 }
 ```
@@ -189,7 +186,7 @@ aws secretsmanager create-secret \
 
 - **Storage**: $0.40 per secret per month
 - **API calls**: $0.05 per 10,000 API calls
-- Current usage: ~$0.80/month (2 secrets)
+- Current usage: ~$0.40/month (1 secret)
 
 ## Related Docs
 

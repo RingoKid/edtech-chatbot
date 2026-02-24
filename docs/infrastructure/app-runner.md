@@ -89,9 +89,6 @@ Using `DefaultConfiguration`:
 | `APP_ENV` | `sandbox` |
 | `DYNAMODB_TABLE_NAME` | `EdTechChatbotTable` |
 | `FRONTEND_URL` | `https://composeearly.com,https://www.composeearly.com` |
-| `LANGSMITH_ENDPOINT` | `https://api.smith.langchain.com` |
-| `LANGSMITH_PROJECT` | `pr-formal-experiment-23` |
-| `LANGSMITH_TRACING` | `true` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | `7` |
 
@@ -100,7 +97,6 @@ Using `DefaultConfiguration`:
 | Variable | Secret ARN |
 |----------|------------|
 | `OPENAI_API_KEY` | `edtech-chatbot/test/openai` |
-| `LANGSMITH_API_KEY` | `edtech-chatbot/test/langsmith` |
 
 ## IAM Roles
 
