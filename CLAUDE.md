@@ -21,14 +21,31 @@ All backend commands run inside the `backend` Docker container:
 
 To run all pytest checks at once: `docker compose exec backend pytest tests/evals/ -v`
 
-**Scaffolding assessments** (LLM judge — within, across, gradual release, decomposition):
+**LLM judge assessments** (scaffolding, instructional quality, formatting):
+
+Discover available assessments and fixtures:
 
 ```bash
-# All 12 fixtures
+docker compose exec backend python scripts/run_scaffolding_evals.py --list
+```
+
+Run assessments:
+
+```bash
+# All assessments on all generated fixtures
 docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py
 
-# Single fixture
-docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --fixture k_letter_b_onlevel
+# Specific assessment(s) only (use --list to see valid names)
+docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --eval verbatim structure
+
+# Specific fixture only
+docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --fixture k_letter_t_onlevel
+
+# Run against expert fixtures (human-authored ground truth)
+docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --fixtures-dir tests/fixtures/handwriting_expert
+
+# Combine flags freely
+docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --eval grade_standards --fixtures-dir tests/fixtures/handwriting_expert
 ```
 
 **Regenerate fixtures** (only needed if generator code changes):

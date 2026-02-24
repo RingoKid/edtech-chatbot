@@ -48,6 +48,7 @@ from tests.evals.models import (
 
 
 FIXTURES_DIR = "tests/fixtures/handwriting_generator"
+EXPERT_FIXTURES_DIR = "tests/fixtures/handwriting_expert"
 RESULTS_DIR = "tests/evals/results"
 RUBRICS_DIR = "tests/evals/rubrics"
 FORM_D_PATH = "prompt/Handwriting & Spelling (Transcription) AI Codes/Supplementary Forms/FORM D Scaffolded Activities .md"
@@ -1188,6 +1189,7 @@ EVAL_REGISTRY = {
         "label": "Within",
         "unit": "pairs",
         "form": "form_d",
+        "description": "Activities within each section progress from simpler to more complex",
         "judge_fn": run_within_judge,
         "compute_fn": compute_within_score,
         "format_fn": format_within_detail,
@@ -1196,6 +1198,7 @@ EVAL_REGISTRY = {
         "label": "Across",
         "unit": "links",
         "form": "form_d",
+        "description": "Later sections build on skills taught in earlier sections",
         "judge_fn": run_across_judge,
         "compute_fn": compute_across_score,
         "format_fn": format_across_detail,
@@ -1204,6 +1207,7 @@ EVAL_REGISTRY = {
         "label": "Release",
         "unit": "transitions",
         "form": "form_d",
+        "description": "Teacher support decreases progressively (gradual release of responsibility)",
         "judge_fn": run_release_judge,
         "compute_fn": compute_release_score,
         "format_fn": format_release_detail,
@@ -1212,6 +1216,7 @@ EVAL_REGISTRY = {
         "label": "Decomp",
         "unit": "components",
         "form": "form_d",
+        "description": "Complex tasks in Section 4 have sub-skills taught in earlier sections",
         "judge_fn": run_decomposition_judge,
         "compute_fn": compute_decomposition_score,
         "format_fn": format_decomposition_detail,
@@ -1220,6 +1225,7 @@ EVAL_REGISTRY = {
         "label": "Verbatim",
         "unit": "sections",
         "form": "form_b",
+        "description": "[Explanation] blocks match Form B text word-for-word",
         "judge_fn": run_verbatim_judge,
         "compute_fn": compute_verbatim_score,
         "format_fn": format_verbatim_detail,
@@ -1228,6 +1234,7 @@ EVAL_REGISTRY = {
         "label": "Structure",
         "unit": "checks",
         "form": "form_b",
+        "description": "All 5 sections, notation conventions, and required components present",
         "judge_fn": run_structure_judge,
         "compute_fn": compute_structure_score,
         "format_fn": format_structure_detail,
@@ -1236,6 +1243,7 @@ EVAL_REGISTRY = {
         "label": "ThinkAloud",
         "unit": "items",
         "form": "none",
+        "description": "Teacher think-aloud worked example before Application (Section 4)",
         "judge_fn": run_think_aloud_judge,
         "compute_fn": compute_think_aloud_score,
         "format_fn": format_think_aloud_detail,
@@ -1244,6 +1252,7 @@ EVAL_REGISTRY = {
         "label": "Corrective",
         "unit": "items",
         "form": "none",
+        "description": "At least 2 corrective feedback blocks anticipating specific student errors",
         "judge_fn": run_corrective_feedback_judge,
         "compute_fn": compute_corrective_feedback_score,
         "format_fn": format_corrective_feedback_detail,
@@ -1252,6 +1261,7 @@ EVAL_REGISTRY = {
         "label": "PostResp",
         "unit": "responses",
         "form": "none",
+        "description": "Teacher explains WHY an answer is correct after elicited student responses",
         "judge_fn": run_post_response_judge,
         "compute_fn": compute_post_response_score,
         "format_fn": format_post_response_detail,
@@ -1260,6 +1270,7 @@ EVAL_REGISTRY = {
         "label": "SoundComp",
         "unit": "items",
         "form": "none",
+        "description": "Section 2 compares target sound/letter with its confusable partner",
         "judge_fn": run_sound_comparison_judge,
         "compute_fn": compute_sound_comparison_score,
         "format_fn": format_sound_comparison_detail,
@@ -1268,6 +1279,7 @@ EVAL_REGISTRY = {
         "label": "Specificity",
         "unit": "composite",
         "form": "none",
+        "description": "Verbatim teacher dialogue (not stage directions), pacing cues, specific words",
         "judge_fn": run_script_specificity_judge,
         "compute_fn": compute_script_specificity_score,
         "format_fn": format_script_specificity_detail,
@@ -1277,6 +1289,7 @@ EVAL_REGISTRY = {
         "unit": "composite",
         "form": "none",
         "uses_params": True,
+        "description": "Correct standards system for grade (GELDS for PreK, K-12 ELA for K/1st)",
         "judge_fn": run_grade_standards_judge,
         "compute_fn": compute_grade_standards_score,
         "format_fn": format_grade_standards_detail,
@@ -1285,6 +1298,7 @@ EVAL_REGISTRY = {
         "label": "ActName",
         "unit": "composite",
         "form": "form_d",
+        "description": "Activities referenced by Form D name, not described generically",
         "judge_fn": run_activity_naming_judge,
         "compute_fn": compute_activity_naming_score,
         "format_fn": format_activity_naming_detail,
@@ -1293,6 +1307,7 @@ EVAL_REGISTRY = {
         "label": "ChildResp",
         "unit": "composite",
         "form": "none",
+        "description": "Every teacher interaction has a specific child response (verbal + action)",
         "judge_fn": run_child_response_judge,
         "compute_fn": compute_child_response_score,
         "format_fn": format_child_response_detail,
@@ -1395,8 +1410,32 @@ def generate_report(
     return "\n".join(lines)
 
 
+def print_eval_list():
+    """Print available evals and fixtures for discovery."""
+    print("Available evals:")
+    print(f"  {'Name':<25s} {'Label':<12s} {'Unit':<14s} {'Form':<8s} Description")
+    print(f"  {'-'*25} {'-'*12} {'-'*14} {'-'*8} {'-'*50}")
+    for name, entry in EVAL_REGISTRY.items():
+        desc = entry.get("description", "")
+        print(f"  {name:<25s} {entry['label']:<12s} {entry['unit']:<14s} {entry['form']:<8s} {desc}")
+
+    print()
+    generated = get_available_fixtures(FIXTURES_DIR)
+    expert = get_available_fixtures(EXPERT_FIXTURES_DIR)
+    print(f"Generated fixtures ({len(generated)} in {FIXTURES_DIR}/):")
+    for fid in generated:
+        print(f"  {fid}")
+    print()
+    print(f"Expert fixtures ({len(expert)} in {EXPERT_FIXTURES_DIR}/):")
+    for fid in expert:
+        print(f"  {fid}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run scaffolding evals on pre-generated fixtures")
+    parser.add_argument(
+        "--list", action="store_true", help="List available evals and fixtures, then exit"
+    )
     parser.add_argument(
         "--fixture", type=str, help="Run on a specific fixture ID only"
     )
@@ -1413,6 +1452,10 @@ def main():
         help="Which evals to run (default: all). Valid: " + ", ".join(ALL_EVAL_NAMES)
     )
     args = parser.parse_args()
+
+    if args.list:
+        print_eval_list()
+        return
 
     fixtures_dir = args.fixtures_dir
     eval_names = args.evals if args.evals else ALL_EVAL_NAMES
