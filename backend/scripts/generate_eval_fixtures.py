@@ -24,6 +24,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 
 from app.graph.graph import create_graph
+from app.graph.agents.handwriting_generator import GENERATOR_MODEL
 
 
 # Fixture param matrix — 10 combos: 3×3 grid (grade × level) + expert mirror
@@ -157,7 +158,7 @@ async def generate_fixture(params: dict, force: bool = False) -> bool:
         },
         "lesson_output": lesson_output,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "generator_model": "gpt-4o",
+        "generator_model": GENERATOR_MODEL,
         "generator_prompt_version": "handwriting-generator:production",
         "generator_git_sha": get_git_sha(),
     }

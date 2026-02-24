@@ -12,6 +12,7 @@ from langchain.agents import create_agent
 
 from app.llm.client import get_chat_model
 
+GENERATOR_MODEL = "gpt-5.1"
 
 # Path to reference materials
 REFERENCE_MATERIALS_DIR = Path(__file__).parent.parent.parent.parent / "prompt" / "reference_materials"
@@ -266,7 +267,7 @@ def create_handwriting_generator_agent(
         CompiledStateGraph: The compiled ReAct agent
     """
     # Get model from registry
-    model = get_chat_model("gpt-5.1")
+    model = get_chat_model(GENERATOR_MODEL)
 
     # Get prompt with parameters and reference materials
     system_prompt = get_handwriting_generator_prompt(
