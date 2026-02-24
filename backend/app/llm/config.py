@@ -41,6 +41,12 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         enabled=True,
         default=False,
     ),
+    "gpt-5.1": ModelConfig(
+        provider="openai",
+        model_name="gpt-5.1",
+        enabled=True,
+        default=False,
+    ),
     "gpt-5.2": ModelConfig(
         provider="openai",
         model_name="gpt-5.2",

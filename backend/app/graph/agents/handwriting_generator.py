@@ -266,7 +266,7 @@ def create_handwriting_generator_agent(
         CompiledStateGraph: The compiled ReAct agent
     """
     # Get model from registry
-    model = get_chat_model("gpt-4o")
+    model = get_chat_model("gpt-5.1")
 
     # Get prompt with parameters and reference materials
     system_prompt = get_handwriting_generator_prompt(
