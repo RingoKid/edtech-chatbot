@@ -5,7 +5,6 @@
     "docker-compose.devcontainer.yml"
   ],
   "service": "backend",
-  "dockerComposeOptions": ["--project-directory", ".."],
   "runServices": ["backend", "frontend", "dynamodb-local"],
   "workspaceFolder": "/workspace",
   "overrideCommand": true,
@@ -20,7 +19,20 @@
         "python.analysis.extraPaths": [
           "/workspace/backend"
         ],
-        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.typeCheckingMode": "off",
+        "python.analysis.diagnosticSeverityOverrides": {
+          "reportAttributeAccessIssue": "none",
+          "reportGeneralTypeIssues": "none",
+          "reportArgumentType": "none",
+          "reportReturnType": "none",
+          "reportIndexIssue": "none",
+          "reportOptionalMemberAccess": "none",
+          "reportCallIssue": "none",
+          "reportOperatorIssue": "none",
+          "reportOptionalCall": "none",
+          "reportMissingImports": "none",
+          "reportMissingModuleSource": "none"
+        },
         "python.analysis.indexing": true,
         "python.testing.pytestEnabled": true,
         "python.testing.pytestArgs": [
