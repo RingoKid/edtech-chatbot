@@ -20,11 +20,44 @@ import subprocess
 import uuid
 from datetime import datetime, timezone
 
+from langchain_core.callbacks import UsageMetadataCallbackHandler
 from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 
 from app.graph.graph import create_graph
 from app.graph.agents.handwriting_generator import GENERATOR_MODEL
+
+# Per-million-token pricing (USD) — update when models or pricing change
+# Source: https://openai.com/api/pricing/
+COST_PER_MILLION_TOKENS = {
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "gpt-4o":      {"input": 2.50, "output": 10.00},
+    "gpt-5.1":     {"input": 1.25, "output": 10.00},
+    "gpt-5.2":     {"input": 1.75, "output": 14.00},
+    "gpt-5.2-pro": {"input": 1.75, "output": 14.00},
+}
+
+
+def _find_pricing(model_name: str) -> dict | None:
+    """Find pricing for a model name, handling versioned names like 'gpt-5.1-2025-04-14'."""
+    if model_name in COST_PER_MILLION_TOKENS:
+        return COST_PER_MILLION_TOKENS[model_name]
+    for key, pricing in COST_PER_MILLION_TOKENS.items():
+        if model_name.startswith(key):
+            return pricing
+    return None
+
+
+def compute_cost(usage_by_model: dict) -> float:
+    """Compute total cost in USD from UsageMetadataCallbackHandler.usage_metadata dict."""
+    total = 0.0
+    for model_name, usage in usage_by_model.items():
+        pricing = _find_pricing(model_name)
+        if not pricing:
+            continue
+        total += (usage.get("input_tokens", 0) / 1_000_000) * pricing["input"]
+        total += (usage.get("output_tokens", 0) / 1_000_000) * pricing["output"]
+    return total
 
 
 # Fixture param matrix — 3×3 grid (grade × level) + expert mirrors + regression targets
@@ -68,13 +101,15 @@ def get_git_sha() -> str:
         return "unknown"
 
 
-async def run_handwriting_generator(graph, params: dict, thread_id: str) -> str | None:
+async def run_handwriting_generator(graph, params: dict, thread_id: str, callbacks: list | None = None) -> str | None:
     """
     Run the full flow: routing -> param extraction -> generation.
 
     Returns the lesson output text, or None on failure.
     """
     config = {"configurable": {"thread_id": thread_id}}
+    if callbacks:
+        config["callbacks"] = callbacks
 
     # Step 1: Route to handwriting task
     routing_messages = [
@@ -87,6 +122,8 @@ async def run_handwriting_generator(graph, params: dict, thread_id: str) -> str 
     for attempt, routing_msg in enumerate(routing_messages):
         retry_thread = f"{thread_id}-retry{attempt}" if attempt > 0 else thread_id
         retry_config = {**config, "configurable": {"thread_id": retry_thread}}
+        if callbacks:
+            retry_config["callbacks"] = callbacks
 
         routing_result = await graph.ainvoke(
             {"messages": [HumanMessage(content=routing_msg)]},
@@ -147,11 +184,19 @@ async def generate_fixture(params: dict, force: bool = False) -> bool:
     graph = await create_graph(checkpointer=MemorySaver())
     thread_id = f"fixture-{fixture_id}-{uuid.uuid4().hex[:8]}"
 
-    lesson_output = await run_handwriting_generator(graph, params, thread_id)
+    usage_handler = UsageMetadataCallbackHandler()
+    lesson_output = await run_handwriting_generator(graph, params, thread_id, callbacks=[usage_handler])
 
     if lesson_output is None:
         print(f"  FAIL {fixture_id}")
         return False
+
+    # Aggregate token usage across all LLM calls (dict keyed by model name)
+    usage_by_model = usage_handler.usage_metadata
+    total_input = sum(u.get("input_tokens", 0) for u in usage_by_model.values())
+    total_output = sum(u.get("output_tokens", 0) for u in usage_by_model.values())
+    total_tokens = total_input + total_output
+    cost_usd = compute_cost(usage_by_model)
 
     fixture_data = {
         "fixture_id": fixture_id,
@@ -165,13 +210,27 @@ async def generate_fixture(params: dict, force: bool = False) -> bool:
         "generator_model": GENERATOR_MODEL,
         "generator_prompt_version": "handwriting-generator:production",
         "generator_git_sha": get_git_sha(),
+        "usage": {
+            "input_tokens": total_input,
+            "output_tokens": total_output,
+            "total_tokens": total_tokens,
+            "cost_usd": round(cost_usd, 6),
+            "by_model": {
+                model: {
+                    "input_tokens": u.get("input_tokens", 0),
+                    "output_tokens": u.get("output_tokens", 0),
+                    "total_tokens": u.get("total_tokens", 0),
+                }
+                for model, u in usage_by_model.items()
+            },
+        },
     }
 
     with open(fixture_path, "w") as f:
         json.dump(fixture_data, f, indent=2)
 
     output_len = len(lesson_output)
-    print(f"  OK   {fixture_id} ({output_len:,} chars)")
+    print(f"  OK   {fixture_id} ({output_len:,} chars, {total_tokens:,} tokens, ${cost_usd:.4f})")
     return True
 
 

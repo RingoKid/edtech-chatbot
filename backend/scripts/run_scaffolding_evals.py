@@ -26,6 +26,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime
 
 from app.llm.client import get_chat_model
@@ -56,7 +57,37 @@ FORM_B_PATH = "prompt/Handwriting & Spelling (Transcription) AI Codes/FORM B-Cod
 
 DEFAULT_JUDGE_MODEL = "gpt-5.2"
 JUDGE_TIMEOUT = 120  # seconds per API call before raising an exception
-JUDGE_MAX_RETRIES = 2  # retry transient failures (network errors, rate limits)
+JUDGE_MAX_RETRIES = 1  # retry transient failures (network errors, rate limits)
+
+# Per-million-token pricing (USD) — update when models or pricing change
+# Source: https://openai.com/api/pricing/
+COST_PER_MILLION_TOKENS = {
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "gpt-4o":      {"input": 2.50, "output": 10.00},
+    "gpt-5.1":     {"input": 1.25, "output": 10.00},
+    "gpt-5.2":     {"input": 1.75, "output": 14.00},
+    "gpt-5.2-pro": {"input": 1.75, "output": 14.00},
+}
+
+
+def extract_usage(raw_msg) -> dict:
+    """Extract token usage from an AIMessage returned by include_raw=True."""
+    usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
+    if hasattr(raw_msg, "usage_metadata") and raw_msg.usage_metadata:
+        usage["input_tokens"] = raw_msg.usage_metadata.get("input_tokens", 0)
+        usage["output_tokens"] = raw_msg.usage_metadata.get("output_tokens", 0)
+        usage["total_tokens"] = raw_msg.usage_metadata.get("total_tokens", 0)
+    return usage
+
+
+def compute_cost(usage: dict, model_key: str) -> float:
+    """Compute cost in USD from token usage and model pricing."""
+    pricing = COST_PER_MILLION_TOKENS.get(model_key)
+    if not pricing:
+        return 0.0
+    input_cost = (usage["input_tokens"] / 1_000_000) * pricing["input"]
+    output_cost = (usage["output_tokens"] / 1_000_000) * pricing["output"]
+    return input_cost + output_cost
 
 ALL_EVAL_NAMES = [
     "within", "across", "release", "decomposition", "verbatim", "structure",
@@ -119,145 +150,159 @@ def get_available_fixtures(fixtures_dir: str = FIXTURES_DIR) -> list[str]:
 # Judge functions
 # ---------------------------------------------------------------------------
 
-def run_within_judge(lesson_output: str, model_key: str, form_d: str) -> WithinSectionOutput:
+def run_within_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[WithinSectionOutput, dict]:
     """Run the within-section scaffolding judge."""
     rubric_template = load_rubric("scaffolding_within_activity")
     prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(WithinSectionOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(WithinSectionOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_across_judge(lesson_output: str, model_key: str, form_d: str) -> AcrossSectionOutput:
+def run_across_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[AcrossSectionOutput, dict]:
     """Run the across-section scaffolding judge."""
     rubric_template = load_rubric("scaffolding_between_activity")
     prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(AcrossSectionOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(AcrossSectionOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_release_judge(lesson_output: str, model_key: str, form_d: str) -> GradualReleaseOutput:
+def run_release_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[GradualReleaseOutput, dict]:
     """Run the gradual release scaffolding judge."""
     rubric_template = load_rubric("scaffolding_gradual_release")
     prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(GradualReleaseOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(GradualReleaseOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_decomposition_judge(lesson_output: str, model_key: str, form_d: str) -> DecompositionOutput:
+def run_decomposition_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[DecompositionOutput, dict]:
     """Run the decomposition scaffolding judge."""
     rubric_template = load_rubric("scaffolding_decomposition")
     prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(DecompositionOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(DecompositionOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_verbatim_judge(lesson_output: str, model_key: str, form_b: str) -> VerbatimOutput:
+def run_verbatim_judge(lesson_output: str, model_key: str, form_b: str) -> tuple[VerbatimOutput, dict]:
     """Run the verbatim explanations judge."""
     rubric_template = load_rubric("verbatim_explanations")
     prompt = rubric_template.replace("{form_b}", form_b).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(VerbatimOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(VerbatimOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_structure_judge(lesson_output: str, model_key: str, form_b: str) -> StructureOutput:
+def run_structure_judge(lesson_output: str, model_key: str, form_b: str) -> tuple[StructureOutput, dict]:
     """Run the lesson structure judge."""
     rubric_template = load_rubric("lesson_structure")
     prompt = rubric_template.replace("{form_b}", form_b).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(StructureOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(StructureOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_think_aloud_judge(lesson_output: str, model_key: str, form_content: None = None) -> ThinkAloudOutput:
+def run_think_aloud_judge(lesson_output: str, model_key: str, form_content: None = None) -> tuple[ThinkAloudOutput, dict]:
     """Run the think-aloud detailed modeling judge."""
     rubric_template = load_rubric("think_aloud")
     prompt = rubric_template.replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(ThinkAloudOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(ThinkAloudOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_corrective_feedback_judge(lesson_output: str, model_key: str, form_content: None = None) -> CorrectiveFeedbackOutput:
+def run_corrective_feedback_judge(lesson_output: str, model_key: str, form_content: None = None) -> tuple[CorrectiveFeedbackOutput, dict]:
     """Run the corrective feedback judge."""
     rubric_template = load_rubric("corrective_feedback")
     prompt = rubric_template.replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(CorrectiveFeedbackOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(CorrectiveFeedbackOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_post_response_judge(lesson_output: str, model_key: str, form_content: None = None) -> PostResponseOutput:
+def run_post_response_judge(lesson_output: str, model_key: str, form_content: None = None) -> tuple[PostResponseOutput, dict]:
     """Run the post-response explanation judge."""
     rubric_template = load_rubric("post_response_explanation")
     prompt = rubric_template.replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(PostResponseOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(PostResponseOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_sound_comparison_judge(lesson_output: str, model_key: str, form_content: None = None) -> SoundLetterComparisonOutput:
+def run_sound_comparison_judge(lesson_output: str, model_key: str, form_content: None = None) -> tuple[SoundLetterComparisonOutput, dict]:
     """Run the sound/letter comparison judge."""
     rubric_template = load_rubric("sound_letter_comparison")
     prompt = rubric_template.replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(SoundLetterComparisonOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(SoundLetterComparisonOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_script_specificity_judge(lesson_output: str, model_key: str, form_content: None = None) -> ScriptSpecificityOutput:
+def run_script_specificity_judge(lesson_output: str, model_key: str, form_content: None = None) -> tuple[ScriptSpecificityOutput, dict]:
     """Run the script specificity judge."""
     rubric_template = load_rubric("script_specificity")
     prompt = rubric_template.replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(ScriptSpecificityOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(ScriptSpecificityOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_grade_standards_judge(lesson_output: str, model_key: str, form_content: None = None, params: dict = None) -> GradeStandardsOutput:
+def run_grade_standards_judge(lesson_output: str, model_key: str, form_content: None = None, params: dict = None) -> tuple[GradeStandardsOutput, dict]:
     """Run the grade-appropriate standards judge."""
     rubric_template = load_rubric("grade_standards")
     grade = params.get("grade", "PreK") if params else "PreK"
     prompt = rubric_template.replace("{grade}", grade).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(GradeStandardsOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(GradeStandardsOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_activity_naming_judge(lesson_output: str, model_key: str, form_d: str) -> ActivityNamingOutput:
+def run_activity_naming_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[ActivityNamingOutput, dict]:
     """Run the activity naming judge."""
     rubric_template = load_rubric("activity_naming")
     prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(ActivityNamingOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(ActivityNamingOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
-def run_child_response_judge(lesson_output: str, model_key: str, form_content: None = None) -> ChildResponseOutput:
+def run_child_response_judge(lesson_output: str, model_key: str, form_content: None = None) -> tuple[ChildResponseOutput, dict]:
     """Run the child response coverage judge."""
     rubric_template = load_rubric("child_response_coverage")
     prompt = rubric_template.replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
-    judge = model.with_structured_output(ChildResponseOutput)
-    return judge.invoke(prompt)
+    judge = model.with_structured_output(ChildResponseOutput, include_raw=True)
+    result = judge.invoke(prompt)
+    return result["parsed"], extract_usage(result["raw"])
 
 
 # ---------------------------------------------------------------------------
@@ -1328,6 +1373,9 @@ def generate_report(
     fixtures_dir: str = FIXTURES_DIR,
 ) -> str:
     """Generate the full markdown report. Only includes columns for evals that ran."""
+    total_tokens = sum(r.get("usage", {}).get("total_tokens", 0) for r in results)
+    total_cost = sum(r.get("cost_usd", 0.0) for r in results)
+
     lines = [
         "# Scaffolding Eval Results",
         "",
@@ -1337,6 +1385,8 @@ def generate_report(
         f"**Evals:** {', '.join(eval_names)}",
         f"**Fixtures dir:** {os.path.basename(os.path.normpath(fixtures_dir))}",
         f"**Fixtures evaluated:** {len(results)}",
+        f"**Total tokens:** {total_tokens:,}",
+        f"**Estimated cost:** ${total_cost:.4f}",
         "",
         "---",
         "",
@@ -1346,27 +1396,41 @@ def generate_report(
 
     # Build dynamic summary table header
     labels = [EVAL_REGISTRY[name]["label"] for name in eval_names]
-    header = "| Fixture | " + " | ".join(labels) + " | Avg |"
-    separator = "|---------|" + "|".join("-----" for _ in labels) + "|-----|"
+    header = "| Fixture | " + " | ".join(labels) + " | Avg | Tokens | Cost |"
+    separator = "|---------|" + "|".join("-----" for _ in labels) + "|-----|--------|------|"
     lines.append(header)
     lines.append(separator)
 
     # Accumulate totals per eval
     totals = {name: 0.0 for name in eval_names}
+    totals_count = {name: 0 for name in eval_names}
+    total_tokens_all = 0
+    total_cost_all = 0.0
 
     for r in results:
         scores = []
         cells = []
+        completed = r.get("completed_evals", eval_names)
         for name in eval_names:
-            s = r[f"{name}_score"]
-            c = r[f"{name}_correct"]
-            t = r[f"{name}_total"]
-            scores.append(s)
-            totals[name] += s
-            cells.append(f"{s:.1f}% ({c}/{t})")
+            if name in completed:
+                s = r[f"{name}_score"]
+                c = r[f"{name}_correct"]
+                t = r[f"{name}_total"]
+                scores.append(s)
+                totals[name] += s
+                totals_count[name] += 1
+                cells.append(f"{s:.1f}% ({c}/{t})")
+            else:
+                cells.append("FAIL")
 
-        avg = sum(scores) / len(scores)
-        line = f"| {r['fixture_id']} | " + " | ".join(cells) + f" | {avg:.1f}% |"
+        avg = sum(scores) / len(scores) if scores else 0.0
+        usage = r.get("usage", {})
+        cost = r.get("cost_usd", 0.0)
+        total_tokens_all += usage.get("total_tokens", 0)
+        total_cost_all += cost
+        tokens_str = f"{usage.get('total_tokens', 0):,}"
+        cost_str = f"${cost:.4f}"
+        line = f"| {r['fixture_id']} | " + " | ".join(cells) + f" | {avg:.1f}% | {tokens_str} | {cost_str} |"
         lines.append(line)
 
     n = len(results)
@@ -1374,11 +1438,18 @@ def generate_report(
         avg_cells = []
         avg_scores = []
         for name in eval_names:
-            avg_val = totals[name] / n
-            avg_scores.append(avg_val)
-            avg_cells.append(f"**{avg_val:.1f}%**")
+            count = totals_count[name]
+            if count > 0:
+                avg_val = totals[name] / count
+                avg_scores.append(avg_val)
+                avg_cells.append(f"**{avg_val:.1f}%**")
+            else:
+                avg_cells.append("—")
         avg_overall = sum(avg_scores) / len(avg_scores)
-        line = "| **Overall Average** | " + " | ".join(avg_cells) + f" | **{avg_overall:.1f}%** |"
+        line = (
+            "| **Overall Average** | " + " | ".join(avg_cells)
+            + f" | **{avg_overall:.1f}%** | **{total_tokens_all:,}** | **${total_cost_all:.4f}** |"
+        )
         lines.append(line)
 
     lines.extend(["", "---", ""])
@@ -1389,21 +1460,33 @@ def generate_report(
     for r in results:
         fixture = r["fixture"]
         params = fixture["params"]
+        usage = r.get("usage", {})
+        cost = r.get("cost_usd", 0.0)
         lines.append(f"### {r['fixture_id']}")
         lines.append(
             f"**Params:** {params['grade']} | Letter {params['letter']} | {params['student_level']}"
         )
+        lines.append(
+            f"**Tokens:** {usage.get('input_tokens', 0):,} in / "
+            f"{usage.get('output_tokens', 0):,} out / "
+            f"{usage.get('total_tokens', 0):,} total | "
+            f"**Cost:** ${cost:.4f}"
+        )
         lines.append("")
 
+        completed = r.get("completed_evals", eval_names)
         for name in eval_names:
             entry = EVAL_REGISTRY[name]
-            s = r[f"{name}_score"]
-            c = r[f"{name}_correct"]
-            t = r[f"{name}_total"]
-            lines.append(
-                f"#### {entry['label']}: {s:.1f}% ({c}/{t} {entry['unit']})\n"
-            )
-            lines.append(r[f"{name}_detail"])
+            if name in completed:
+                s = r[f"{name}_score"]
+                c = r[f"{name}_correct"]
+                t = r[f"{name}_total"]
+                lines.append(
+                    f"#### {entry['label']}: {s:.1f}% ({c}/{t} {entry['unit']})\n"
+                )
+                lines.append(r[f"{name}_detail"])
+            else:
+                lines.append(f"#### {entry['label']}: FAILED\n")
 
         lines.extend(["---", ""])
 
@@ -1503,19 +1586,29 @@ def main():
         fixture = load_fixture(fixture_id, fixtures_dir)
         lesson_output = fixture["lesson_output"]
 
-        try:
-            result = {"fixture_id": fixture_id, "fixture": fixture}
-            scores = []
+        result = {"fixture_id": fixture_id, "fixture": fixture}
+        completed_evals = []
+        fixture_usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
 
-            for name in eval_names:
-                entry = EVAL_REGISTRY[name]
-                form_content = forms[entry["form"]]
+        for i, name in enumerate(eval_names):
+            entry = EVAL_REGISTRY[name]
+            form_content = forms[entry["form"]]
 
+            # Small delay between judge calls to avoid rate limits / server drops
+            if i > 0:
+                time.sleep(1)
+
+            try:
                 # Run judge — pass params when eval needs them (e.g., grade_standards)
                 if entry.get("uses_params"):
-                    judge_output = entry["judge_fn"](lesson_output, args.model, form_content, params=fixture.get("params", {}))
+                    judge_output, usage = entry["judge_fn"](lesson_output, args.model, form_content, params=fixture.get("params", {}))
                 else:
-                    judge_output = entry["judge_fn"](lesson_output, args.model, form_content)
+                    judge_output, usage = entry["judge_fn"](lesson_output, args.model, form_content)
+
+                # Accumulate token usage
+                fixture_usage["input_tokens"] += usage["input_tokens"]
+                fixture_usage["output_tokens"] += usage["output_tokens"]
+                fixture_usage["total_tokens"] += usage["total_tokens"]
 
                 # Compute score
                 correct, total, score = entry["compute_fn"](judge_output)
@@ -1528,25 +1621,37 @@ def main():
                 result[f"{name}_total"] = total
                 result[f"{name}_score"] = score
                 result[f"{name}_detail"] = detail
-                scores.append(score)
+                result[f"{name}_usage"] = usage
+                completed_evals.append(name)
+                print(f"    {entry['label']}: {score:.1f}% ({correct}/{total})")
 
+            except Exception as e:
+                print(f"    {entry['label']}: FAILED — {type(e).__name__}: {e}")
+                cause = e.__cause__ or e.__context__
+                while cause:
+                    print(f"      caused by {type(cause).__name__}: {cause}")
+                    cause = cause.__cause__ or cause.__context__
+
+        # Save partial or full results for this fixture
+        if completed_evals:
+            fixture_cost = compute_cost(fixture_usage, args.model)
+            result["usage"] = fixture_usage
+            result["cost_usd"] = fixture_cost
+            result["completed_evals"] = completed_evals
+
+            scores = [result[f"{name}_score"] for name in completed_evals]
             avg = sum(scores) / len(scores)
-            # Console output
-            parts = []
-            for name in eval_names:
-                label = EVAL_REGISTRY[name]["label"]
-                s = result[f"{name}_score"]
-                c = result[f"{name}_correct"]
-                t = result[f"{name}_total"]
-                parts.append(f"{label}: {s:.1f}% ({c}/{t})")
-            parts.append(f"Avg: {avg:.1f}%")
-            print(f"    {' | '.join(parts)}")
+            failed_count = len(eval_names) - len(completed_evals)
+            status = f"{len(completed_evals)}/{len(eval_names)} evals"
+            if failed_count:
+                status += f" ({failed_count} failed)"
+            tokens_str = f"{fixture_usage['total_tokens']:,} tokens"
+            cost_str = f"${fixture_cost:.4f}"
+            print(f"    => {status} | Avg: {avg:.1f}% | {tokens_str} ({cost_str})")
 
             results.append(result)
-
-        except Exception as e:
-            print(f"    ERROR: {type(e).__name__}: {e}")
-            continue
+        else:
+            failed += 1
 
     if not results:
         print("\nNo results to report.")
@@ -1572,13 +1677,21 @@ def main():
     parts = []
     avg_scores = []
     for name in eval_names:
-        avg_val = sum(r[f"{name}_score"] for r in results) / n
-        avg_scores.append(avg_val)
+        completed_results = [r for r in results if name in r.get("completed_evals", eval_names)]
         label = EVAL_REGISTRY[name]["label"]
-        parts.append(f"{label}={avg_val:.1f}%")
-    avg_overall = sum(avg_scores) / len(avg_scores)
+        if completed_results:
+            avg_val = sum(r[f"{name}_score"] for r in completed_results) / len(completed_results)
+            avg_scores.append(avg_val)
+            parts.append(f"{label}={avg_val:.1f}%")
+        else:
+            parts.append(f"{label}=FAIL")
+    avg_overall = sum(avg_scores) / len(avg_scores) if avg_scores else 0.0
     parts.append(f"Avg={avg_overall:.1f}%")
     print(f"\nOverall: {' | '.join(parts)}")
+
+    total_tokens = sum(r.get("usage", {}).get("total_tokens", 0) for r in results)
+    total_cost = sum(r.get("cost_usd", 0.0) for r in results)
+    print(f"Total tokens: {total_tokens:,} | Estimated cost: ${total_cost:.4f}")
 
 
 if __name__ == "__main__":
