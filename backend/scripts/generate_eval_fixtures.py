@@ -27,7 +27,7 @@ from app.graph.graph import create_graph
 from app.graph.agents.handwriting_generator import GENERATOR_MODEL
 
 
-# Fixture param matrix — 10 combos: 3×3 grid (grade × level) + expert mirror
+# Fixture param matrix — 3×3 grid (grade × level) + expert mirrors + regression targets
 # Every grade × student_level cell covered, each with a unique letter.
 # Fixture #1 mirrors the expert fixture (PreK/Z/on-level) for reproducibility comparison.
 FIXTURE_PARAMS = [
@@ -38,14 +38,18 @@ FIXTURE_PARAMS = [
     {"id": "prek_letter_s_struggling", "grade": "PreK", "letter": "S", "student_level": "struggling"},
     {"id": "prek_letter_m_advanced", "grade": "PreK", "letter": "M", "student_level": "advanced"},
     {"id": "prek_letter_b_onlevel", "grade": "PreK", "letter": "B", "student_level": "on-level"},
+    {"id": "prek_letter_m_struggling", "grade": "PreK", "letter": "M", "student_level": "struggling"},
     # K
     {"id": "k_letter_t_onlevel", "grade": "K", "letter": "T", "student_level": "on-level"},
     {"id": "k_letter_c_struggling", "grade": "K", "letter": "C", "student_level": "struggling"},
     {"id": "k_letter_w_advanced", "grade": "K", "letter": "W", "student_level": "advanced"},
+    {"id": "k_letter_b_advanced", "grade": "K", "letter": "B", "student_level": "advanced"},
+    {"id": "k_letter_b_onlevel", "grade": "K", "letter": "B", "student_level": "on-level"},
     # 1st
     {"id": "first_letter_p_onlevel", "grade": "1st", "letter": "P", "student_level": "on-level"},
     {"id": "first_letter_r_struggling", "grade": "1st", "letter": "R", "student_level": "struggling"},
     {"id": "first_letter_q_advanced", "grade": "1st", "letter": "Q", "student_level": "advanced"},
+    {"id": "first_letter_i_onlevel", "grade": "1st", "letter": "I", "student_level": "on-level"},
 ]
 
 FIXTURES_DIR = "tests/fixtures/handwriting_generator"
@@ -203,7 +207,11 @@ async def main():
             else:
                 skipped += 1
         except Exception as e:
-            print(f"  ERROR {params['id']}: {e}")
+            print(f"  ERROR {params['id']}: {type(e).__name__}: {e}")
+            cause = e.__cause__ or e.__context__
+            while cause:
+                print(f"    caused by {type(cause).__name__}: {cause}")
+                cause = cause.__cause__ or cause.__context__
             failed += 1
 
     print()

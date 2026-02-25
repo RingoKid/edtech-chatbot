@@ -1437,7 +1437,7 @@ def main():
         "--list", action="store_true", help="List available evals and fixtures, then exit"
     )
     parser.add_argument(
-        "--fixture", type=str, help="Run on a specific fixture ID only"
+        "--fixture", type=str, nargs="+", help="Run on specific fixture ID(s) only"
     )
     parser.add_argument(
         "--model", type=str, default=DEFAULT_JUDGE_MODEL,
@@ -1468,11 +1468,12 @@ def main():
         sys.exit(1)
 
     if args.fixture:
-        if args.fixture not in available:
-            print(f"Fixture not found: {args.fixture}")
+        missing = [f for f in args.fixture if f not in available]
+        if missing:
+            print(f"Fixture(s) not found: {missing}")
             print(f"Available: {available}")
             sys.exit(1)
-        fixture_ids = [args.fixture]
+        fixture_ids = args.fixture
     else:
         fixture_ids = available
 
@@ -1544,7 +1545,7 @@ def main():
             results.append(result)
 
         except Exception as e:
-            print(f"    ERROR: {e}")
+            print(f"    ERROR: {type(e).__name__}: {e}")
             continue
 
     if not results:
