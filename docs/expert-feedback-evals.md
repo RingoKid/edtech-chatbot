@@ -104,12 +104,15 @@ These don't break: `[Explanation]`, `(Child Response)`, `{{Teacher Does}}`, `+Ge
 | 1 | `grade_standards` | P0 | Implemented — needs recalibration | #1, #2 |
 | 2 | `activity_naming` | P0 | Implemented | #4, #5 |
 | 3 | `child_response_coverage` | P0 | Implemented | #9 |
-| 4 | `letter_case` | P1 | Not started | #8 |
+| 4 | `letter_case` | P1 | Not started (standalone — considered folding into `grade_content_scope`, keeping separate) | #8 |
 | 5 | `verbal_cue_age` | P1 | Not started | #10 |
 | 6 | `objective_alignment` | P1 | Not started | #3 |
 | 7 | `verbatim` (tighten) | P2 | Recalibrate | #6 |
 | 8 | `within` (tighten) | P2 | Recalibrate | #7 |
 | 9 | Difficulty adjustment | P2 | Not started (multi-turn) | #11 |
+| 10 | `grade_activity_appropriateness` | P0 | Not started | Grade-level activity analysis |
+| 11 | `developmental_techniques` | P1 | Not started | Grade-level activity analysis |
+| 12 | `grade_content_scope` | P1 | Not started | Grade-level activity analysis |
 
 ---
 
@@ -244,4 +247,48 @@ These don't break: `[Explanation]`, `(Child Response)`, `{{Teacher Does}}`, `+Ge
 | **Issue** | Multi-turn conversational behavior: user requests a modification, agent should re-generate with lower-difficulty Form D activities. |
 | **Why it's hard** | Fixtures are single-shot. Requires live conversation eval. |
 | **Possible approach** | Separate script with 2-turn sequence: (1) generate lesson, (2) "make it easier" → check activities shift to lower Form D tier. |
+| **Status** | Not started. |
+
+---
+
+### P0 — Grade-Level Activity Evals
+
+#### 10. `grade_activity_appropriateness`
+
+> Grade-level analysis: Activities in the lesson must be appropriate for the target grade.
+
+| Field | Value |
+|-------|-------|
+| **What it checks** | Hybrid rule-based + LLM judge. **Rule-based:** No banned activities for the grade (e.g., Magic Finger Write banned for 1st, Disappearing Letter banned for PreK). Uses allowlist/blocklist per grade. **LLM judge:** For cross-grade activities (Sound Hunt, Sound-Letter Hunt), checks delivery matches the grade (e.g., Sound Hunt = beginning-sounds-only for PreK, beginning+ending for K, medial vowels for 1st). |
+| **Form dependency** | Form D (activity menu) |
+| **Scoring** | Composite: rule-based blocklist check + LLM judge delivery check |
+| **Fixture params used** | `grade`, `student_level` |
+| **Status** | Not started. |
+
+---
+
+### P1 — Grade-Level Technique & Content Evals
+
+#### 11. `developmental_techniques`
+
+> Grade-level analysis: Teaching methods (not activity-specific) must be appropriate for the grade.
+
+| Field | Value |
+|-------|-------|
+| **What it checks** | LLM judge. 6 technique checks, each pass/fail: (1) Directionality instruction — required PreK, not for 1st. (2) Mouth/articulation placement — expected PreK, not for 1st. (3) Choral repetition intensity. (4) Pencil grip instruction. (5) Teacher modeling ratio — heavy PreK, light 1st. (6) Line identification (top/middle/bottom). |
+| **Form dependency** | None |
+| **Scoring** | `appropriate_count / 6 * 100` |
+| **Fixture params used** | `grade` |
+| **Status** | Not started. |
+
+#### 12. `grade_content_scope`
+
+> Grade-level analysis: Content complexity and scope must match the target grade.
+
+| Field | Value |
+|-------|-------|
+| **What it checks** | LLM judge. 5-6 content checks: (1) Sound isolation type — beginning only PreK, beginning+ending K, medial 1st. (2) Spelling scope — single letter PreK, CVC K, CVCe 1st. (3) Prior knowledge assumptions — teach from scratch PreK, all sounds known 1st. (4) Review activity complexity. (5) Phonemic task type. |
+| **Form dependency** | None |
+| **Scoring** | `appropriate_count / total_checks * 100` |
+| **Fixture params used** | `grade` |
 | **Status** | Not started. |

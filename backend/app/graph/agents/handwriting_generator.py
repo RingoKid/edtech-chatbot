@@ -26,6 +26,13 @@ GRADE_TO_STANDARDS_HEADER = {
     "1st": "1st Grade",
 }
 
+# Map grade parameter to Form C section header in reference materials
+GRADE_TO_FORM_C_HEADER = {
+    "PreK": "FORM C: PreK Example Output",
+    "K": "FORM C: K Example Output",
+    "1st": "FORM C: 1st Example Output",
+}
+
 
 # Default prompt used when Langfuse is unavailable or prompt doesn't exist
 DEFAULT_HANDWRITING_GENERATOR_PROMPT = """You are a lesson planning expert specialized in handwriting and spelling instruction for early childhood education (PreK-1st grade).
@@ -138,7 +145,7 @@ After presenting the lesson:
 
 ## Output Format
 
-Generate the lesson in clean markdown format following Form C as your example.
+Generate the lesson in clean markdown format following the Form C example for your grade level.
 
 ---
 
@@ -177,17 +184,38 @@ def load_grade_standards(grade: str) -> str:
     return f"ERROR: No standards found for grade '{grade}'."
 
 
-def load_reference_materials() -> str:
+def load_reference_materials(grade: str) -> str:
     """
-    Load the handwriting reference materials from file.
+    Load the handwriting reference materials, filtered to the matching grade's Form C example.
+
+    Keeps only the Form C section that matches the requested grade, removing
+    the other two grade-specific Form C sections so the LLM sees a relevant example.
+
+    Args:
+        grade: Grade level (PreK, K, 1st)
 
     Returns:
-        str: The contents of handwriting_reference.md
+        str: The contents of handwriting_reference.md with only the matching Form C
     """
     try:
-        return REFERENCE_MATERIALS_PATH.read_text()
+        content = REFERENCE_MATERIALS_PATH.read_text()
     except FileNotFoundError:
         return "ERROR: Reference materials not found. Please ensure handwriting_reference.md exists."
+
+    target_header = GRADE_TO_FORM_C_HEADER.get(grade)
+    if not target_header:
+        return content
+
+    # Split on section headers and filter out non-matching Form C sections
+    sections = content.split("\n## ")
+    filtered = []
+    for section in sections:
+        is_form_c = section.startswith("FORM C:")
+        if is_form_c and not section.startswith(target_header):
+            continue
+        filtered.append(section)
+
+    return "\n## ".join(filtered)
 
 
 def get_handwriting_generator_prompt(
@@ -213,7 +241,7 @@ def get_handwriting_generator_prompt(
         str: The complete system prompt with reference materials
     """
     # Load reference materials and grade-specific standards
-    reference_materials = load_reference_materials()
+    reference_materials = load_reference_materials(grade)
     grade_standards = load_grade_standards(grade)
 
     # Substitute parameters
@@ -269,8 +297,8 @@ def create_handwriting_generator_agent(
     Returns:
         CompiledStateGraph: The compiled ReAct agent
     """
-    # Get model from registry
-    model = get_chat_model(GENERATOR_MODEL)
+    # Get model from registry (streaming keeps TCP alive, prevents VPN/proxy idle drops)
+    model = get_chat_model(GENERATOR_MODEL, streaming=True)
 
     # Get prompt with parameters and reference materials
     system_prompt = get_handwriting_generator_prompt(
