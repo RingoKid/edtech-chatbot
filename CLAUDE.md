@@ -12,57 +12,85 @@ All backend commands run inside the `backend` Docker container:
 
 ### Running Tests and Assessments
 
-**Pytest-based checks** (routing, params, structure):
-
-1. **Discover** — List all test files: `ls backend/tests/evals/test_*.py`
-2. **Present** — Show the available tests to the user
-3. **Ask** — Which test(s) to run? (or "all")
-4. **Run** — `docker compose exec backend pytest tests/evals/<selected_file> -v`
-
-To run all pytest checks at once: `docker compose exec backend pytest tests/evals/ -v`
-
-**LLM judge assessments** (scaffolding, instructional quality, formatting):
-
-Discover available assessments and fixtures:
+**Pytest checks:** Discover with `ls backend/tests/evals/test_*.py`, then ask user which to run.
 
 ```bash
-docker compose exec backend python scripts/run_scaffolding_evals.py --list
+docker compose exec backend pytest tests/evals/ -v            # all
+docker compose exec backend pytest tests/evals/<file> -v      # specific
 ```
 
-Run assessments:
+**LLM judge assessments:** Use `--list` to discover available evals and fixtures. Flags combine freely.
 
 ```bash
-# All assessments on all generated fixtures
-docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py
-
-# Specific assessment(s) only (use --list to see valid names)
-docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --eval verbatim structure
-
-# Specific fixture only
-docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --fixture k_letter_t_onlevel
-
-# Run against expert fixtures (human-authored ground truth)
-docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --fixtures-dir tests/fixtures/handwriting_expert
-
-# Combine flags freely
-docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py --eval grade_standards --fixtures-dir tests/fixtures/handwriting_expert
+EVAL_CMD="docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py"
+$EVAL_CMD --list                                                # discover evals & fixtures
+$EVAL_CMD                                                       # run all
+$EVAL_CMD --eval verbatim structure --fixture k_letter_t_onlevel  # combine flags
+$EVAL_CMD --fixtures-dir tests/fixtures/handwriting_expert      # expert fixtures
 ```
 
-**Regenerate fixtures** (only needed if generator code changes):
+**Regenerate fixtures** (only if generator code changes):
 
 ```bash
 docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/generate_eval_fixtures.py
 ```
 
-The `-e GIT_SHA=...` flag embeds the current commit hash in reports/fixtures for provenance tracking.
-
-After rebuilding, always initialize the database:
+**After rebuilding**, always init the database (creates local DynamoDB tables, without this API returns 500s):
 
 ```bash
 docker compose exec backend python scripts/init_db.py
 ```
 
-This creates the DynamoDB tables in the local container. Without this, API requests will fail with 500 errors.
+## AWS Environment
+
+### Account & Region
+
+- **Account:** 522534289122
+- **Region:** us-east-1
+- **Domain:** composeearly.com
+
+### Service Identifiers
+
+- **Amplify App ID:** `dyio3npn4doy2` (frontend)
+- **App Runner Service:** `edtech-chatbot-service-develop` (backend)
+- **ECR Repo:** `522534289122.dkr.ecr.us-east-1.amazonaws.com/edtech-chatbot`
+- **DynamoDB Tables:** `EdTechChatbotTable-{env}`, `EdTechChatbotCheckpoints-{env}`
+
+### Quick Status Checks
+
+```bash
+# Frontend — last 3 deploys
+aws amplify list-jobs --app-id dyio3npn4doy2 --branch-name develop \
+  --max-items 3 --query 'jobSummaries[].{Job:jobId,Status:status,Time:endTime,Msg:commitMessage}' \
+  --output table
+
+# Backend — service status + last 3 operations
+aws apprunner list-services \
+  --query 'ServiceSummaryList[?ServiceName==`edtech-chatbot-service-develop`].{Name:ServiceName,Status:Status,URL:ServiceUrl}' \
+  --output table
+
+aws apprunner list-operations \
+  --service-arn $(aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`edtech-chatbot-service-develop`].ServiceArn' --output text) \
+  --max-results 3 --output table
+
+# Backend health check (live)
+curl -s https://mkbifgscip.us-east-1.awsapprunner.com/api/v1/health
+
+# ECR — recent images
+aws ecr describe-images --repository-name edtech-chatbot \
+  --query 'sort_by(imageDetails,&imagePushedAt)[-3:].{Tags:imageTags,Pushed:imagePushedAt,Size:imageSizeInBytes}' \
+  --output table
+
+# DynamoDB — table status
+aws dynamodb describe-table --table-name EdTechChatbotTable-sandbox \
+  --query 'Table.{Name:TableName,Status:TableStatus,Items:ItemCount}' \
+  --output table
+
+# App Runner logs (last 30 min)
+aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`edtech-chatbot-service-develop`].ServiceArn' --output text \
+  | xargs -I{} aws logs filter-log-events --log-group-name /aws/apprunner/edtech-chatbot-service-develop \
+  --start-time $(date -v-30M +%s000) --limit 50
+```
 
 ## Architecture Rules
 
