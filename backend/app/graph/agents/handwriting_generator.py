@@ -70,16 +70,9 @@ Generate a complete handwriting and spelling lesson following the structure in t
 
 5. **Complete Structure**: Your output MUST include ALL of these sections:
    - A. Standards (from the Grade-Specific Standards Reference below)
-     - **PreK**: MUST use GELDS codes. Only these 6 codes are relevant to handwriting/spelling — select from these ONLY:
-       - CLL6.4c (isolates initial sounds), CLL6.4e (segments syllables), CLL6.4f (blends sounds)
-       - CLL7.4a (recognizes/names letters), CLL8.4b (letters form words), CLL9.4d (writes letters)
-       - Do NOT use PDM codes, CLL6.4a, CLL6.4b, CLL6.4d, CLL9.4a, CLL9.4b, or any K-12 ELA codes.
-     - **K**: MUST use Georgia K-12 ELA codes (K.F.* format). Include at least 4 standards, one from EACH category:
-       - Phonemic Awareness (K.F.PA.*), Phoneme-Grapheme Correspondence (K.F.P.1.*), Encoding (K.F.P.3.*), Handwriting (K.F.H.*)
-       - Do NOT use decoding standards (K.F.P.2.*) — those are reading standards.
-     - **1st**: MUST use Georgia K-12 ELA codes (1.F.* format). Include at least 4 standards, one from EACH category:
-       - Phonemic Awareness (1.F.PA.*), Phoneme-Grapheme Correspondence (1.F.P.1.*), Encoding (1.F.P.3.*), Handwriting (1.F.H.*)
-       - Do NOT use decoding standards (1.F.P.2.*) — those are reading standards.
+     - **PreK**: Use GELDS codes (CLL prefix). Select 1–3 standards that align with the lesson objectives.
+     - **K**: Use Georgia K-12 ELA codes (K.F.* format). Include at least 4 standards, one from each category: Phonemic Awareness, Phoneme-Grapheme Correspondence, Encoding, Handwriting.
+     - **1st**: Use Georgia K-12 ELA codes (1.F.* format). Include at least 4 standards, one from each category: Phonemic Awareness, Phoneme-Grapheme Correspondence, Encoding, Handwriting.
    - B. Objectives (scaffolded objectives)
    - C. Materials (list of materials)
    - D. Scripted Lesson Plan:

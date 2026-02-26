@@ -1,7 +1,8 @@
 # Georgia Standards for Handwriting & Spelling Lessons
 
-Filtered reference of state standards relevant to handwriting and spelling instruction.
-Only includes standards that apply to lesson plan generation for PreK, Kindergarten, and 1st Grade.
+Curated reference of state standards for letter-level handwriting and spelling instruction only.
+Includes only standards relevant to single-letter/sound lessons for PreK, Kindergarten, and 1st Grade.
+Standards for rhyme, compound words, syllables, decoding, and motor skills are intentionally excluded.
 
 > **Source documents:**
 > - PreK: `48-60_Indicators.pdf` (GELDS — Georgia Early Learning and Development Standards)
@@ -20,10 +21,7 @@ PreK uses a different standards system from K-12. Published by Georgia's Departm
 
 | Code | Description |
 |------|-------------|
-| CLL6.4a | Listens and differentiates between sounds that are the same and different |
-| CLL6.4b | Identifies and produces rhyming words |
 | CLL6.4c | Isolates the initial (beginning) sounds in words with adult guidance |
-| CLL6.4d | Segments sentences into individual words |
 | CLL6.4e | Segments words into syllables |
 | CLL6.4f | Manipulates and blends sounds (phonemes) with adult guidance |
 
@@ -43,19 +41,7 @@ PreK uses a different standards system from K-12. Published by Georgia's Departm
 
 | Code | Description |
 |------|-------------|
-| CLL9.4a | Draws pictures and copies letters and/or numbers to communicate |
-| CLL9.4b | Uses writing tools |
 | CLL9.4d | Writes some letters of the alphabet |
-
-### Physical Development and Motor Skills (PDM)
-
-**Standard PDM6: The child will demonstrate fine motor skills.**
-
-| Code | Description |
-|------|-------------|
-| PDM6.4a | Performs fine-motor tasks that require small-muscle strength and control |
-| PDM6.4b | Uses hand-eye coordination to manipulate small objects with ease |
-| PDM6.4c | Able to perform more complex fine motor tasks with accuracy 50% of the time |
 
 ---
 
@@ -63,45 +49,7 @@ PreK uses a different standards system from K-12. Published by Georgia's Departm
 
 Codes use the format `K.F.PA.6.a` (Grade.Domain.BigIdea.Standard.Sub-standard).
 
-### K.F.PA — Phonological Awareness
-
-**K.F.PA.1 Rhyme** — Identify and produce rhyme in spoken language and oral texts.
-
-| Code | Description |
-|------|-------------|
-| K.F.PA.1.a | Identify and pair words that rhyme in spoken language, distinguishing them from those that do not |
-| K.F.PA.1.b | Orally produce words that rhyme |
-
-**K.F.PA.2 Words & Sentences** — Recognize the basic relationships that exist between words and sentences.
-
-| Code | Description |
-|------|-------------|
-| K.F.PA.2.a | Know words are put together to make sentences, and sentences communicate complete thoughts |
-| K.F.PA.2.b | Segment phrases and sentences into words |
-| K.F.PA.2.c | Know that sounds are put together to make words and that words have distinct meanings |
-
-**K.F.PA.3 Compound Words** — Identify and manipulate separate words in compound words.
-
-| Code | Description |
-|------|-------------|
-| K.F.PA.3.a | Blend and segment separate words in spoken compound words |
-| K.F.PA.3.b | Add, delete, and substitute single words in spoken compound words |
-
-**K.F.PA.4 Syllables** — Identify and manipulate syllables in spoken words.
-
-| Code | Description |
-|------|-------------|
-| K.F.PA.4.a | Know that syllables are word parts with one vowel sound |
-| K.F.PA.4.b | Count and pronounce syllables in single and multisyllabic spoken words |
-| K.F.PA.4.c | Blend and segment syllables in spoken words |
-| K.F.PA.4.d | Delete syllables in spoken words |
-
-**K.F.PA.5 Onsets & Rimes** — Blend and segment onsets and rimes in spoken words.
-
-| Code | Description |
-|------|-------------|
-| K.F.PA.5.a | Blend onsets and rimes of spoken one-syllable words |
-| K.F.PA.5.b | Segment onsets and rimes of spoken one-syllable words |
+### K.F.PA — Phonemic Awareness
 
 **K.F.PA.6 Phonemic Awareness** — Identify and manipulate the individual sounds in spoken words.
 
@@ -120,14 +68,6 @@ Codes use the format `K.F.PA.6.a` (Grade.Domain.BigIdea.Standard.Sub-standard).
 |------|-------------|
 | K.F.P.1.a | Identify and produce basic one-to-one phoneme-grapheme correspondences for the most frequently used sound for each consonant |
 | K.F.P.1.b | Identify and produce both long and short vowel sounds for A, E, I, O, U |
-
-**K.F.P.2 Decoding with Phonics** — Use grade-level phonics skills to decode words in context and in isolation.
-
-| Code | Description |
-|------|-------------|
-| K.F.P.2.a | Blend letter sounds to decode simple one-syllable words, including regularly spelled high-frequency words (VC, CV, CVC) |
-| K.F.P.2.b | Identify and decode parts of irregularly spelled high-frequency words |
-| K.F.P.2.e | Identify and distinguish between words that are spelled similarly by identifying the sounds of the letters that differ |
 
 **K.F.P.3 Encoding with Phonics** — Use grade-level phonics skills to encode words in context and in isolation.
 
@@ -191,15 +131,6 @@ Same coding system as Kindergarten, with `1.` prefix. Note: K.F.PA.1 (Rhyme), K.
 |------|-------------|
 | 1.F.P.1.a | Identify and produce phoneme-grapheme correspondences for frequently used consonant blends and digraphs |
 | 1.F.P.1.b | Identify and produce both long and short vowel sounds for A, E, I, O, U, including final -e and vowel digraphs |
-
-**1.F.P.2 Decoding with Phonics** — Use grade-level phonics skills to decode words in context and in isolation.
-
-| Code | Description |
-|------|-------------|
-| 1.F.P.2.a | Decode regularly spelled one-syllable words with a variety of spelling patterns (VC, CV, CVC, CVCe, VCC, CCVC, CVCC, CVVC, CCVCC), including high-frequency words |
-| 1.F.P.2.b | Identify and decode parts of irregularly spelled words, including high-frequency words |
-| 1.F.P.2.c | Decode one-syllable nonsense words with a variety of spelling patterns (VC, CV, CVC, CVCe, VCC, CCVC, CVCC, CVVC, CCVCC) |
-| 1.F.P.2.d | Decode two-syllable words with basic patterns by applying knowledge of basic syllable types |
 
 **1.F.P.3 Encoding with Phonics** — Use grade-level phonics skills to encode words in context and in isolation.
 
