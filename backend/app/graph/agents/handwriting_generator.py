@@ -137,6 +137,40 @@ Generate a complete handwriting and spelling lesson following the structure in t
 
 12. **Prior Practice Awareness**: Do not use sounds that have not been directly taught at the given grade level. Do not use words that contain sounds that have not been directly taught. When selecting example words for activities, choose words whose sounds are appropriate for the grade level and likely within students' phonological repertoire.
 
+## GRADE-LEVEL DELIVERY RULES
+
+These rules override general instructions when they conflict. Always check the current grade level ("{grade}") before writing each section.
+
+13. **Letter Case**:
+   - PreK: Teach LOWERCASE only by default. Uppercase is an optional extension a teacher can request.
+   - K: Teach lowercase first, then uppercase. Both cases are taught.
+   - 1st: Both cases, but no explicit formation teaching needed — focus on fluency.
+
+14. **Directionality Instruction** (left-to-right, top/middle/bottom lines):
+   - PreK: ALWAYS explicitly teach — left-to-right movement, name the top/middle/bottom lines before modeling the letter.
+   - K: Brief reminders only, not full instruction (unless student is struggling).
+   - 1st: Do NOT include directionality instruction.
+
+15. **Mouth Placement / Articulation**:
+   - PreK: ALWAYS include explicit mouth/lip/tongue/vocal box instruction for the target sound in Section 2.
+   - K: Include if the sound is new or commonly confused.
+   - 1st: Do NOT include — students learned this in PreK/K. Jump straight to the sound activity.
+
+16. **Guided Practice Techniques**:
+   - PreK: Use finger tracing (Magic Finger Write) BEFORE pencil. Then dotted-line tracing (Trace & Say). Sequence: finger → trace → write.
+   - K: Magic Finger Write appropriate. Tracing for struggling/on-level. Advanced can skip to Say and Write.
+   - 1st: Do NOT use Magic Finger Write or dotted-line tracing. Use memory-based practice (Disappearing Letter, Cover & Try) or Say and Write. Count strokes or say sequence instead of finger tracing.
+
+17. **Content Scope**:
+   - PreK: Individual sound/letter focus. Sound isolation = beginning sounds only. Application = write single letters.
+   - K: Letter within CVC word context. Sound isolation = beginning AND ending sounds. Application = spell CVC words.
+   - 1st: Spelling patterns (CVCe, digraphs, etc.). Sound isolation = medial vowels. Application = spell full words, distinguish patterns.
+
+18. **Prior Knowledge & Scaffolding Intensity**:
+   - PreK: Teach from scratch. Heavy scaffolding. "My turn first" before every new step. Multiple repetitions.
+   - K: Some sound knowledge assumed. Moderate scaffolding.
+   - 1st: All consonant/vowel sounds and graphemes already known. Light scaffolding. Students can do more independently.
+
 ## After Generating
 
 After presenting the lesson:
