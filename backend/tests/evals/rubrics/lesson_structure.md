@@ -16,13 +16,13 @@ Check whether the lesson contains all **8 required sections** and all **7 requir
 
 Check each marker for **presence and purpose** — not formatting perfection. The markers may appear inline, as block headers, or with surrounding text. Accept natural variations as long as the intended purpose is clearly served.
 
-- `[...]` Explanation — Should contain the section's purpose explanation in brackets. Accept labels like "Explanation:" inside the brackets. Do NOT re-judge whether the text is word-for-word verbatim — that is a separate eval. If bracketed text describes the section's instructional purpose, mark as correct.
-- `#` Teacher Script — Should introduce or set apart the teacher's scripted dialogue. Accept `#Teacher Script:` as a block header before the dialogue — it does not need to prefix every individual line.
-- `(...)` Child Response — Should indicate expected child responses. Accept natural teaching notation like "(children chorally respond /m/)" or "(Children should respond yes)" — these ARE expected responses written in descriptive form. Mark as correct if parentheses consistently convey what children are expected to say or do.
-- `{...}` Teacher Does — Should contain teacher physical actions and demonstrations. Mark as correct if curly braces consistently describe what the teacher does.
-- `+` Gesture — Should mark a phoneme mnemonic gesture for the target sound. Accept inline placement within a script sentence — does not need a standalone line. Mark as correct if the + marker is present and identifies a gesture.
-- `##` Sequence Verbal Cues — Should mark the letter formation stroke sequence. One entry per target letter is sufficient — uppercase and lowercase may share strokes. Accept `##Sequence Verbal Cues for letter X: ...` format.
-- `*` Modification — Should mark the end-of-lesson adaptation prompt. If absent, mark as incorrect.
+- 💡 **Explanation:** — Should contain the section's purpose explanation. Do NOT re-judge whether the text is word-for-word verbatim — that is a separate eval. If text after the 💡 **Explanation:** marker describes the section's instructional purpose, mark as correct.
+- 🗣️ **Teacher:** — Should introduce or set apart the teacher's scripted dialogue. Each teacher dialogue line should start with this marker.
+- 💬 **Child Response:** — Should indicate expected child responses. Accept natural teaching notation like "💬 **Child Response:** Children chorally respond /m/" — these ARE expected responses written in descriptive form. Mark as correct if the marker consistently conveys what children are expected to say or do.
+- 👉 **Teacher Does:** — Should contain teacher physical actions and demonstrations. Mark as correct if the marker consistently describes what the teacher does.
+- 🤚 **Gesture:** — Should mark a phoneme mnemonic gesture for the target sound. Mark as correct if the marker is present and identifies a gesture.
+- ✏️ **Verbal Cues:** — Should mark the letter formation stroke sequence. One entry per target letter is sufficient — uppercase and lowercase may share strokes. Accept variations like "✏️ **Verbal Cues for letter X:**" format.
+- 🔄 **Adaptation:** — Should mark the end-of-lesson adaptation prompt. If absent, mark as incorrect.
 
 ## Instructions
 

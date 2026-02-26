@@ -20,11 +20,11 @@ CRITERIA_REGISTRY: dict[str, dict] = {
     },
     "verbatim_check": {
         "type": "rule-based",
-        "description": "Checks if [Explanation] text matches Form B exactly",
+        "description": "Checks if 💡 Explanation text matches Form B exactly",
     },
     "verbal_cues_correct": {
         "type": "rule-based",
-        "description": "Checks if ##Sequence Verbal Cues match Form F for target letter",
+        "description": "Checks if ✏️ Verbal Cues match Form F for target letter",
     },
     "routing_accuracy": {
         "type": "rule-based",
@@ -64,7 +64,7 @@ CRITERIA_REGISTRY: dict[str, dict] = {
     },
     "verbatim_explanations": {
         "type": "llm-judge",
-        "description": "Checks if [Explanation] blocks quote Form B text word-for-word in each section",
+        "description": "Checks if 💡 Explanation blocks quote Form B text word-for-word in each section",
     },
     "lesson_structure": {
         "type": "llm-judge",
@@ -107,13 +107,13 @@ def evaluate_structure_complete(output: str) -> EvalResult:
     - Model, Explain & Engage, Guided Practice, Application, Wrap-Up
 
     Required Markers:
-    - [...]  - AI explains lesson parts
-    - #      - Teacher script (what teacher says)
-    - (...)  - Child response (expected responses)
-    - {...}  - Teacher does (teacher actions)
-    - +      - Gesture (phoneme gesture)
-    - ##     - Verbal cues (letter formation)
-    - *      - Modification (end-of-lesson prompt)
+    - 💡 **Explanation:**  - AI explains lesson parts
+    - 🗣️ **Teacher:**     - Teacher script (what teacher says)
+    - 💬 **Child Response:** - Child response (expected responses)
+    - 👉 **Teacher Does:** - Teacher does (teacher actions)
+    - 🤚 **Gesture:**      - Gesture (phoneme gesture)
+    - ✏️ **Verbal Cues:**  - Verbal cues (letter formation)
+    - 🔄 **Adaptation:**   - Modification (end-of-lesson prompt)
 
     Returns score as passed_checks / total_checks
     """
@@ -129,15 +129,15 @@ def evaluate_structure_complete(output: str) -> EvalResult:
         "wrap-up",
     ]
 
-    # Required markers with their patterns
+    # Required markers with their patterns (emoji + bold notation)
     required_markers = {
-        "explanation": r"\[.+?\]",      # [...]
-        "teacher_script": r"#[^#]",      # # but not ##
-        "child_response": r"\(.+?\)",    # (...)
-        "teacher_does": r"\{.+?\}",      # {...}
-        "gesture": r"\+",                # +
-        "verbal_cues": r"##",            # ##
-        "modification": r"\*",           # *
+        "explanation": r"\*\*Explanation:\*\*",        # 💡 **Explanation:**
+        "teacher_script": r"\*\*Teacher:\*\*",         # 🗣️ **Teacher:**
+        "child_response": r"\*\*Child Response:\*\*",  # 💬 **Child Response:**
+        "teacher_does": r"\*\*Teacher Does:\*\*",      # 👉 **Teacher Does:**
+        "gesture": r"\*\*Gesture:\*\*",                # 🤚 **Gesture:**
+        "verbal_cues": r"\*\*Verbal Cues",             # ✏️ **Verbal Cues:**
+        "modification": r"\*\*Adaptation:\*\*",        # 🔄 **Adaptation:**
     }
 
     output_lower = output.lower()
@@ -259,17 +259,22 @@ VERBAL_CUES = {
 
 def evaluate_verbatim_check(output: str) -> EvalResult:
     """
-    Check if [Explanation] text matches Form B exactly.
+    Check if 💡 Explanation text matches Form B exactly.
 
-    Extracts text within brackets [...] and compares against expected
+    Extracts text after **Explanation:** markers and compares against expected
     verbatim explanations from Form B.
 
     Returns score as matched_explanations / total_expected.
     """
-    # Extract all [Explanation] blocks from output
-    # Match content within brackets, handling multi-line
-    explanation_pattern = r'\[([^\]]+)\]'
+    # Extract all 💡 **Explanation:** blocks from output
+    # Match content after **Explanation:** until double newline or end
+    explanation_pattern = r'\*\*Explanation:\*\*\s*"?(.+?)"?\s*(?=\n\n|\Z)'
     found_explanations = re.findall(explanation_pattern, output, re.IGNORECASE | re.DOTALL)
+
+    # Fallback: also check for old bracket format [Explanation: ...]
+    if not found_explanations:
+        old_pattern = r'\[([^\]]+)\]'
+        found_explanations = re.findall(old_pattern, output, re.IGNORECASE | re.DOTALL)
 
     # Normalize text for comparison (lowercase, collapse whitespace)
     def normalize(text: str) -> str:
@@ -337,15 +342,15 @@ def evaluate_verbal_cues_correct(output: str, target_letter: str) -> EvalResult:
     expected_upper = VERBAL_CUES.get(letter_upper, "")
     expected_lower = VERBAL_CUES.get(letter_lower, "")
 
-    # Extract ##Sequence Verbal Cues section
-    # Look for content after ## that mentions verbal cues
-    cue_pattern = r'##\s*(?:Sequence\s+)?Verbal\s+Cues[:\s]*([^\n#]+(?:\n(?!#)[^\n]+)*)'
+    # Extract ✏️ **Verbal Cues:** section
+    # Look for content after **Verbal Cues...:** marker
+    cue_pattern = r'\*\*Verbal Cues[^*]*:\*\*\s*([^\n]+)'
     matches = re.findall(cue_pattern, output, re.IGNORECASE)
 
     if not matches:
-        # Try alternative pattern - just look for ## followed by cue text
-        alt_pattern = r'##\s*([^\n]+)'
-        matches = re.findall(alt_pattern, output)
+        # Fallback: try old ##Sequence Verbal Cues format
+        alt_pattern = r'##\s*(?:Sequence\s+)?Verbal\s+Cues[:\s]*([^\n#]+)'
+        matches = re.findall(alt_pattern, output, re.IGNORECASE)
 
     # Normalize for comparison
     def normalize(text: str) -> str:

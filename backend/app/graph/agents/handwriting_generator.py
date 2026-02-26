@@ -47,9 +47,9 @@ Generate a complete handwriting and spelling lesson following the structure in t
 
 ## CRITICAL RULES
 
-1. **Verbatim Explanations**: Each section's [Explanation] text MUST be copied EXACTLY from Form B in the reference materials. Do not paraphrase or modify these explanations.
+1. **Verbatim Explanations**: Each section's 💡 **Explanation:** text MUST be copied EXACTLY from Form B in the reference materials. Do not paraphrase or modify these explanations.
 
-2. **Verbal Cues**: The ##Sequence Verbal Cues for the target letter MUST match Form F exactly. Look up the correct verbal cues for letter "{letter}" in Form F.
+2. **Verbal Cues**: The ✏️ **Verbal Cues:** for the target letter MUST match Form F exactly. Look up the correct verbal cues for letter "{letter}" in Form F.
 
 3. **Activity Selection**: Based on student level "{student_level}":
    - struggling → Use LOW-LEVEL activities from Form D
@@ -60,13 +60,13 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - **Materials section** MUST list all Form D activities used in the lesson by name.
 
 4. **Notation Conventions** (MUST use these exactly):
-   - [Explanation] → AI explains the parts of the lesson (use brackets)
-   - #Teacher Script → What the teacher says (use single #)
-   - (Child Response) → Expected student responses (use parentheses)
-   - {{Teacher Does}} → Teacher actions (use curly braces)
-   - +Gesture → Phoneme gesture (use plus sign)
-   - ##Sequence Verbal Cues → Letter formation verbal cues (use ##)
-   - *Modification → End-of-lesson prompt (use asterisk)
+   - 💡 **Explanation:** → AI explains the parts of the lesson
+   - 🗣️ **Teacher:** → What the teacher says (teacher dialogue)
+   - 💬 **Child Response:** → Expected student responses
+   - 👉 **Teacher Does:** → Teacher actions and demonstrations
+   - 🤚 **Gesture:** → Phoneme gesture
+   - ✏️ **Verbal Cues:** → Letter formation verbal cues
+   - 🔄 **Adaptation:** → End-of-lesson modification prompt
 
 5. **Complete Structure**: Your output MUST include ALL of these sections:
    - A. Standards (from the Grade-Specific Standards Reference below)
@@ -83,40 +83,50 @@ Generate a complete handwriting and spelling lesson following the structure in t
      5. Wrap-Up
 
 6. **End with Modification Prompt**: Always end with:
-   *Adaptation: Let me know if you would like any modifications to the lesson
+   🔄 **Adaptation:** Let me know if you would like any modifications to the lesson
 
 ## INSTRUCTIONAL QUALITY RULES
 
 7. **Think-Aloud Before Application**: Before students do the Application task (Section 4) independently, you MUST include a full teacher think-aloud worked example using a specific word. Detailed modeling is not just demonstrating directions — it is detailing what is happening in the thinking process to complete a task. The teacher must narrate the internal reasoning step by step. Example pattern:
-   #Let me show you. My turn. The word is cab. So, I first stretch the sounds, c-a-b, the beginning sound is /c/. I know that the /c/ sound is written with the letter c. I am going to write c in the first block. So, we have /c/-/a/. The /a/ sound is written with the letter a, so I write the letter a, remember that's our vowel, in the middle box. So, we have /c/-/a/-/b/. That's our new sound at the end. I am going to write the letter b for the /b/ sound in the last box. Okay. Let's try.
+   🗣️ **Teacher:** Let me show you. My turn. The word is cab. So, I first stretch the sounds, c-a-b, the beginning sound is /c/. I know that the /c/ sound is written with the letter c. I am going to write c in the first block. So, we have /c/-/a/. The /a/ sound is written with the letter a, so I write the letter a, remember that's our vowel, in the middle box. So, we have /c/-/a/-/b/. That's our new sound at the end. I am going to write the letter b for the /b/ sound in the last box. Okay. Let's try.
 
 8. **Corrective Feedback**: Include at least 2 corrective feedback blocks in the lesson that anticipate specific, plausible student errors. Each block MUST: (a) name a specific likely error for the target letter/sound (e.g., confusing letter direction, confusing voiced/unvoiced pair, incorrect stroke sequence), (b) provide exact scripted teacher dialogue that explains the difference, and (c) engage students in noticing and fixing it. Example pattern:
    Corrective Feedback: Some children may confuse the direction of d, writing instead b or p.
-   #Teacher: You are close. My sound is /d/. Everyone look up here. Some of you wrote this. {{Teacher writes b}}. This was our new sound we learned yesterday. This sound is /b/. We are writing /d/. This is /d/ {{Teacher writes d on the board}}. What is different about these two letters? Everyone think. Partner 1 tell Partner 2. Stop. Partner 2 tell Partner 1. Stop. Jesslyn, what is different about the /b/ and /d/? (child should respond that bottom bubble is different).
-   #Exactly, both the /d/ and /b/ have a straight line down, but one has a bubble on the back, the left, and one has a bubble in the front, on the right. Everyone say /d/. Where's the bubble, on the front or back? Everyone (on the back). Everyone say /b/. Where's the bubble? Everyone. (on the front).
+   🗣️ **Teacher:** You are close. My sound is /d/. Everyone look up here. Some of you wrote this.
+   👉 **Teacher Does:** Teacher writes b.
+   🗣️ **Teacher:** This was our new sound we learned yesterday. This sound is /b/. We are writing /d/. This is /d/.
+   👉 **Teacher Does:** Teacher writes d on the board.
+   🗣️ **Teacher:** What is different about these two letters? Everyone think. Partner 1 tell Partner 2. Stop. Partner 2 tell Partner 1. Stop. Jesslyn, what is different about the /b/ and /d/?
+   💬 **Child Response:** Child should respond that bottom bubble is different.
+   🗣️ **Teacher:** Exactly, both the /d/ and /b/ have a straight line down, but one has a bubble on the back, the left, and one has a bubble in the front, on the right. Everyone say /d/. Where's the bubble, on the front or back? Everyone.
+   💬 **Child Response:** On the back.
+   🗣️ **Teacher:** Everyone say /b/. Where's the bubble? Everyone.
+   💬 **Child Response:** On the front.
 
 9. **Post-Response Explanations**: After the first and/or second elicited student response during an activity, the teacher MUST explain WHY the answer is correct — not just confirm it with "Yes!" or "Perfect!" or move on. The explanation should connect the student's answer to the underlying concept. Example pattern:
-   #Does /b/-et start with the /b/ or /p/ sound? (children should say /b/)
-   #Yes. I am pushing out air and using my vocal box /b/, so I am going to hold up my ball sound card for the /b/ sound.
+   🗣️ **Teacher:** Does /b/-et start with the /b/ or /p/ sound?
+   💬 **Child Response:** Children should say /b/.
+   🗣️ **Teacher:** Yes. I am pushing out air and using my vocal box /b/, so I am going to hold up my ball sound card for the /b/ sound.
 
 10. **Sound/Letter Comparison with Confusable Partner**: In Section 2 (Model, Explain & Engage), include a compare/contrast between the target sound/letter and its most commonly confused partner. You MUST: state what is similar, state what is different, include articulatory detail (mouth, lips, tongue, voicing), and have students produce both sounds. Example pattern:
-   #Remember that we said that the /{letter}/ sound is a lot like the [confusable] sound.
-   #Look at my mouth and listen to the sound of each one.
-   #Ready. /{letter}/
-   #Ready. [confusable]
-   #What's different? (Children should respond with the key difference)
-   #Right. For the /{letter}/ sound, [articulatory description]. For the [confusable] sound, [articulatory description].
-   #Everyone put your hand on your vocal box and make the /{letter}/ sound. Everyone.
-   #Now let's make the [confusable] sound. Everyone.
+   🗣️ **Teacher:** Remember that we said that the /{letter}/ sound is a lot like the [confusable] sound.
+   🗣️ **Teacher:** Look at my mouth and listen to the sound of each one.
+   🗣️ **Teacher:** Ready. /{letter}/
+   🗣️ **Teacher:** Ready. [confusable]
+   🗣️ **Teacher:** What's different?
+   💬 **Child Response:** Children should respond with the key difference.
+   🗣️ **Teacher:** Right. For the /{letter}/ sound, [articulatory description]. For the [confusable] sound, [articulatory description].
+   🗣️ **Teacher:** Everyone put your hand on your vocal box and make the /{letter}/ sound. Everyone.
+   🗣️ **Teacher:** Now let's make the [confusable] sound. Everyone.
 
 11. **Verbatim Teacher Script — Not Stage Directions**: Write the EXACT words the teacher will say. Do NOT write stage directions that require teacher improvisation. Every section must have verbatim read-aloud teacher dialogue.
-   - BAD: "{{Teacher demonstrates writing and uses sequence verbal cues}}"
-   - GOOD: "#Watch me. I'm going to write uppercase {letter}. [verbal cues from Form F]."
-   - BAD: "{{Teacher continues this process with remaining words}}"
+   - BAD: "👉 **Teacher Does:** Teacher demonstrates writing and uses sequence verbal cues"
+   - GOOD: "🗣️ **Teacher:** Watch me. I'm going to write uppercase {letter}. [verbal cues from Form F]."
+   - BAD: "👉 **Teacher Does:** Teacher continues this process with remaining words"
    - GOOD: Script out at least 2-3 full cycles with specific words.
    - Include pacing cues in EVERY section: "Ready... Go", "My turn... Your turn", "Say it with me", "Get Ready Go."
    - Include specific example words (at least 2-3) in Sound Hunt and Application activities — do not leave word lists to the teacher.
-   - Script specific child responses with (parentheses), not generic "(Children respond)".
+   - Script specific child responses with 💬 **Child Response:**, not generic "💬 **Child Response:** Children respond".
 
 12. **Prior Practice Awareness**: Do not use sounds that have not been directly taught at the given grade level. Do not use words that contain sounds that have not been directly taught. When selecting example words for activities, choose words whose sounds are appropriate for the grade level and likely within students' phonological repertoire.
 

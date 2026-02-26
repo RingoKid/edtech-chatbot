@@ -94,34 +94,34 @@ C. Materials
 
 D. Scripted Lesson Plan:
    1. Review & Connect
-      [Explanation] + #Teacher Script
+      💡 Explanation + 🗣️ Teacher
 
    2. Model, Explain, Engage
-      [Explanation] + #Teacher Script + ##Sequence Verbal Cues
+      💡 Explanation + 🗣️ Teacher + ✏️ Verbal Cues
 
    3. Guided Practice
-      [Explanation] + #Teacher Script
+      💡 Explanation + 🗣️ Teacher
 
    4. Application
-      [Explanation] + #Teacher Script
+      💡 Explanation + 🗣️ Teacher
 
    5. Wrap-Up
-      [Explanation] + #Teacher Script
+      💡 Explanation + 🗣️ Teacher
 
-*Modification prompt at end
+🔄 Adaptation prompt at end
 ```
 
 ### Notation Conventions
 
 | Notation | Meaning |
 |----------|---------|
-| `[Explanation]` | Verbatim text from Form B (must match exactly) |
-| `#Teacher Script` | What the teacher says |
-| `(Child Response)` | Expected student responses |
-| `{Teacher Does}` | Teacher actions |
-| `+Gesture` | Phoneme gesture |
-| `##Sequence Verbal Cues` | From Form F for target letter |
-| `*Modification` | Prompt for modifications |
+| `💡 **Explanation:**` | Verbatim text from Form B (must match exactly) |
+| `🗣️ **Teacher:**` | What the teacher says |
+| `💬 **Child Response:**` | Expected student responses |
+| `👉 **Teacher Does:**` | Teacher actions |
+| `🤚 **Gesture:**` | Phoneme gesture |
+| `✏️ **Verbal Cues:**` | From Form F for target letter |
+| `🔄 **Adaptation:**` | Prompt for modifications |
 
 ---
 

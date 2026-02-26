@@ -16,11 +16,11 @@ Check whether each of the 5 lesson sections contains an [Explanation] block that
 
 For the lesson below:
 
-1. **Find each [Explanation] block** — look for text within brackets `[...]` at the start of each section (Review & Connect, Model Explain & Engage, Guided Practice, Application, Wrap-Up).
+1. **Find each 💡 Explanation block** — look for text after the `💡 **Explanation:**` marker at the start of each section (Review & Connect, Model Explain & Engage, Guided Practice, Application, Wrap-Up).
 2. **Compare** against the expected Form B text for that section.
 3. **Mark as verbatim** if the core instructional content matches the Form B text. Accept: minor abbreviations (e.g., "The purpose is to..." instead of "The purpose of this part of the lesson is to..."), spacing variations (e.g., "sound(s)" vs "sound (s)"), and minor wording adjustments that preserve the full meaning. Mark as NOT verbatim only if the meaning changes, key instructional terms are replaced, or significant content is added, removed, or reordered.
 4. **If not verbatim**, describe specifically what meaning was lost or changed: Were key instructional terms replaced? Was significant content added, removed, or reordered?
-5. **If missing**, note that no [Explanation] block was found for that section.
+5. **If missing**, note that no 💡 **Explanation:** block was found for that section.
 
 ## Lesson to Evaluate
 
