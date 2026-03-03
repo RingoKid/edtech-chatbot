@@ -50,7 +50,6 @@ const Navigation = () => {
   };
 
   const navItems = [
-    { name: "Homepage", href: "/" },
     {
       name: "Best Practices Modeled",
       href: "/best-practices",
@@ -60,7 +59,8 @@ const Navigation = () => {
         { name: "Transcription", href: "/handwriting-spelling" },
       ],
     },
-    { name: "AI Teaching Assistant", href: "/ai-teaching-assistant" },
+    { name: "Science of Learning", href: "/science-of-learning" },
+    { name: "L4C LaunchPad", href: "/ai-teaching-assistant" },
   ];
 
   const isHomePage = location.pathname === "/";
@@ -76,15 +76,23 @@ const Navigation = () => {
           : "bg-transparent"
       )}
     >
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className={cn(
+                "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-lg",
+                scrolled || !isHomePage
+                  ? "bg-gradient-to-br from-primary-500 to-primary-700"
+                  : "bg-white/20"
+              )}>
                 <BookOpen className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
-              <span className="text-base sm:text-lg lg:text-xl font-bold font-display gradient-text leading-tight">
+              <span className={cn(
+                "text-base sm:text-lg lg:text-xl font-bold font-display leading-tight",
+                scrolled || !isHomePage ? "gradient-text" : "text-white"
+              )}>
                 <span className="hidden sm:inline">Language For Composing</span>
                 <span className="sm:hidden">LFC</span>
               </span>
@@ -92,7 +100,7 @@ const Navigation = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-6">
             {navItems.map((item, index) => (
               <motion.div
                 key={item.name}
@@ -106,7 +114,7 @@ const Navigation = () => {
                     <Link
                       to={item.href}
                       className={cn(
-                        "relative px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg whitespace-nowrap flex items-center gap-1",
+                        "relative px-3 lg:px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg whitespace-nowrap flex items-center gap-1",
                         location.pathname === item.href ||
                           item.dropdown.some(
                             (sub) => location.pathname === sub.href
@@ -168,7 +176,7 @@ const Navigation = () => {
                   <Link
                     to={item.href}
                     className={cn(
-                      "relative px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg whitespace-nowrap",
+                      "relative px-3 lg:px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg whitespace-nowrap",
                       location.pathname === item.href
                         ? "bg-primary-100 text-primary-700"
                         : scrolled || !isHomePage
@@ -194,7 +202,7 @@ const Navigation = () => {
                     to="/ai-teaching-assistant"
                     className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-secondary-600 shadow-lg hover:shadow-xl transition-all"
                   >
-                    Open workspace
+                    Open L4C LaunchPad
                   </Link>
                   <div className="relative">
                     <button
@@ -240,7 +248,7 @@ const Navigation = () => {
                               className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-primary-700 bg-primary-50"
                             >
                               <UserRound className="w-4 h-4" />
-                              View workspace
+                              L4C LaunchPad
                             </Link>
                             <button
                               type="button"
@@ -370,7 +378,7 @@ const Navigation = () => {
                         className="block w-full rounded-xl bg-gradient-to-r from-primary-600 to-secondary-600 px-4 py-3 text-center font-semibold text-white shadow-lg"
                         onClick={() => setIsOpen(false)}
                       >
-                        Open workspace
+                        Open L4C LaunchPad
                       </Link>
                       <button
                         type="button"

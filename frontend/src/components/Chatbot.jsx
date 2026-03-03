@@ -11,7 +11,7 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
       id: 1,
       type: "bot",
       content:
-        "Hello! I'm your AI Teaching Assistant. I'm here to help with early childhood education questions, lesson planning, and classroom strategies. How can I assist you today?",
+        "Hello! I'm the L4C LaunchPad. I'm here to help with early childhood education questions, lesson planning, and classroom strategies. How can I assist you today?",
       timestamp: new Date(),
     },
   ]);
@@ -402,7 +402,7 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
         id: 1,
         type: "bot",
         content:
-          "Hello! I'm your AI Teaching Assistant. I'm here to help with early childhood education questions, lesson planning, and classroom strategies. How can I assist you today?",
+          "Hello! I'm the L4C LaunchPad. I'm here to help with early childhood education questions, lesson planning, and classroom strategies. How can I assist you today?",
         timestamp: new Date(),
       },
     ]);
@@ -429,7 +429,7 @@ const Chatbot = ({ onNewMessage, hideHeader = false }) => {
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold">AI Teaching Assistant</h3>
+              <h3 className="font-semibold">L4C LaunchPad</h3>
               <div className="text-xs text-white/80 flex items-center">
                 <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                 Online

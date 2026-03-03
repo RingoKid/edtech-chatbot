@@ -7,6 +7,7 @@ import HandwritingSpelling from "./pages/HandwritingSpelling";
 import VocabularySyntax from "./pages/VocabularySyntax";
 import IdeaGeneration from "./pages/IdeaGeneration";
 import AITeachingAssistant from "./pages/AITeachingAssistant";
+import ScienceOfLearning from "./pages/ScienceOfLearning";
 import VideoPlayer from "./pages/VideoPlayer";
 import AuthPortal from "./pages/AuthPortal";
 import RequireAuth from "./components/RequireAuth";
@@ -86,6 +87,9 @@ const AppRoutes = () => {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="best-practices" element={<BestPractices />} />
+
+        {/* Science of Learning (no auth required) */}
+        <Route path="science-of-learning" element={<ScienceOfLearning />} />
 
         {/* Category listing pages */}
         <Route path="handwriting-spelling" element={<HandwritingSpelling />} />

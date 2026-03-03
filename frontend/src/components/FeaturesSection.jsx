@@ -14,7 +14,8 @@ const FeaturesSection = () => {
       subtitle: "Connect & Share",
       description: "Teachers, families, and researchers come together to share questions, insights, and classroom experiences. This space supports responsive instruction by helping educators learn from one another and from research on how children use language in real writing contexts.",
       color: "from-green-500 to-emerald-500",
-      bgColor: "from-green-50 to-emerald-50"
+      bgColor: "from-green-50 to-emerald-50",
+      borderColor: "border-t-green-500"
     },
     {
       icon: Video,
@@ -22,7 +23,8 @@ const FeaturesSection = () => {
       subtitle: "Learn & Grow",
       description: "Short videos for teachers to deepen their understanding of the language skills and processes involved in early writing development.",
       color: "from-blue-500 to-cyan-500",
-      bgColor: "from-blue-50 to-cyan-50"
+      bgColor: "from-blue-50 to-cyan-50",
+      borderColor: "border-t-blue-500"
     },
     {
       icon: BookOpen,
@@ -30,7 +32,8 @@ const FeaturesSection = () => {
       subtitle: "Explore & Discover",
       description: "A curated collection of trusted resources to help teachers explore research and practical strategies for supporting language, writing, and learning in the classroom.",
       color: "from-purple-500 to-pink-500",
-      bgColor: "from-purple-50 to-pink-50"
+      bgColor: "from-purple-50 to-pink-50",
+      borderColor: "border-t-purple-500"
     }
   ]
 
@@ -59,6 +62,10 @@ const FeaturesSection = () => {
 
   return (
     <section className="section-padding bg-gradient-to-br from-primary-50 via-white to-secondary-50 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-1/2 left-0 w-72 h-72 bg-primary-100 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl opacity-50" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary-50 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl opacity-50" />
+
       <div className="container relative z-10" ref={ref}>
         {/* Header */}
         <motion.div
@@ -67,6 +74,11 @@ const FeaturesSection = () => {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
+          <motion.div variants={itemVariants} className="mb-4">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-secondary-100 text-secondary-700 text-sm font-semibold">
+              Coming Soon
+            </span>
+          </motion.div>
           <motion.h2
             variants={itemVariants}
             className="text-4xl sm:text-5xl font-bold font-display mb-6"
@@ -89,17 +101,24 @@ const FeaturesSection = () => {
           {hubs.map((hub, index) => (
             <motion.div
               key={index}
-              className={`p-8 rounded-3xl bg-gradient-to-br ${hub.bgColor} border border-primary-200 shadow-xl hover:shadow-2xl transition-all duration-300`}
+              className={`relative p-8 rounded-3xl bg-white border border-gray-100 border-t-4 ${hub.borderColor} shadow-lg hover:shadow-2xl transition-all duration-300`}
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
               transition={{ duration: 0.8, delay: index * 0.2 }}
-              whileHover={{ y: -10 }}
+              whileHover={{ y: -8 }}
             >
-              <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${hub.color} flex items-center justify-center text-white shadow-lg mb-6`}>
-                <hub.icon className="w-10 h-10" />
+              {/* Coming Soon badge */}
+              <div className="absolute top-4 right-4">
+                <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-medium">
+                  Coming Soon
+                </span>
               </div>
 
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${hub.color} flex items-center justify-center text-white shadow-lg mb-6`}>
+                <hub.icon className="w-8 h-8" />
+              </div>
+
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {hub.title}
               </h3>
 

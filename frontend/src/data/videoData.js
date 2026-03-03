@@ -35,8 +35,10 @@ export const transcriptionVideos = [
     id: 'sequenced-segmentation',
     title: 'Sequenced Segmentation',
     description: 'Have children pull apart the individual sounds in spoken words in a systematic sequence from easier to more complex forms.',
-    noVideoYet: true,
-    videos: []
+    videos: [
+      { url: encodeVideoUrl('Sequenced Segmentation.mp4'), label: 'Demonstration 1' },
+      { url: encodeVideoUrl('Sequenced Segmentation 2.mp4'), label: 'Demonstration 2' }
+    ]
   },
   {
     id: 'correct-letter-sequence-strokes',

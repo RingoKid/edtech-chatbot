@@ -33,10 +33,13 @@ describe('videoData — Transcription practices', () => {
     expect(transcriptionVideos[3].id).toBe('sequenced-segmentation')
   })
 
-  it('Sequenced Segmentation has noVideoYet: true and empty videos', () => {
+  it('Sequenced Segmentation has 2 videos with valid S3 URLs', () => {
     const ss = transcriptionVideos[3]
-    expect(ss.noVideoYet).toBe(true)
-    expect(ss.videos).toEqual([])
+    expect(ss.noVideoYet).toBeUndefined()
+    expect(ss.videos).toHaveLength(2)
+    ss.videos.forEach(v => {
+      expect(v.url).toMatch(/^https:\/\/l4c-videos\.s3\.amazonaws\.com\/videos\//)
+    })
   })
 
   it('all Transcription descriptions match doc', () => {

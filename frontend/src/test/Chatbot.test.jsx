@@ -20,7 +20,7 @@ vi.mock('../api', () => ({
 describe('Chatbot Component', () => {
   it('renders initial welcome message', () => {
     render(<Chatbot />)
-    expect(screen.getByText(/Hello! I'm your AI Teaching Assistant/)).toBeInTheDocument()
+    expect(screen.getByText(/Hello! I'm the L4C LaunchPad/)).toBeInTheDocument()
   })
 
   it('allows user to type and send messages', async () => {
@@ -63,12 +63,12 @@ describe('Chatbot Component', () => {
     const sendButton = screen.getByRole('button', { name: /send message/i })
     
     // Initially only welcome message
-    expect(screen.getAllByText(/Hello! I'm your AI Teaching Assistant/)).toHaveLength(1)
+    expect(screen.getAllByText(/Hello! I'm the L4C LaunchPad/)).toHaveLength(1)
     
     await user.click(sendButton)
     
     // Should still only have welcome message
-    expect(screen.getAllByText(/Hello! I'm your AI Teaching Assistant/)).toHaveLength(1)
+    expect(screen.getAllByText(/Hello! I'm the L4C LaunchPad/)).toHaveLength(1)
   })
 
   it('handles Enter key to send message', async () => {

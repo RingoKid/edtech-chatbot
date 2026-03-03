@@ -852,7 +852,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
               <Bot className="w-5 h-5" />
             </div>
-            <h3 className="font-semibold">AI Teaching Assistant</h3>
+            <h3 className="font-semibold">L4C LaunchPad</h3>
           </div>
           <button
             onClick={clearChat}
