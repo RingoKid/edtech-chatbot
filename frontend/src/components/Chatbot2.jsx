@@ -840,7 +840,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     )}>
       {/* Header */}
       {!hideHeader && (
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-white">
           <div className="flex items-center">
             <button
               onClick={toggleSidebar}
@@ -888,7 +888,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             className="absolute top-0 left-0 h-full w-72 bg-white shadow-xl z-30 flex flex-col"
           >
             {/* Sidebar Header */}
-            <div className="p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-between">
+            <div className="p-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-white flex items-center justify-between">
               <h3 className="font-semibold">Conversations</h3>
               <button
                 onClick={() => setSidebarOpen(false)}
@@ -901,7 +901,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             {/* New Chat Button */}
             <button
               onClick={clearChat}
-              className="m-3 p-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
+              className="m-3 p-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
               New Conversation
@@ -911,7 +911,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             <div className="flex-1 overflow-y-auto">
               {loadingHistory ? (
                 <div className="flex items-center justify-center p-4">
-                  <Loader className="w-5 h-5 animate-spin text-purple-500" />
+                  <Loader className="w-5 h-5 animate-spin text-primary-500" />
                 </div>
               ) : conversations.length === 0 ? (
                 <div className="p-4 text-center text-gray-500 text-sm">
@@ -926,12 +926,12 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
                       className={cn(
                         "w-full p-3 rounded-lg text-left transition-colors",
                         conv.thread_id === threadId
-                          ? "bg-purple-100 border-l-4 border-purple-500"
+                          ? "bg-primary-100 border-l-4 border-primary-500"
                           : "hover:bg-gray-100"
                       )}
                     >
                       <div className="flex items-start gap-2">
-                        <MessageSquare className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
+                        <MessageSquare className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                         <div className="min-w-0 flex-1">
                           <div className="font-medium text-sm text-gray-900 truncate">
                             {conv.title || 'New Conversation'}
@@ -980,8 +980,8 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
                 <div className={cn(
                   "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm",
                   message.type === 'user'
-                    ? 'bg-purple-500 ml-2'
-                    : 'bg-gradient-to-br from-pink-500 to-purple-500 mr-2'
+                    ? 'bg-primary-500 ml-2'
+                    : 'bg-gradient-to-br from-secondary-500 to-primary-600 mr-2'
                 )}>
                   {message.type === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                 </div>
@@ -989,7 +989,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
                 <div className={cn(
                   "rounded-lg px-4 py-2 shadow-sm",
                   message.type === 'user'
-                    ? 'bg-purple-500 text-white'
+                    ? 'bg-primary-500 text-white'
                     : 'bg-gray-100 text-gray-900'
                 )}>
                   {/* Show image if present */}
@@ -1038,10 +1038,10 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             className="flex justify-end"
           >
             <div className="flex flex-row-reverse max-w-[80%]">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm bg-purple-500 ml-2">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm bg-primary-500 ml-2">
                 <Mic className="w-4 h-4 animate-pulse" />
               </div>
-              <div className="rounded-lg px-4 py-2 shadow-sm bg-purple-400 text-white">
+              <div className="rounded-lg px-4 py-2 shadow-sm bg-primary-400 text-white">
                 <p className="text-sm leading-relaxed italic">{liveTranscript}</p>
                 <div className="text-xs mt-1 opacity-70 text-white/70">
                   Listening...
@@ -1059,7 +1059,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             className="flex justify-start"
           >
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-white mr-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary-500 to-primary-600 flex items-center justify-center text-white mr-2">
                 <Bot className="w-4 h-4" />
               </div>
               <div className="bg-gray-100 rounded-lg px-4 py-2 flex items-center space-x-1">
@@ -1080,7 +1080,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={forceScrollToBottom}
-            className="absolute bottom-4 right-4 w-10 h-10 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 transition-colors flex items-center justify-center z-10"
+            className="absolute bottom-4 right-4 w-10 h-10 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-colors flex items-center justify-center z-10"
             title="Scroll to bottom"
           >
             <ChevronDown className="w-5 h-5" />
@@ -1165,7 +1165,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask about lesson planning, student assessment, classroom management..."
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               rows="2"
               disabled={isTyping || isRecording}
             />
@@ -1180,7 +1180,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
                 "p-2 rounded-lg transition-colors",
                 isTyping || isRecording
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-purple-500 text-white hover:bg-purple-600"
+                  : "bg-primary-500 text-white hover:bg-primary-600"
               )}
               title="Add attachment"
             >
@@ -1199,7 +1199,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
                   onClick={handleCameraClick}
                   className="flex items-center space-x-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
-                  <Camera className="w-5 h-5 text-purple-500" />
+                  <Camera className="w-5 h-5 text-primary-500" />
                   <span className="text-sm text-gray-700 whitespace-nowrap">Take Photo</span>
                 </button>
                 <div className="border-t border-gray-100" />
@@ -1207,7 +1207,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
                   onClick={handlePhotoVideoClick}
                   className="flex items-center space-x-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
-                  <Image className="w-5 h-5 text-purple-500" />
+                  <Image className="w-5 h-5 text-primary-500" />
                   <span className="text-sm text-gray-700 whitespace-nowrap">Photo/Video</span>
                 </button>
               </motion.div>
@@ -1222,7 +1222,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
               "p-2 rounded-lg transition-all duration-200",
               isRecording
                 ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
-                : "bg-purple-500 text-white hover:bg-purple-600",
+                : "bg-primary-500 text-white hover:bg-primary-600",
               isTyping && "opacity-50 cursor-not-allowed"
             )}
             title={isRecording ? "Stop recording" : "Start voice recording"}
@@ -1237,7 +1237,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             className={cn(
               "p-2 rounded-lg transition-colors",
               (inputValue.trim() || selectedImage || selectedVideo) && !isTyping && !isRecording
-                ? "bg-purple-500 text-white hover:bg-purple-600"
+                ? "bg-primary-500 text-white hover:bg-primary-600"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             )}
           >
