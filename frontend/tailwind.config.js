@@ -89,6 +89,7 @@ export default {
       fontFamily: {
         'sans': ['Inter', 'system-ui', 'sans-serif'],
         'display': ['Poppins', 'system-ui', 'sans-serif'],
+        'handwritten': ['Patrick Hand', 'cursive'],
       },
       animation: {
         'fade-in-up': 'fadeInUp 0.8s ease-out',

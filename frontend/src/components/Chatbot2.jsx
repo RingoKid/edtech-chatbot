@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Loader, RotateCcw, ChevronDown, Mic, MicOff, Image, Camera, Plus, X, Menu, MessageSquare } from 'lucide-react'
+import { Send, User, Loader, RotateCcw, ChevronDown, Mic, MicOff, Image, Camera, Plus, X, Menu, MessageSquare } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat2, handwriting } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
@@ -8,6 +8,9 @@ import useAudioRecorder from '../hooks/useAudioRecorder'
 import TranscriptionWebSocket from '../api/transcriptionWebSocket'
 import CameraModal from './CameraModal'
 
+
+const BG_LETTERS = 'abcdefghjkmnpqrstuvwxyz'
+const BG_ROTATIONS = Array.from({ length: 600 }, (_, i) => ((i * 17 + 5) % 30) - 15)
 
 const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [messages, setMessages] = useState([])
@@ -834,35 +837,55 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   }
 
   return (
-    <div className={cn(
-      "flex flex-col h-full bg-white relative",
-      hideHeader ? "border-0 shadow-none rounded-none" : "border border-gray-200 rounded-xl shadow-lg overflow-hidden"
-    )}>
-      {/* Header */}
-      {!hideHeader && (
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-white">
-          <div className="flex items-center">
-            <button
-              onClick={toggleSidebar}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors mr-2"
-              title="View conversations"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
-              <Bot className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold">L4C LaunchPad</h3>
-          </div>
-          <button
-            onClick={clearChat}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            title="New conversation"
+    <div className="flex flex-col h-full bg-white relative overflow-hidden">
+      {/* Background — dense tiling letter pattern with rectangular center cutout */}
+      <div
+        className="absolute inset-0 pointer-events-none select-none font-handwritten flex flex-wrap content-start overflow-hidden"
+        aria-hidden="true"
+        style={{
+          maskImage: [
+            'linear-gradient(to right, black 0%, black 33%, transparent 40%, transparent 60%, black 67%, black 100%)',
+            'linear-gradient(to bottom, black 0%, black 3%, transparent 7%, transparent 93%, black 97%, black 100%)',
+          ].join(', '),
+          WebkitMaskImage: [
+            'linear-gradient(to right, black 0%, black 33%, transparent 40%, transparent 60%, black 67%, black 100%)',
+            'linear-gradient(to bottom, black 0%, black 3%, transparent 7%, transparent 93%, black 97%, black 100%)',
+          ].join(', '),
+          maskComposite: 'add',
+          WebkitMaskComposite: 'source-over',
+        }}
+      >
+        {Array.from({ length: 600 }).map((_, i) => (
+          <span
+            key={i}
+            className="w-12 h-12 flex items-center justify-center text-lg text-gray-400/[0.18]"
+            style={{ transform: `rotate(${BG_ROTATIONS[i]}deg)` }}
           >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+            {BG_LETTERS[i % BG_LETTERS.length]}
+          </span>
+        ))}
+      </div>
+
+{/* z-[1] spacer — mask on the letters container handles the fade */}
+
+      {/* Minimal top bar */}
+      <div className="flex items-center justify-between px-4 h-12 border-b border-gray-100 bg-white relative z-10">
+        <button
+          onClick={toggleSidebar}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          title="View conversations"
+        >
+          <Menu className="w-5 h-5 text-gray-500" />
+        </button>
+        <span className="text-sm font-medium text-gray-700">L4C LaunchPad</span>
+        <button
+          onClick={clearChat}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          title="New conversation"
+        >
+          <RotateCcw className="w-4 h-4 text-gray-500" />
+        </button>
+      </div>
 
       {/* Sidebar Overlay */}
       <AnimatePresence>
@@ -871,7 +894,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/30 z-20"
+            className="absolute inset-0 bg-black/20 z-20"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -885,67 +908,60 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="absolute top-0 left-0 h-full w-72 bg-white shadow-xl z-30 flex flex-col"
+            className="absolute top-0 left-0 h-full w-72 bg-gray-50 shadow-xl z-30 flex flex-col border-r border-gray-200"
           >
             {/* Sidebar Header */}
-            <div className="p-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-white flex items-center justify-between">
-              <h3 className="font-semibold">Conversations</h3>
+            <div className="flex items-center h-12 px-3 border-b border-gray-200 bg-white">
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-2"
+                title="Close conversations"
               >
-                <X className="w-5 h-5" />
+                <Menu className="w-5 h-5 text-gray-500" />
               </button>
+              <span className="text-sm font-medium text-gray-700">Conversations</span>
             </div>
 
             {/* New Chat Button */}
             <button
               onClick={clearChat}
-              className="m-3 p-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
+              className="mx-3 mt-3 mb-1 p-2.5 border border-gray-200 text-gray-700 rounded-lg hover:bg-white transition-colors flex items-center gap-2 text-sm"
             >
               <Plus className="w-4 h-4" />
-              New Conversation
+              New conversation
             </button>
 
             {/* Conversation List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto px-2 py-2">
               {loadingHistory ? (
                 <div className="flex items-center justify-center p-4">
-                  <Loader className="w-5 h-5 animate-spin text-primary-500" />
+                  <Loader className="w-5 h-5 animate-spin text-gray-400" />
                 </div>
               ) : conversations.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
+                <div className="p-4 text-center text-gray-400 text-sm">
                   No conversations yet
                 </div>
               ) : (
-                <div className="space-y-1 p-2">
+                <div className="space-y-0.5">
                   {conversations.map((conv) => (
                     <button
                       key={conv.thread_id}
                       onClick={() => loadConversation(conv.thread_id)}
                       className={cn(
-                        "w-full p-3 rounded-lg text-left transition-colors",
+                        "w-full px-3 py-2.5 rounded-lg text-left transition-colors text-sm",
                         conv.thread_id === threadId
-                          ? "bg-primary-100 border-l-4 border-primary-500"
-                          : "hover:bg-gray-100"
+                          ? "bg-white shadow-sm text-gray-900"
+                          : "text-gray-600 hover:bg-white/60"
                       )}
                     >
-                      <div className="flex items-start gap-2">
-                        <MessageSquare className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm text-gray-900 truncate">
-                            {conv.title || 'New Conversation'}
-                          </div>
-                          {conv.last_message_preview && (
-                            <div className="text-xs text-gray-500 truncate mt-0.5">
-                              {conv.last_message_preview}
-                            </div>
-                          )}
-                          <div className="text-xs text-gray-400 mt-1">
-                            {new Date(conv.updated_at).toLocaleDateString()}
-                          </div>
-                        </div>
+                      <div className="truncate font-medium">
+                        {conv.title || 'New Conversation'}
                       </div>
+                      {conv.last_message_preview && (
+                        <div className="text-xs text-gray-400 truncate mt-0.5">
+                          {conv.last_message_preview}
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -955,123 +971,96 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
         )}
       </AnimatePresence>
 
-      {/* Messages */}
+      {/* Messages Area */}
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 space-y-4 relative min-h-0"
+        className="flex-1 overflow-y-auto relative min-h-0 z-[2]"
       >
-        <AnimatePresence>
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className={cn(
-                "flex",
-                message.type === 'user' ? 'justify-end' : 'justify-start'
-              )}
-            >
-              <div className={cn(
-                "flex max-w-[80%]",
-                message.type === 'user' ? 'flex-row-reverse' : 'flex-row'
-              )}>
-                <div className={cn(
-                  "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm",
-                  message.type === 'user'
-                    ? 'bg-primary-500 ml-2'
-                    : 'bg-gradient-to-br from-secondary-500 to-primary-600 mr-2'
-                )}>
-                  {message.type === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                </div>
-
-                <div className={cn(
-                  "rounded-lg px-4 py-2 shadow-sm",
-                  message.type === 'user'
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 text-gray-900'
-                )}>
-                  {/* Show image if present */}
-                  {message.image && (
-                    <img
-                      src={message.image}
-                      alt="Uploaded"
-                      className="max-w-full rounded-lg mb-2 max-h-48 object-contain"
-                    />
-                  )}
-
-                  {/* Show video if present */}
-                  {message.video && (
-                    <video
-                      src={message.video}
-                      controls
-                      className="max-w-full rounded-lg mb-2 max-h-48"
-                    />
-                  )}
-
-                  {message.type === 'user' ? (
-                    <p className="text-sm leading-relaxed">{message.content}</p>
-                  ) : (
-                    <MarkdownRenderer
-                      content={message.content}
-                      className="text-sm leading-relaxed"
-                    />
-                  )}
-                  <div className={cn(
-                    "text-xs mt-1 opacity-70",
-                    message.type === 'user' ? 'text-white/70' : 'text-gray-500'
-                  )}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          <AnimatePresence>
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                {message.type === 'bot' ? (
+                  /* Bot message — white card with border */
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 flex items-center justify-center mt-0.5">
+                      <span className="text-[10px] font-bold text-white leading-none">L4C</span>
+                    </div>
+                    <div className="min-w-0 flex-1 bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
+                      {message.image && (
+                        <img src={message.image} alt="Uploaded" className="max-w-sm rounded-lg mb-3 max-h-64 object-contain" />
+                      )}
+                      {message.video && (
+                        <video src={message.video} controls className="max-w-sm rounded-lg mb-3 max-h-64" />
+                      )}
+                      <MarkdownRenderer
+                        content={message.content}
+                        className="text-[15px] leading-relaxed text-gray-800"
+                      />
+                    </div>
                   </div>
+                ) : (
+                  /* User message — subtle bubble, right-aligned */
+                  <div className="flex justify-end">
+                    <div className="max-w-[80%] bg-gray-100 rounded-2xl px-4 py-3">
+                      {message.image && (
+                        <img src={message.image} alt="Uploaded" className="max-w-full rounded-lg mb-2 max-h-48 object-contain" />
+                      )}
+                      {message.video && (
+                        <video src={message.video} controls className="max-w-full rounded-lg mb-2 max-h-48" />
+                      )}
+                      <p className="text-[15px] leading-relaxed text-gray-900">{message.content}</p>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* Live transcript display */}
+          {liveTranscript && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-end"
+            >
+              <div className="max-w-[80%] bg-primary-50 border border-primary-100 rounded-2xl px-4 py-3">
+                <p className="text-sm leading-relaxed text-primary-700 italic">{liveTranscript}</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <Mic className="w-3 h-3 text-primary-400 animate-pulse" />
+                  <span className="text-xs text-primary-400">Listening...</span>
                 </div>
               </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
+          )}
 
-        {/* Live transcript display */}
-        {liveTranscript && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-end"
-          >
-            <div className="flex flex-row-reverse max-w-[80%]">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm bg-primary-500 ml-2">
-                <Mic className="w-4 h-4 animate-pulse" />
+          {/* Typing indicator */}
+          {isTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex gap-3"
+            >
+              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary-600 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-white leading-none">L4C</span>
               </div>
-              <div className="rounded-lg px-4 py-2 shadow-sm bg-primary-400 text-white">
-                <p className="text-sm leading-relaxed italic">{liveTranscript}</p>
-                <div className="text-xs mt-1 opacity-70 text-white/70">
-                  Listening...
-                </div>
+              <div className="flex items-center gap-1 pt-1">
+                <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* Typing indicator */}
-        {isTyping && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-start"
-          >
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary-500 to-primary-600 flex items-center justify-center text-white mr-2">
-                <Bot className="w-4 h-4" />
-              </div>
-              <div className="bg-gray-100 rounded-lg px-4 py-2 flex items-center space-x-1">
-                <Loader className="w-4 h-4 animate-spin text-gray-500" />
-                <span className="text-sm text-gray-500">Thinking...</span>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Scroll anchor */}
-        <div ref={messagesEndRef} />
+          {/* Scroll anchor */}
+          <div ref={messagesEndRef} />
+        </div>
 
         {/* Scroll to bottom button */}
         {isUserScrolling && (
@@ -1080,169 +1069,167 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={forceScrollToBottom}
-            className="absolute bottom-4 right-4 w-10 h-10 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-colors flex items-center justify-center z-10"
+            className="sticky bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-white border border-gray-200 text-gray-500 rounded-full shadow-md hover:bg-gray-50 transition-colors flex items-center justify-center z-10"
             title="Scroll to bottom"
           >
-            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-4 h-4" />
           </motion.button>
         )}
       </div>
 
-
-      {/* Input */}
-      <div className="p-4 border-t bg-gray-50">
-        {/* Error messages */}
-        {(transcriptionError || recorderError) && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg"
-          >
-            <p className="text-sm text-red-600 font-medium">
+      {/* Input Area */}
+      <div className="bg-white px-4 pb-4 pt-2 relative z-10">
+        <div className="max-w-3xl mx-auto">
+          {/* Error messages */}
+          {(transcriptionError || recorderError) && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-2 p-2.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600"
+            >
               {transcriptionError || recorderError}
-            </p>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* Image preview */}
-        {imagePreview && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-3 relative inline-block"
-          >
-            <img
-              src={imagePreview}
-              alt="Selected"
-              className="max-h-32 rounded-lg border border-gray-200"
-            />
-            <button
-              onClick={handleRemoveImage}
-              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-              title="Remove image"
+          {/* Image preview */}
+          {imagePreview && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-2 relative inline-block"
             >
-              ×
-            </button>
-          </motion.div>
-        )}
+              <img src={imagePreview} alt="Selected" className="max-h-24 rounded-lg border border-gray-200" />
+              <button
+                onClick={handleRemoveImage}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition-colors text-xs"
+                title="Remove image"
+              >
+                ×
+              </button>
+            </motion.div>
+          )}
 
-        {/* Video preview */}
-        {videoPreview && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-3 relative inline-block"
-          >
-            <video
-              src={videoPreview}
-              controls
-              className="max-h-32 rounded-lg border border-gray-200"
-            />
-            <button
-              onClick={handleRemoveImage}
-              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-              title="Remove video"
+          {/* Video preview */}
+          {videoPreview && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-2 relative inline-block"
             >
-              ×
-            </button>
-          </motion.div>
-        )}
+              <video src={videoPreview} controls className="max-h-24 rounded-lg border border-gray-200" />
+              <button
+                onClick={handleRemoveImage}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition-colors text-xs"
+                title="Remove video"
+              >
+                ×
+              </button>
+            </motion.div>
+          )}
 
-        <div className="flex items-end space-x-2">
-          {/* Hidden file input for gallery */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            onChange={handleImageSelect}
-            className="hidden"
-          />
+          {/* Input container — pill shape with tools inside */}
+          <div className="relative flex items-end border border-gray-200 rounded-2xl bg-gray-50 focus-within:border-gray-300 focus-within:bg-white focus-within:shadow-sm transition-all">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
 
-          <div className="flex-1">
+            {/* Attachment button */}
+            <div className="relative flex-shrink-0 self-end p-2">
+              <button
+                onClick={handlePlusButtonClick}
+                disabled={isTyping || isRecording}
+                className={cn(
+                  "p-1.5 rounded-lg transition-colors",
+                  isTyping || isRecording
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-200/50"
+                )}
+                title="Add attachment"
+              >
+                {showAttachmentMenu ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+              </button>
+
+              {/* Attachment menu */}
+              {showAttachmentMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute bottom-full mb-2 left-0 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+                >
+                  <button
+                    onClick={handleCameraClick}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                  >
+                    <Camera className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-700 whitespace-nowrap">Take Photo</span>
+                  </button>
+                  <div className="border-t border-gray-100" />
+                  <button
+                    onClick={handlePhotoVideoClick}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                  >
+                    <Image className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-700 whitespace-nowrap">Photo / Video</span>
+                  </button>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Textarea */}
             <textarea
               ref={textareaRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask about lesson planning, student assessment, classroom management..."
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              rows="2"
+              placeholder="Message L4C LaunchPad..."
+              className="flex-1 bg-transparent resize-none focus:outline-none text-[15px] py-3 max-h-36 leading-relaxed"
+              rows="1"
               disabled={isTyping || isRecording}
             />
-          </div>
 
-          {/* Plus button with attachment menu */}
-          <div className="relative">
-            <button
-              onClick={handlePlusButtonClick}
-              disabled={isTyping || isRecording}
-              className={cn(
-                "p-2 rounded-lg transition-colors",
-                isTyping || isRecording
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-primary-500 text-white hover:bg-primary-600"
-              )}
-              title="Add attachment"
-            >
-              {showAttachmentMenu ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-            </button>
-
-            {/* Attachment menu */}
-            {showAttachmentMenu && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute bottom-full mb-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+            {/* Right-side buttons */}
+            <div className="flex items-center gap-0.5 flex-shrink-0 self-end p-2">
+              {/* Mic button */}
+              <button
+                onClick={handleVoiceToggle}
+                disabled={isTyping}
+                className={cn(
+                  "p-1.5 rounded-lg transition-all duration-200",
+                  isRecording
+                    ? "text-red-500 bg-red-50 animate-pulse"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-200/50",
+                  isTyping && "opacity-50 cursor-not-allowed"
+                )}
+                title={isRecording ? "Stop recording" : "Start voice recording"}
               >
-                <button
-                  onClick={handleCameraClick}
-                  className="flex items-center space-x-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <Camera className="w-5 h-5 text-primary-500" />
-                  <span className="text-sm text-gray-700 whitespace-nowrap">Take Photo</span>
-                </button>
-                <div className="border-t border-gray-100" />
-                <button
-                  onClick={handlePhotoVideoClick}
-                  className="flex items-center space-x-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <Image className="w-5 h-5 text-primary-500" />
-                  <span className="text-sm text-gray-700 whitespace-nowrap">Photo/Video</span>
-                </button>
-              </motion.div>
-            )}
+                {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </button>
+
+              {/* Send button */}
+              <button
+                onClick={handleSendMessage}
+                disabled={(!inputValue.trim() && !selectedImage && !selectedVideo) || isTyping || isRecording}
+                className={cn(
+                  "p-1.5 rounded-lg transition-colors",
+                  (inputValue.trim() || selectedImage || selectedVideo) && !isTyping && !isRecording
+                    ? "text-white bg-primary-600 hover:bg-primary-700"
+                    : "text-gray-300 cursor-not-allowed"
+                )}
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          {/* Microphone button */}
-          <button
-            onClick={handleVoiceToggle}
-            disabled={isTyping}
-            className={cn(
-              "p-2 rounded-lg transition-all duration-200",
-              isRecording
-                ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
-                : "bg-primary-500 text-white hover:bg-primary-600",
-              isTyping && "opacity-50 cursor-not-allowed"
-            )}
-            title={isRecording ? "Stop recording" : "Start voice recording"}
-          >
-            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </button>
-
-          {/* Send button */}
-          <button
-            onClick={handleSendMessage}
-            disabled={(!inputValue.trim() && !selectedImage && !selectedVideo) || isTyping || isRecording}
-            className={cn(
-              "p-2 rounded-lg transition-colors",
-              (inputValue.trim() || selectedImage || selectedVideo) && !isTyping && !isRecording
-                ? "bg-primary-500 text-white hover:bg-primary-600"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            )}
-          >
-            <Send className="w-5 h-5" />
-          </button>
+          <p className="text-xs text-gray-400 text-center mt-2">
+            L4C LaunchPad helps you build structured composing lessons
+          </p>
         </div>
       </div>
 
