@@ -194,7 +194,7 @@ async def generate_all(
         s3_client: Optional pre-created S3 client
 
     Returns:
-        List of dicts with {url, placement, alt_text} for each image
+        List of dicts with {url, alt_text} for each image
     """
     if gemini_client is None:
         gemini_client = get_gemini_client()
@@ -222,8 +222,7 @@ async def generate_all(
             url = await future
             results.append({
                 "url": url,
-                "placement": req["placement"],
-                "alt_text": req["alt_text"],
+                "alt_text": req.get("alt_text", ""),
             })
 
     return results

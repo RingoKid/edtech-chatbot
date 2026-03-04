@@ -13,7 +13,6 @@ from fastapi.responses import StreamingResponse
 from weasyprint import HTML
 
 from app.services.chat_service import ChatService
-from app.services.image_service import S3_URL_PREFIX
 
 logger = logging.getLogger(__name__)
 
@@ -74,9 +73,9 @@ ul, ol {
 li { margin-bottom: 3px; }
 
 img {
-    max-width: 200px;
-    float: right;
-    margin: 0 0 10px 12px;
+    display: block;
+    max-width: 350px;
+    margin: 12px auto;
     border-radius: 4px;
     border: 1px solid #e2e8f0;
 }
@@ -121,30 +120,16 @@ def _extract_lesson_text_from_state(state_values: dict) -> str:
     return state_values.get("lesson_markdown") or ""
 
 
-def _build_html(lesson_md: str, image_urls: list[str]) -> str:
-    """Convert lesson markdown to full HTML document with print CSS."""
+def _build_html(lesson_md: str) -> str:
+    """Convert lesson markdown to full HTML document with print CSS.
+
+    Images are already embedded in the markdown as ![alt](url) syntax,
+    which the markdown parser converts to <img> tags automatically.
+    """
     html_body = markdown.markdown(
         lesson_md,
         extensions=["tables", "fenced_code"],
     )
-
-    # Inject image tags after section headings if images are available
-    for i, url in enumerate(image_urls):
-        alt = f"Lesson image {i + 1}"
-        img_tag = f'<img src="{url}" alt="{alt}" />'
-        # Insert after the first few h2 tags
-        h2_count = 0
-        result = []
-        for line in html_body.split("\n"):
-            result.append(line)
-            if "</h2>" in line:
-                h2_count += 1
-                # Place images after 1st, 3rd, 5th h2 sections
-                target_positions = [1, 3, 5]
-                if h2_count in target_positions and i < len(target_positions):
-                    if target_positions.index(h2_count) == i:
-                        result.append(img_tag)
-        html_body = "\n".join(result)
 
     return f"""\
 <!DOCTYPE html>
@@ -165,14 +150,13 @@ async def export_pdf(thread_id: str):
     Generate and download a PDF of the lesson plan for a given thread.
 
     1. Fetches conversation messages from checkpoint state
-    2. Extracts the lesson markdown (longest assistant message)
-    3. Fetches image URLs from state
-    4. Renders HTML with print-optimized CSS
-    5. Converts to PDF via WeasyPrint
+    2. Extracts the lesson markdown (with embedded image URLs)
+    3. Renders HTML with print-optimized CSS
+    4. Converts to PDF via WeasyPrint
     """
     chat_service = ChatService()
 
-    # Read lesson content + image URLs directly from graph state
+    # Read lesson content directly from graph state
     graph = await chat_service._get_graph()
     config = {"configurable": {"thread_id": thread_id}}
     state = await graph.aget_state(config)
@@ -187,10 +171,8 @@ async def export_pdf(thread_id: str):
             detail="No lesson content found in this thread",
         )
 
-    image_urls = state.values.get("image_urls") or []
-
     # Build HTML and convert to PDF
-    html_str = _build_html(lesson_md, image_urls)
+    html_str = _build_html(lesson_md)
 
     try:
         pdf_bytes = HTML(string=html_str).write_pdf()

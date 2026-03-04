@@ -1,5 +1,71 @@
+import { useRef, useCallback, useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+
+const RETRY_INTERVAL_MS = 3000
+const MAX_RETRIES = 20 // ~60 seconds of retrying
+
+/**
+ * Standalone image component with skeleton placeholder + auto-retry.
+ * Starts hidden; shows a pulsing skeleton until the image loads.
+ * Retries every 3s (up to ~60s) for images that don't exist yet
+ * (Gemini is still generating them at the S3 URL).
+ */
+const LessonImage = ({ src, alt, ...props }) => {
+  const [loaded, setLoaded] = useState(false)
+  const retryCount = useRef(0)
+  const retryTimer = useRef(null)
+  const imgRef = useRef(null)
+
+  // Clean up retry timer on unmount
+  useEffect(() => {
+    return () => clearInterval(retryTimer.current)
+  }, [])
+
+  const handleLoad = useCallback(() => {
+    clearInterval(retryTimer.current)
+    setLoaded(true)
+  }, [])
+
+  const handleError = useCallback(() => {
+    if (retryTimer.current || retryCount.current >= MAX_RETRIES) return
+
+    retryTimer.current = setInterval(() => {
+      retryCount.current++
+      if (retryCount.current >= MAX_RETRIES) {
+        clearInterval(retryTimer.current)
+        return
+      }
+      if (imgRef.current) {
+        imgRef.current.src = src + (src.includes('?') ? '&' : '?') + 't=' + Date.now()
+      }
+    }, RETRY_INTERVAL_MS)
+  }, [src])
+
+  return (
+    <span className="block my-3 mx-auto max-w-[300px]">
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt || 'Lesson image'}
+        className="max-w-[300px] w-full rounded-lg border border-gray-200 shadow-sm"
+        style={{ display: loaded ? 'block' : 'none' }}
+        onLoad={handleLoad}
+        onError={handleError}
+        {...props}
+      />
+      {!loaded && (
+        <span
+          className="flex items-center justify-center w-full h-[200px] rounded-lg border border-gray-200 bg-gray-50 animate-pulse"
+        >
+          <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+          </svg>
+        </span>
+      )}
+    </span>
+  )
+}
 
 const MarkdownRenderer = ({ content, className = '' }) => {
   return (
@@ -51,20 +117,9 @@ const MarkdownRenderer = ({ content, className = '' }) => {
           <pre className="bg-gray-200 p-2 rounded my-2 overflow-x-auto" {...props} />
         ),
 
-        // Images — lesson images with responsive styling
+        // Images — skeleton placeholder + auto-retry until loaded
         img: ({ node, src, alt, ...props }) => (
-          <img
-            src={src}
-            alt={alt || 'Lesson image'}
-            className="max-w-[300px] w-full rounded-lg border border-gray-200 my-3 mx-auto block shadow-sm"
-            loading="lazy"
-            onError={(e) => {
-              // Show placeholder skeleton if image hasn't loaded yet
-              e.target.style.display = 'none'
-              e.target.nextSibling && (e.target.nextSibling.style.display = 'flex')
-            }}
-            {...props}
-          />
+          <LessonImage src={src} alt={alt} {...props} />
         ),
 
         // Links

@@ -115,5 +115,5 @@ class GraphState(TypedDict):
     lesson_markdown: Optional[str]
 
     # Image generation pipeline (post-lesson generation)
-    image_requests: Optional[list[dict]]  # ImagePlan serialized by image director
+    image_requests: Optional[list[dict]]  # {prompt, alt_text} dicts from image director
     image_urls: Optional[list[str]]  # Pre-computed S3 URLs for the 3 lesson images

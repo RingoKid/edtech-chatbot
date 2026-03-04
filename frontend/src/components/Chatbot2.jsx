@@ -455,8 +455,8 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           setThreadId(res.thread_id)
         }
 
-        // Check if images were generated with this response
-        if (res?.images && res.images.length > 0) {
+        // Check if lesson images are embedded in the reply (S3 URLs in markdown)
+        if (res?.reply?.includes('l4c-videos.s3.amazonaws.com')) {
           setHasLessonImages(true)
         }
 

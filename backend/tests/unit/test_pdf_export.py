@@ -3,8 +3,7 @@ Unit tests for PDF export functionality.
 
 Tests cover:
 - PDF endpoint returns correct content type
-- Generated PDF HTML includes image tags with S3 URLs
-- HTML building from markdown
+- HTML building from markdown with embedded images
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -23,7 +22,7 @@ from app.routers.export import _build_html, _extract_lesson_text_from_state
 def test_build_html_basic():
     """_build_html converts markdown to HTML with CSS."""
     lesson_md = "# My Lesson\n\nThis is a paragraph."
-    html = _build_html(lesson_md, [])
+    html = _build_html(lesson_md)
 
     assert "<!DOCTYPE html>" in html
     assert "<style>" in html
@@ -31,34 +30,43 @@ def test_build_html_basic():
     assert "This is a paragraph" in html
 
 
-def test_pdf_contains_images():
-    """Generated PDF HTML includes <img> tags with S3 URLs."""
+def test_build_html_with_embedded_images():
+    """_build_html renders embedded markdown images as <img> tags."""
     lesson_md = (
         "# Lesson Title\n\n"
         "## Section One\n\nContent here.\n\n"
+        "![A formation guide](https://l4c-videos.s3.amazonaws.com/images/test/img_1.jpg)\n\n"
         "## Section Two\n\nMore content.\n\n"
-        "## Section Three\n\nEven more content.\n\n"
+        "![Practice worksheet](https://l4c-videos.s3.amazonaws.com/images/test/img_2.jpg)\n"
     )
-    image_urls = [
-        "https://l4c-videos.s3.amazonaws.com/images/test/img_1.jpg",
-        "https://l4c-videos.s3.amazonaws.com/images/test/img_2.jpg",
-        "https://l4c-videos.s3.amazonaws.com/images/test/img_3.jpg",
-    ]
 
-    html = _build_html(lesson_md, image_urls)
+    html = _build_html(lesson_md)
 
     assert "img_1.jpg" in html
+    assert "img_2.jpg" in html
     assert "<img" in html
     assert "l4c-videos.s3.amazonaws.com" in html
 
 
 def test_build_html_no_images():
-    """HTML renders correctly with empty image list."""
+    """HTML renders correctly with no images in markdown."""
     lesson_md = "# Simple Lesson\n\nNo images needed."
-    html = _build_html(lesson_md, [])
+    html = _build_html(lesson_md)
 
     assert "<img" not in html
     assert "Simple Lesson" in html
+
+
+def test_build_html_img_css_centered():
+    """CSS styles images as centered blocks, not floated right."""
+    lesson_md = "# Lesson\n\n![desc](https://example.com/img.jpg)"
+    html = _build_html(lesson_md)
+
+    assert "display: block" in html
+    assert "margin: 12px auto" in html
+    assert "max-width: 350px" in html
+    # Old floating style should NOT be present
+    assert "float: right" not in html
 
 
 # ──────────────────────────────────────────────────────────────
@@ -97,7 +105,6 @@ def test_pdf_endpoint_returns_pdf():
     mock_state = MagicMock()
     mock_state.values = {
         "lesson_markdown": "# My Lesson\n\n" + "Content. " * 100,
-        "image_urls": [],
     }
 
     with patch(

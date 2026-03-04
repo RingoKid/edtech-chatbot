@@ -171,6 +171,14 @@ These rules override general instructions when they conflict. Always check the c
    - K: Some sound knowledge assumed. Moderate scaffolding.
    - 1st: All consonant/vowel sounds and graphemes already known. Light scaffolding. Students can do more independently.
 
+19. **Image Placeholders**: Place EXACTLY 3 image placeholders in your lesson using this syntax:
+   `![2-3 sentence description of the image focused on pedagogical content](IMAGE_N)`
+   where N is 1, 2, or 3. Placement guidance:
+   - `IMAGE_1` → in Section 2 (Model, Explain & Engage)
+   - `IMAGE_2` → in Section 3 (Guided Practice)
+   - `IMAGE_3` → in Section 4 (Application)
+   The description should focus on what the image teaches (e.g., "Step-by-step formation guide for lowercase letter d showing numbered stroke order with a starting dot and directional arrows on writing lines."). Do NOT include image-model boilerplate like "white background" or "children's book style" — just describe the pedagogical content.
+
 ## After Generating
 
 After presenting the lesson:

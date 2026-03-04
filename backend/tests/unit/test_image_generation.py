@@ -2,9 +2,10 @@
 Unit tests for the image generation pipeline.
 
 Tests cover:
-- ImageRequest / ImagePlan schema validation
+- ImageRequest schema validation
 - Image service (S3 upload, Gemini call shape, parallel execution)
-- Assembly node (URL computation)
+- Assembly node (URL computation, token replacement)
+- Image director (description extraction)
 - Graph node ordering
 """
 
@@ -13,9 +14,8 @@ from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 from PIL import Image as PILImage
-from pydantic import ValidationError
 
-from app.schemas.image import ImageRequest, ImagePlan
+from app.schemas.image import ImageRequest
 from app.services.image_service import (
     compute_image_urls,
     compute_s3_key,
@@ -26,7 +26,12 @@ from app.services.image_service import (
     PROMPT_PREFIX,
     NUM_IMAGES,
 )
-from app.graph.nodes.image_assembly import image_assembly_node, _compute_image_urls
+from app.graph.nodes.image_assembly import (
+    image_assembly_node,
+    _compute_image_urls,
+    _replace_image_tokens,
+)
+from app.graph.nodes.image_director import _extract_image_descriptions, STYLE_SUFFIX
 
 
 # ──────────────────────────────────────────────────────────────
@@ -34,90 +39,11 @@ from app.graph.nodes.image_assembly import image_assembly_node, _compute_image_u
 # ──────────────────────────────────────────────────────────────
 
 
-def _make_image_request(**overrides):
-    """Helper to create a valid ImageRequest dict."""
-    defaults = {
-        "prompt": "A letter formation guide on a pure white background with no border",
-        "placement": "Model, Explain & Engage",
-        "alt_text": "Letter D formation guide",
-        "pedagogical_role": "Shows stroke order for letter D",
-    }
-    defaults.update(overrides)
-    return defaults
-
-
-def test_image_plan_schema_valid():
-    """ImagePlan accepts valid data with exactly 3 images."""
-    plan = ImagePlan(images=[
-        ImageRequest(**_make_image_request()),
-        ImageRequest(**_make_image_request(prompt="Scene illustration")),
-        ImageRequest(**_make_image_request(prompt="Letter comparison")),
-    ])
-    assert len(plan.images) == 3
-    assert all(isinstance(img, ImageRequest) for img in plan.images)
-
-
-def test_image_plan_exactly_3():
-    """ImagePlan rejects lists that don't have exactly 3 images."""
-    # Too few
-    with pytest.raises(ValidationError, match="exactly 3"):
-        ImagePlan(images=[
-            ImageRequest(**_make_image_request()),
-            ImageRequest(**_make_image_request()),
-        ])
-
-    # Too many
-    with pytest.raises(ValidationError, match="exactly 3"):
-        ImagePlan(images=[
-            ImageRequest(**_make_image_request()),
-            ImageRequest(**_make_image_request()),
-            ImageRequest(**_make_image_request()),
-            ImageRequest(**_make_image_request()),
-        ])
-
-
-def test_image_plan_has_required_fields():
-    """Each ImageRequest must have prompt, placement, alt_text, pedagogical_role."""
-    # Missing prompt
-    with pytest.raises(ValidationError):
-        ImageRequest(
-            placement="Section",
-            alt_text="alt",
-            pedagogical_role="role",
-        )
-
-    # Missing placement
-    with pytest.raises(ValidationError):
-        ImageRequest(
-            prompt="A prompt",
-            alt_text="alt",
-            pedagogical_role="role",
-        )
-
-    # Missing alt_text
-    with pytest.raises(ValidationError):
-        ImageRequest(
-            prompt="A prompt",
-            placement="Section",
-            pedagogical_role="role",
-        )
-
-    # Missing pedagogical_role
-    with pytest.raises(ValidationError):
-        ImageRequest(
-            prompt="A prompt",
-            placement="Section",
-            alt_text="alt",
-        )
-
-
-def test_image_prompt_contains_white_bg():
-    """Verify the service prepends white background text."""
-    prompt = "A letter formation guide"
-    full_prompt = PROMPT_PREFIX + prompt
-    assert "white background" not in full_prompt  # It's in the director's system prompt
-    # The PROMPT_PREFIX adds "No text, no words, no letters"
-    assert "No text" in full_prompt
+def test_image_request_valid():
+    """ImageRequest accepts valid data with prompt and alt_text."""
+    req = ImageRequest(prompt="A formation guide", alt_text="Letter D guide")
+    assert req.prompt == "A formation guide"
+    assert req.alt_text == "Letter D guide"
 
 
 def test_image_prompt_contains_no_text():
@@ -182,7 +108,7 @@ def test_assembly_url_pattern():
 
 def test_assembly_node_returns_urls():
     """The image_assembly_node returns image_urls in state."""
-    state = {"messages": [], "handwriting_params": None}
+    state = {"messages": [], "handwriting_params": None, "lesson_markdown": ""}
     config = {"configurable": {"thread_id": "node-test-123"}}
 
     result = image_assembly_node(state, config)
@@ -190,6 +116,97 @@ def test_assembly_node_returns_urls():
     assert "image_urls" in result
     assert len(result["image_urls"]) == 3
     assert all("node-test-123" in url for url in result["image_urls"])
+
+
+def test_assembly_replaces_tokens():
+    """Assembly node replaces IMAGE_N tokens in lesson_markdown with S3 URLs."""
+    lesson = (
+        "## Model\n\n"
+        "![A formation guide](IMAGE_1)\n\n"
+        "## Practice\n\n"
+        "![Practice worksheet](IMAGE_2)\n\n"
+        "## Application\n\n"
+        "![Scene illustration](IMAGE_3)\n"
+    )
+    state = {
+        "messages": [],
+        "handwriting_params": None,
+        "lesson_markdown": lesson,
+    }
+    config = {"configurable": {"thread_id": "replace-test"}}
+
+    result = image_assembly_node(state, config)
+
+    md = result["lesson_markdown"]
+    assert "IMAGE_1" not in md
+    assert "IMAGE_2" not in md
+    assert "IMAGE_3" not in md
+    assert "replace-test/img_1.jpg" in md
+    assert "replace-test/img_2.jpg" in md
+    assert "replace-test/img_3.jpg" in md
+
+
+def test_replace_image_tokens():
+    """_replace_image_tokens substitutes all IMAGE_N tokens."""
+    md = "Look: ![desc](IMAGE_1) and ![desc2](IMAGE_2) and ![desc3](IMAGE_3)"
+    urls = [
+        "https://l4c-videos.s3.amazonaws.com/images/t/img_1.jpg",
+        "https://l4c-videos.s3.amazonaws.com/images/t/img_2.jpg",
+        "https://l4c-videos.s3.amazonaws.com/images/t/img_3.jpg",
+    ]
+    result = _replace_image_tokens(md, urls)
+    assert "IMAGE_1" not in result
+    assert "IMAGE_2" not in result
+    assert "IMAGE_3" not in result
+    assert urls[0] in result
+    assert urls[1] in result
+    assert urls[2] in result
+
+
+# ──────────────────────────────────────────────────────────────
+# Image director — description extraction tests
+# ──────────────────────────────────────────────────────────────
+
+
+def test_extract_image_descriptions():
+    """Extracts descriptions from markdown with S3 image links."""
+    md = (
+        "## Model\n\n"
+        "![Step-by-step formation guide for lowercase d](https://l4c-videos.s3.amazonaws.com/images/abc/img_1.jpg)\n\n"
+        "## Practice\n\n"
+        "![Practice worksheet with dotted letters](https://l4c-videos.s3.amazonaws.com/images/abc/img_2.jpg)\n\n"
+        "## Application\n\n"
+        "![Scene with objects starting with d sound](https://l4c-videos.s3.amazonaws.com/images/abc/img_3.jpg)\n"
+    )
+
+    results = _extract_image_descriptions(md)
+
+    assert len(results) == 3
+    assert results[0]["alt_text"] == "Step-by-step formation guide for lowercase d"
+    assert results[1]["alt_text"] == "Practice worksheet with dotted letters"
+    assert results[2]["alt_text"] == "Scene with objects starting with d sound"
+    # Each prompt should include the style suffix
+    for r in results:
+        assert "children's book illustration" in r["prompt"]
+        assert "white background" in r["prompt"]
+
+
+def test_extract_image_descriptions_no_images():
+    """Returns empty list when no S3 image links are found."""
+    md = "## Model\n\nJust some text with no images."
+    results = _extract_image_descriptions(md)
+    assert results == []
+
+
+def test_extract_image_descriptions_ignores_non_s3():
+    """Only extracts images with l4c-videos S3 URLs, ignores others."""
+    md = (
+        "![Some image](https://example.com/img.jpg)\n"
+        "![Real image](https://l4c-videos.s3.amazonaws.com/images/abc/img_1.jpg)\n"
+    )
+    results = _extract_image_descriptions(md)
+    assert len(results) == 1
+    assert results[0]["alt_text"] == "Real image"
 
 
 # ──────────────────────────────────────────────────────────────
@@ -246,9 +263,9 @@ def test_gemini_parallel_execution():
         from app.services.image_service import generate_all
 
         requests = [
-            {"prompt": "img1", "placement": "Section 1", "alt_text": "alt1"},
-            {"prompt": "img2", "placement": "Section 2", "alt_text": "alt2"},
-            {"prompt": "img3", "placement": "Section 3", "alt_text": "alt3"},
+            {"prompt": "img1", "alt_text": "alt1"},
+            {"prompt": "img2", "alt_text": "alt2"},
+            {"prompt": "img3", "alt_text": "alt3"},
         ]
 
         results = asyncio.get_event_loop().run_until_complete(
@@ -304,26 +321,3 @@ def test_graph_node_order():
     assert route_after_handwriting_generator({"lesson_finalized": True}) == "image_assembly"
     assert route_after_handwriting_generator({"lesson_finalized": False}) == "image_assembly"
     assert route_after_handwriting_generator({}) == "image_assembly"
-
-
-# ──────────────────────────────────────────────────────────────
-# WebSocket event format test
-# ──────────────────────────────────────────────────────────────
-
-
-def test_websocket_event_format():
-    """WebSocket image event matches expected format."""
-    from app.schemas.chat import ImageReadyEvent
-
-    event = ImageReadyEvent(
-        url="https://l4c-videos.s3.amazonaws.com/images/abc-123/img_1.jpg",
-        placement="Model, Explain & Engage",
-        alt_text="Lowercase letter d formation guide",
-    )
-
-    data = event.model_dump()
-    assert "url" in data
-    assert "placement" in data
-    assert "alt_text" in data
-    assert data["url"].startswith("https://")
-    assert "img_1.jpg" in data["url"]
