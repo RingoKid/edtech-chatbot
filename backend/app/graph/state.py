@@ -110,3 +110,10 @@ class GraphState(TypedDict):
     # Structured feedback data extracted by the feedback collector
     # Persisted to DynamoDB by ChatService after graph invocation
     feedback_data: Optional[FeedbackData]
+
+    # Latest lesson plan content (overwritten on each generation/modification)
+    lesson_markdown: Optional[str]
+
+    # Image generation pipeline (post-lesson generation)
+    image_requests: Optional[list[dict]]  # ImagePlan serialized by image director
+    image_urls: Optional[list[str]]  # Pre-computed S3 URLs for the 3 lesson images

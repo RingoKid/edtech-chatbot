@@ -259,6 +259,40 @@ specs/
 - `scripts/run_scaffolding_evals.py` - Refactored runner with EVAL_REGISTRY and --eval flag
 - `app/langfuse/criteria.py` - 2 new registry entries
 
+### 021 - Lesson Image Generation & PDF Export
+**Status:** Implemented
+**Spec:** [021-lesson-image-generation/spec.md](./021-lesson-image-generation/spec.md)
+**Description:** LLM-powered image director agent that reads completed lesson plans, generates contextually relevant educational images via Gemini 2.5 Flash, and delivers them asynchronously. Includes PDF export for print-ready lesson plans.
+
+**Features:**
+- Image director agent (gpt-4o) reads lesson → outputs 3 image generation prompts
+- Gemini 2.5 Flash image generation with parallel execution (ThreadPoolExecutor)
+- S3 storage with pre-known URLs (images appear without coordination)
+- Image data included in chat response for frontend rendering
+- PDF export via weasyprint with print-optimized layout
+- MarkdownRenderer updated with image styling + lazy loading
+- Export PDF button in chatbot UI
+- 22 unit tests (16 image generation + 6 PDF export)
+
+**Related Files:**
+- `app/services/image_service.py` - Gemini image generation + S3 upload
+- `app/graph/nodes/image_assembly.py` - Pre-known URL computation
+- `app/graph/nodes/image_director.py` - LLM prompt planning + generation orchestration
+- `app/schemas/image.py` - ImageRequest, ImagePlan Pydantic models
+- `app/schemas/chat.py` - ImageReadyEvent schema
+- `app/routers/export.py` - PDF export endpoint
+- `app/graph/state.py` - `image_requests`, `image_urls` state fields
+- `app/graph/graph.py` - Image assembly + director nodes, routing updates
+- `app/services/chat_service.py` - Image data in response
+- `app/main.py` - Export router registration
+- `frontend/src/components/MarkdownRenderer.jsx` - Image rendering support
+- `frontend/src/components/Chatbot2.jsx` - Export PDF button + image state tracking
+- `frontend/src/api/index.js` - `exportPdf()` API method
+- `tests/unit/test_image_generation.py` - 16 unit tests
+- `tests/unit/test_pdf_export.py` - 6 unit tests
+- `Dockerfile` - WeasyPrint system dependencies
+- `requirements.txt` - weasyprint, markdown packages
+
 ---
 
 ## How to Use This Structure

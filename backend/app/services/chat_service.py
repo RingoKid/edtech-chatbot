@@ -4,16 +4,69 @@ This service encapsulates LangGraph integration and message handling.
 """
 
 from typing import Dict, Any, List, Optional
+import re
 import uuid
 import json
 
 from fastapi import WebSocket, WebSocketDisconnect
 from app.graph.graph import create_graph
 from langchain_core.messages import HumanMessage
-from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
+from app.schemas.chat import ChatMessageRequest, ChatMessageResponse, ImageReadyEvent
 from app.schemas.chat_history import MessageItem
 from app.services.chat_history_service import get_chat_history_service
 from app.services.feedback_service import get_feedback_service
+
+
+def _inject_images_into_markdown(
+    markdown: str,
+    images: list[dict],
+) -> str:
+    """Inject image tags into lesson markdown between headers and body text.
+
+    For each image, finds the section header matching ``placement`` and inserts
+    a markdown image tag on the line immediately after. Headers may have
+    letter prefixes (e.g. "## C. Model, Explain & Engage") while placement
+    is just "Model, Explain & Engage", so matching is substring-based.
+
+    Images that don't match any header are appended at the end.
+    """
+    if not images:
+        return markdown
+
+    lines = markdown.split("\n")
+    # Track which images still need to be placed
+    remaining: list[dict] = list(images)
+    insertions: dict[int, list[str]] = {}  # line_index → tags to insert after
+
+    for img in remaining[:]:
+        placement = img.get("placement", "")
+        if not placement:
+            continue
+        placement_lower = placement.lower()
+        for i, line in enumerate(lines):
+            # Match markdown headers (# to ###)
+            if re.match(r"^#{1,3}\s+", line):
+                header_text = re.sub(r"^#{1,3}\s+", "", line).strip().lower()
+                if placement_lower in header_text:
+                    tag = f"\n![{img.get('alt_text', 'Lesson image')}]({img['url']})\n"
+                    insertions.setdefault(i, []).append(tag)
+                    remaining.remove(img)
+                    break
+
+    # Build result with insertions
+    result_lines = []
+    for i, line in enumerate(lines):
+        result_lines.append(line)
+        if i in insertions:
+            for tag in insertions[i]:
+                result_lines.append(tag)
+
+    # Append unmatched images at the end
+    for img in remaining:
+        tag = f"\n![{img.get('alt_text', 'Lesson image')}]({img['url']})"
+        result_lines.append(tag)
+
+    return "\n".join(result_lines)
 
 
 class ChatService:
@@ -106,9 +159,14 @@ class ChatService:
             thread_id=request.thread_id
         )
 
+        images = None
+        if result.get("images"):
+            images = [ImageReadyEvent(**img) for img in result["images"]]
+
         return ChatMessageResponse(
             thread_id=result["thread_id"],
-            reply=result["reply"]
+            reply=result["reply"],
+            images=images,
         )
 
     async def handle_message(
@@ -200,8 +258,23 @@ class ChatService:
 
         response = {
             "reply": reply,
-            "thread_id": thread_id
+            "thread_id": thread_id,
         }
+
+        # Inject images into lesson markdown if available
+        image_requests = result.get("image_requests")
+        image_urls = result.get("image_urls")
+        if image_requests and image_urls:
+            images = [
+                {
+                    "url": url,
+                    "placement": req.get("placement", ""),
+                    "alt_text": req.get("alt_text", ""),
+                }
+                for req, url in zip(image_requests, image_urls)
+            ]
+            response["images"] = images
+            response["reply"] = _inject_images_into_markdown(reply, images)
 
         return response
 

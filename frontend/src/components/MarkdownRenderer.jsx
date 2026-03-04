@@ -51,6 +51,22 @@ const MarkdownRenderer = ({ content, className = '' }) => {
           <pre className="bg-gray-200 p-2 rounded my-2 overflow-x-auto" {...props} />
         ),
 
+        // Images — lesson images with responsive styling
+        img: ({ node, src, alt, ...props }) => (
+          <img
+            src={src}
+            alt={alt || 'Lesson image'}
+            className="max-w-[300px] w-full rounded-lg border border-gray-200 my-3 mx-auto block shadow-sm"
+            loading="lazy"
+            onError={(e) => {
+              // Show placeholder skeleton if image hasn't loaded yet
+              e.target.style.display = 'none'
+              e.target.nextSibling && (e.target.nextSibling.style.display = 'flex')
+            }}
+            {...props}
+          />
+        ),
+
         // Links
         a: ({ node, ...props }) => (
           <a

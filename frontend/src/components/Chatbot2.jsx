@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, User, Loader, RotateCcw, ChevronDown, Mic, MicOff, Image, Camera, Plus, X, Menu, MessageSquare } from 'lucide-react'
+import { Send, User, Loader, RotateCcw, ChevronDown, Mic, MicOff, Image, Camera, Plus, X, Menu, MessageSquare, Download } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { chat2, handwriting } from '../api'
 import MarkdownRenderer from './MarkdownRenderer'
@@ -31,6 +31,8 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false) // Sidebar visibility
   const [conversations, setConversations] = useState([]) // List of past conversations
   const [loadingHistory, setLoadingHistory] = useState(false) // Loading state for history
+  const [hasLessonImages, setHasLessonImages] = useState(false) // Track if current thread has generated images
+  const [exportingPdf, setExportingPdf] = useState(false) // PDF export loading state
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
   const transcriptionWsRef = useRef(null)
@@ -453,6 +455,11 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           setThreadId(res.thread_id)
         }
 
+        // Check if images were generated with this response
+        if (res?.images && res.images.length > 0) {
+          setHasLessonImages(true)
+        }
+
         const botResponse = {
           id: Date.now() + 1,
           type: 'bot',
@@ -483,10 +490,23 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }
   }
 
+  const handleExportPdf = async () => {
+    if (!threadId || exportingPdf) return
+    setExportingPdf(true)
+    try {
+      await chat2.exportPdf(threadId)
+    } catch (err) {
+      console.error('Failed to export PDF:', err)
+    } finally {
+      setExportingPdf(false)
+    }
+  }
+
   const clearChat = async () => {
     // Reset messages and start a new chat session
     setMessages([])
     setThreadId(null)
+    setHasLessonImages(false)
     setIsTyping(true)
     setSidebarOpen(false)
 
@@ -1022,6 +1042,28 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
               </motion.div>
             ))}
           </AnimatePresence>
+
+          {/* Export PDF button — appears when lesson images have been generated */}
+          {hasLessonImages && !isTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-center mb-3"
+            >
+              <button
+                onClick={handleExportPdf}
+                disabled={exportingPdf}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-700 bg-primary-50 border border-primary-200 rounded-lg hover:bg-primary-100 transition-colors disabled:opacity-50"
+              >
+                {exportingPdf ? (
+                  <Loader className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                {exportingPdf ? 'Generating PDF...' : 'Export Lesson as PDF'}
+              </button>
+            </motion.div>
+          )}
 
           {/* Live transcript display */}
           {liveTranscript && (

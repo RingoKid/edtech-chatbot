@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
-from app.routers import health, chat, auth, users, transcription, handwriting_analysis
+from app.routers import health, chat, auth, users, transcription, handwriting_analysis, export
 from app.langfuse.router import router as evals_router
 from app.config import settings
 from app.dependencies.auth import get_current_user
@@ -46,6 +46,7 @@ protected_router = APIRouter(
 protected_router.include_router(chat.router)
 protected_router.include_router(users.router)
 protected_router.include_router(handwriting_analysis.router)
+protected_router.include_router(export.router)
 
 # --- WebSocket Routes (auth handled at endpoint level via query param) ---
 # WebSocket endpoints can't use OAuth2PasswordBearer, so they handle auth separately

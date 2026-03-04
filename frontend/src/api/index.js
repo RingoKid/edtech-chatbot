@@ -23,6 +23,25 @@ export const chat2 = {
   getHistory: () => client.apiGet("/chat/history"),
   // getMessages - Get all messages for a specific conversation
   getMessages: (threadId) => client.apiGet(`/chat/${threadId}/messages`),
+  // exportPdf - Download lesson plan as PDF
+  exportPdf: async (threadId) => {
+    const response = await fetch(`${client.API_BASE}/chat/${threadId}/export-pdf`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${client.getAccessToken()}` },
+    })
+    if (!response.ok) {
+      throw new Error('Failed to export PDF')
+    }
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `lesson-${threadId.slice(0, 8)}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  },
 };
 
 // WebSocket helper (uses environment-based configuration)

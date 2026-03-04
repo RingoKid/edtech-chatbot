@@ -52,6 +52,8 @@ from app.graph.nodes.placeholders import (
     vocabulary_generator_placeholder,
     idea_generation_generator_placeholder,
 )
+from app.graph.nodes.image_assembly import image_assembly_node
+from app.graph.nodes.image_director import image_director_node
 from app.config import settings
 
 
@@ -286,9 +288,17 @@ def handwriting_generator_node(state: GraphState) -> dict:
     # Check if finalize_lesson tool was called
     lesson_finalized = check_finalize_called(new_messages)
 
+    # Extract the latest lesson content (last AI message)
+    lesson_markdown = None
+    for msg in reversed(new_messages):
+        if isinstance(msg, AIMessage) and not msg.tool_calls and msg.content:
+            lesson_markdown = msg.content
+            break
+
     return {
         "messages": new_messages,
         "lesson_finalized": lesson_finalized,
+        "lesson_markdown": lesson_markdown,
     }
 
 
@@ -310,14 +320,11 @@ def route_after_handwriting_generator(state: GraphState) -> str:
     """
     Routing function: decide where to go after the handwriting generator runs.
 
-    If finalize_lesson was called, route to feedback_collector.
-    Otherwise, end this invocation and wait for user response.
+    Always routes to image_assembly so images generate with every lesson
+    (initial generation AND modifications). Images at pre-known S3 URLs
+    get overwritten on each pass.
     """
-    if state.get("lesson_finalized"):
-        return "feedback_collector"
-
-    # Generator presented lesson or made modifications - wait for user feedback
-    return END
+    return "image_assembly"
 
 
 def feedback_collector_node(state: GraphState) -> dict:
@@ -382,21 +389,17 @@ def entry_router(state: GraphState) -> str:
     2. Mid-generation: params set, not finalized → generator
     3. Default: routing_agent
     """
-    # Check if we're in an active handwriting generation session
-    if (
-        state.get("handwriting_params") is not None
-        and not state.get("lesson_finalized", False)
-    ):
+    hw_params = state.get("handwriting_params")
+    print(f"[ENTRY] hw_params={'set' if hw_params else 'None'}")
+
+    # Active handwriting session — route back to generator
+    # (handles both initial generation and modification requests)
+    if hw_params is not None:
+        print(f"[ENTRY] → handwriting_generator")
         return "handwriting_generator"
 
-    # Mid-feedback: lesson finalized but feedback not yet submitted
-    if (
-        state.get("lesson_finalized", False)
-        and not state.get("feedback_submitted", False)
-    ):
-        return "feedback_collector"
-
     # Default: go through routing
+    print(f"[ENTRY] → routing_agent")
     return "routing_agent"
 
 
@@ -426,6 +429,8 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
     graph.add_node("param_agent", param_agent_node)
     graph.add_node("handwriting_placeholder", handwriting_placeholder)
     graph.add_node("handwriting_generator", handwriting_generator_node)
+    graph.add_node("image_assembly", image_assembly_node)
+    graph.add_node("image_director", image_director_node)
     graph.add_node("feedback_collector", feedback_collector_node)
     graph.add_node("vocabulary_placeholder", vocabulary_placeholder)
     graph.add_node("vocabulary_generator_placeholder", vocabulary_generator_placeholder)
@@ -438,7 +443,6 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
         {
             "routing_agent": "routing_agent",
             "handwriting_generator": "handwriting_generator",
-            "feedback_collector": "feedback_collector",
         }
     )
 
@@ -466,22 +470,11 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
         }
     )
 
-    # Handwriting generator routes to feedback_collector after finalize
-    graph.add_conditional_edges(
-        "handwriting_generator",
-        route_after_handwriting_generator,
-        {
-            "feedback_collector": "feedback_collector",
-            END: END,
-        }
-    )
-
-    # Feedback collector always ends after collecting or skipping
-    graph.add_conditional_edges(
-        "feedback_collector",
-        route_after_feedback_collector,
-        {END: END}
-    )
+    # Handwriting generator always flows into image pipeline
+    # (images regenerate on every lesson generation + modification)
+    graph.add_edge("handwriting_generator", "image_assembly")
+    graph.add_edge("image_assembly", "image_director")
+    graph.add_edge("image_director", END)
 
     # Placeholder nodes always end the conversation
     graph.add_edge("handwriting_placeholder", END)
