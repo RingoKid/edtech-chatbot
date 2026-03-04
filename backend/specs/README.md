@@ -260,35 +260,31 @@ specs/
 - `app/langfuse/criteria.py` - 2 new registry entries
 
 ### 021 - Lesson Image Generation & PDF Export
-**Status:** Implemented
+**Status:** Implemented (v2)
 **Spec:** [021-lesson-image-generation/spec.md](./021-lesson-image-generation/spec.md)
-**Description:** LLM-powered image director agent that reads completed lesson plans, generates contextually relevant educational images via Gemini 2.5 Flash, and delivers them asynchronously. Includes PDF export for print-ready lesson plans.
+**Description:** Generator-driven image placement — the handwriting generator places `![desc](IMAGE_N)` placeholders inline, assembly node replaces tokens with S3 URLs, image director extracts descriptions via regex and fires off Gemini 2.5 Flash (no LLM call). Includes PDF export and frontend skeleton placeholders with auto-retry.
 
 **Features:**
-- Image director agent (gpt-4o) reads lesson → outputs 3 image generation prompts
-- Gemini 2.5 Flash image generation with parallel execution (ThreadPoolExecutor)
-- S3 storage with pre-known URLs (images appear without coordination)
-- Image data included in chat response for frontend rendering
-- PDF export via weasyprint with print-optimized layout
-- MarkdownRenderer updated with image styling + lazy loading
-- Export PDF button in chatbot UI
-- 22 unit tests (16 image generation + 6 PDF export)
+- Generator places 3 `![desc](IMAGE_N)` placeholders inline (Rule 19)
+- Assembly node replaces IMAGE_N tokens with pre-known S3 URLs
+- Image director extracts descriptions via regex + STYLE_SUFFIX (no gpt-4o call)
+- Gemini 2.5 Flash parallel generation via ThreadPoolExecutor (fire-and-forget)
+- Frontend `LessonImage` component: skeleton placeholder + auto-retry every 3s
+- PDF export via weasyprint with centered images (native markdown `<img>` rendering)
+- 24 unit tests (17 image generation + 7 PDF export)
 
 **Related Files:**
+- `app/graph/agents/handwriting_generator.py` - Rule 19: image placeholder instructions
+- `app/graph/nodes/image_assembly.py` - URL computation + IMAGE_N token replacement
+- `app/graph/nodes/image_director.py` - Regex extraction, STYLE_SUFFIX, background Gemini
 - `app/services/image_service.py` - Gemini image generation + S3 upload
-- `app/graph/nodes/image_assembly.py` - Pre-known URL computation
-- `app/graph/nodes/image_director.py` - LLM prompt planning + generation orchestration
-- `app/schemas/image.py` - ImageRequest, ImagePlan Pydantic models
-- `app/schemas/chat.py` - ImageReadyEvent schema
-- `app/routers/export.py` - PDF export endpoint
-- `app/graph/state.py` - `image_requests`, `image_urls` state fields
-- `app/graph/graph.py` - Image assembly + director nodes, routing updates
-- `app/services/chat_service.py` - Image data in response
-- `app/main.py` - Export router registration
-- `frontend/src/components/MarkdownRenderer.jsx` - Image rendering support
-- `frontend/src/components/Chatbot2.jsx` - Export PDF button + image state tracking
-- `frontend/src/api/index.js` - `exportPdf()` API method
-- `tests/unit/test_image_generation.py` - 16 unit tests
+- `app/schemas/image.py` - ImageRequest (prompt + alt_text)
+- `app/routers/export.py` - PDF export endpoint (centered images)
+- `app/services/chat_service.py` - Simple IMAGE_N → URL replacement
+- `frontend/src/components/MarkdownRenderer.jsx` - LessonImage with skeleton + retry
+- `frontend/src/components/Chatbot2.jsx` - Export button (S3 URL detection)
+- `tests/unit/test_image_generation.py` - 17 unit tests
+- `tests/unit/test_pdf_export.py` - 7 unit tests
 - `tests/unit/test_pdf_export.py` - 6 unit tests
 - `Dockerfile` - WeasyPrint system dependencies
 - `requirements.txt` - weasyprint, markdown packages
