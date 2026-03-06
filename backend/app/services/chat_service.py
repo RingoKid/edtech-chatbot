@@ -3,13 +3,14 @@ Chat service module containing the core chatbot logic.
 This service encapsulates LangGraph integration and message handling.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, AsyncGenerator
 import uuid
 import json
+import traceback
 
 from fastapi import WebSocket, WebSocketDisconnect
 from app.graph.graph import create_graph
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessageChunk
 from app.schemas.chat import ChatMessageRequest, ChatMessageResponse
 from app.schemas.chat_history import MessageItem
 from app.services.chat_history_service import get_chat_history_service
@@ -208,6 +209,148 @@ class ChatService:
             "reply": reply,
             "thread_id": thread_id,
         }
+
+    async def handle_message_stream(
+        self,
+        user_message: str,
+        user_id: str,
+        thread_id: str | None = None
+    ) -> AsyncGenerator[dict, None]:
+        """
+        Async generator that streams LLM tokens as SSE events.
+        Yields dicts with 'event' and 'data' keys for EventSourceResponse.
+
+        Event types:
+          meta  - {thread_id} sent first
+          token - "chunk text" streamed LLM tokens
+          done  - {thread_id, image_urls} after graph completes
+          error - {message} on failure
+        """
+        graph = await self._get_graph()
+        chat_history_service = get_chat_history_service()
+
+        # Thread setup (same logic as handle_message)
+        is_new_thread = thread_id is None
+        if is_new_thread:
+            thread_id = self.create_new_thread()
+            await chat_history_service.create_conversation(user_id, thread_id)
+
+        config = {"configurable": {"thread_id": thread_id}}
+
+        # Send thread_id immediately so frontend has it
+        yield {"event": "meta", "data": json.dumps({"thread_id": thread_id})}
+
+        try:
+            # Check for interrupted state (same as handle_message)
+            current_state = await graph.aget_state(config)
+
+            if current_state and current_state.next:
+                await graph.aupdate_state(
+                    config,
+                    {"messages": [HumanMessage(content=user_message)]}
+                )
+                input_data = None
+            else:
+                input_data = {"messages": [HumanMessage(content=user_message)]}
+
+            # Stream tokens via astream_events — this penetrates nested
+            # agent.invoke() boundaries (unlike stream_mode="messages").
+            # Only stream from generator nodes (the long LLM calls).
+            # Routing/param agents are short — done.reply fallback handles them.
+            # langgraph_checkpoint_ns contains the parent node path, e.g.
+            # "handwriting_generator:<uuid>|model:<uuid>"
+            SKIP_PREFIXES = ("routing_agent:", "param_agent:", "feedback_collector:")
+            full_response = ""
+            async for event in graph.astream_events(
+                input_data, config=config, version="v2"
+            ):
+                if event["event"] == "on_chat_model_stream":
+                    ns = event.get("metadata", {}).get(
+                        "langgraph_checkpoint_ns", ""
+                    )
+                    if ns.startswith(SKIP_PREFIXES):
+                        continue
+                    chunk = event["data"]["chunk"]
+                    if (
+                        isinstance(chunk, AIMessageChunk)
+                        and chunk.content
+                        and not chunk.tool_calls
+                        and not chunk.tool_call_chunks
+                    ):
+                        full_response += chunk.content
+                        yield {
+                            "event": "token",
+                            "data": json.dumps(chunk.content),
+                        }
+
+            # After stream completes, all graph nodes have executed.
+            # Read final state for side effects.
+            final_state = await graph.aget_state(config)
+            result = final_state.values if final_state else {}
+
+            # Extract final reply from state messages (fallback when
+            # tokens weren't streamed, e.g. routing-only responses)
+            reply_from_state = ""
+            state_messages = result.get("messages", [])
+            if state_messages:
+                last_msg = state_messages[-1]
+                reply_from_state = (
+                    last_msg.content if hasattr(last_msg, "content") else ""
+                )
+
+            # Use streamed tokens if we got any, otherwise fall back to state
+            reply = full_response or reply_from_state
+
+            # Post-generation side effects (same as handle_message)
+            task_type = result.get("task_type")
+            if task_type:
+                task_display_names = {
+                    "handwriting": "Handwriting",
+                    "vocabulary": "Vocabulary",
+                    "idea_generation": "Idea Generation",
+                }
+                title = task_display_names.get(task_type, task_type.title())
+                await chat_history_service.update_title(user_id, thread_id, title)
+
+            if reply:
+                await chat_history_service.update_preview(
+                    user_id, thread_id, reply
+                )
+
+            # Persist feedback if collected
+            feedback_data = result.get("feedback_data")
+            if feedback_data:
+                feedback_service = get_feedback_service()
+                await feedback_service.save_feedback(
+                    thread_id=thread_id,
+                    user_id=user_id,
+                    task_type=result.get("task_type", "unknown"),
+                    category=feedback_data["category"],
+                    rating=feedback_data.get("rating"),
+                    text=feedback_data["text"],
+                )
+
+            # Send done event with image URLs + fallback reply
+            image_urls = result.get("image_urls")
+            if image_urls:
+                for i, url in enumerate(image_urls, start=1):
+                    reply = reply.replace(f"IMAGE_{i}", url)
+
+            yield {
+                "event": "done",
+                "data": json.dumps({
+                    "thread_id": thread_id,
+                    "image_urls": image_urls or [],
+                    "reply": reply,
+                }),
+            }
+
+        except Exception as e:
+            traceback.print_exc()
+            yield {
+                "event": "error",
+                "data": json.dumps({"message": str(e)}),
+            }
 
     async def get_conversation_messages(
         self,

@@ -40,6 +40,8 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
   const accumulatedTranscriptRef = useRef('') // Accumulate all transcripts during recording session
   const fileInputRef = useRef(null) // Reference for file input
   const textareaRef = useRef(null) // Reference for textarea to restore focus
+  const streamAbortRef = useRef(null) // Abort controller for active SSE stream
+  const scrollThrottleRef = useRef(null) // Throttle scroll during token streaming
 
   // Initialize audio recorder hook
   const { isRecording, error: recorderError, startRecording, stopRecording, clearError } = useAudioRecorder()
@@ -135,6 +137,15 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }
   }
 
+  // Throttled scroll: avoids excessive scrolls during rapid token streaming
+  const throttledScrollToBottom = () => {
+    if (scrollThrottleRef.current) return
+    scrollThrottleRef.current = setTimeout(() => {
+      scrollThrottleRef.current = null
+      scrollToBottom()
+    }, 100)
+  }
+
   useEffect(() => {
     if (isInitialMount) {
       setIsInitialMount(false)
@@ -142,6 +153,14 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
     }
     scrollToBottom()
   }, [messages, isTyping])
+
+  // Cleanup scroll throttle on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollThrottleRef.current) clearTimeout(scrollThrottleRef.current)
+      if (streamAbortRef.current) streamAbortRef.current()
+    }
+  }, [])
 
   const simulateTyping = async () => {
     setIsTyping(true)
@@ -428,7 +447,7 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
         setIsTyping(false)
       }
     } else {
-      // No image, send regular text message
+      // No image, send regular text message via SSE streaming
       const newUserMessage = {
         id: Date.now(),
         type: 'user',
@@ -444,41 +463,112 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
         onNewMessage()
       }
 
-      // First try backend chat endpoint; if it fails fall back to local generator
       setIsTyping(true)
+      const botMsgId = Date.now() + 1
+
       try {
-        // Pass the thread_id to maintain conversation context
-        const res = await chat2.send(inputValue, threadId)
+        const { stream, abort } = chat2.sendStream(inputValue, threadId)
+        streamAbortRef.current = abort
 
-        // Store the thread_id from response for next request
-        if (res?.thread_id) {
-          setThreadId(res.thread_id)
-        }
+        await stream({
+          onMeta: (meta) => {
 
-        // Check if lesson images are embedded in the reply (S3 URLs in markdown)
-        if (res?.reply?.includes('l4c-videos.s3.amazonaws.com')) {
-          setHasLessonImages(true)
-        }
+            if (meta.thread_id) setThreadId(meta.thread_id)
+          },
+          onToken: (tokenText) => {
 
-        const botResponse = {
-          id: Date.now() + 1,
-          type: 'bot',
-          content: res?.reply ?? generateResponse(inputValue),
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, botResponse])
+            // On first token, hide typing indicator and create bot message
+            setIsTyping(false)
+            setMessages(prev => {
+              const existing = prev.find(m => m.id === botMsgId)
+              if (existing) {
+                // Append to existing bot message
+                return prev.map(m =>
+                  m.id === botMsgId
+                    ? { ...m, content: m.content + tokenText }
+                    : m
+                )
+              }
+              // First token — create the bot message
+              return [...prev, {
+                id: botMsgId,
+                type: 'bot',
+                content: tokenText,
+                timestamp: new Date()
+              }]
+            })
+            throttledScrollToBottom()
+          },
+          onDone: (meta) => {
+
+            setMessages(prev => {
+              const existing = prev.find(m => m.id === botMsgId)
+
+              if (!existing && meta.reply) {
+                // No tokens were streamed — use full reply from done event
+                return [...prev, {
+                  id: botMsgId,
+                  type: 'bot',
+                  content: meta.reply,
+                  timestamp: new Date()
+                }]
+              }
+              if (existing && meta.image_urls?.length) {
+                // Replace IMAGE_N placeholders with S3 URLs
+                setHasLessonImages(true)
+                return prev.map(m => {
+                  if (m.id !== botMsgId) return m
+                  let content = m.content
+                  meta.image_urls.forEach((url, i) => {
+                    content = content.replace(`IMAGE_${i + 1}`, url)
+                  })
+                  return { ...m, content }
+                })
+              }
+              // Check if streamed content has images (done event now includes replaced URLs)
+              if (!existing && meta.reply?.includes('l4c-videos.s3.amazonaws.com')) {
+                setHasLessonImages(true)
+              }
+              return prev
+            })
+          },
+          onError: (err) => {
+            console.error('Stream error:', err)
+            // Fallback: show local response if no tokens were received
+            setMessages(prev => {
+              const existing = prev.find(m => m.id === botMsgId)
+              if (!existing) {
+                return [...prev, {
+                  id: botMsgId,
+                  type: 'bot',
+                  content: generateResponse(inputValue),
+                  timestamp: new Date()
+                }]
+              }
+              return prev
+            })
+          },
+        })
       } catch (err) {
-        // fallback to local response
-        const response = generateResponse(inputValue)
-        const botResponse = {
-          id: Date.now() + 1,
-          type: 'bot',
-          content: response,
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, botResponse])
+
+        if (err.name === 'AbortError') return
+        // Fallback to local response
+        setMessages(prev => {
+          const existing = prev.find(m => m.id === botMsgId)
+          if (!existing) {
+            return [...prev, {
+              id: botMsgId,
+              type: 'bot',
+              content: generateResponse(inputValue),
+              timestamp: new Date()
+            }]
+          }
+          return prev
+        })
       } finally {
+
         setIsTyping(false)
+        streamAbortRef.current = null
       }
     }
   }
@@ -735,36 +825,100 @@ const Chatbot2 = ({ onNewMessage, hideHeader = false }) => {
           onNewMessage()
         }
 
-        // Send transcript to chat API and get bot response
+        // Send transcript to chat API via SSE streaming
         setIsTyping(true)
+        const botMsgId = Date.now() + 1
         try {
-          // Pass the thread_id to maintain conversation context
-          const res = await chat2.send(transcriptContent, threadId)
+          const { stream, abort } = chat2.sendStream(transcriptContent, threadId)
+          streamAbortRef.current = abort
 
-          // Store the thread_id from response for next request
-          if (res?.thread_id) {
-            setThreadId(res.thread_id)
-          }
-
-          const botResponse = {
-            id: Date.now() + 1,
-            type: 'bot',
-            content: res?.reply ?? generateResponse(transcriptContent),
-            timestamp: new Date()
-          }
-          setMessages(prev => [...prev, botResponse])
+          await stream({
+            onMeta: (meta) => {
+              if (meta.thread_id) setThreadId(meta.thread_id)
+            },
+            onToken: (tokenText) => {
+              setIsTyping(false)
+              setMessages(prev => {
+                const existing = prev.find(m => m.id === botMsgId)
+                if (existing) {
+                  return prev.map(m =>
+                    m.id === botMsgId
+                      ? { ...m, content: m.content + tokenText }
+                      : m
+                  )
+                }
+                return [...prev, {
+                  id: botMsgId,
+                  type: 'bot',
+                  content: tokenText,
+                  timestamp: new Date()
+                }]
+              })
+              throttledScrollToBottom()
+            },
+            onDone: (meta) => {
+              setMessages(prev => {
+                const existing = prev.find(m => m.id === botMsgId)
+                if (!existing && meta.reply) {
+                  return [...prev, {
+                    id: botMsgId,
+                    type: 'bot',
+                    content: meta.reply,
+                    timestamp: new Date()
+                  }]
+                }
+                if (existing && meta.image_urls?.length) {
+                  setHasLessonImages(true)
+                  return prev.map(m => {
+                    if (m.id !== botMsgId) return m
+                    let content = m.content
+                    meta.image_urls.forEach((url, i) => {
+                      content = content.replace(`IMAGE_${i + 1}`, url)
+                    })
+                    return { ...m, content }
+                  })
+                }
+                if (!existing && meta.reply?.includes('l4c-videos.s3.amazonaws.com')) {
+                  setHasLessonImages(true)
+                }
+                return prev
+              })
+            },
+            onError: (err) => {
+              console.error('Stream error:', err)
+              setMessages(prev => {
+                const existing = prev.find(m => m.id === botMsgId)
+                if (!existing) {
+                  return [...prev, {
+                    id: botMsgId,
+                    type: 'bot',
+                    content: generateResponse(transcriptContent),
+                    timestamp: new Date()
+                  }]
+                }
+                return prev
+              })
+            },
+          })
         } catch (err) {
-          // fallback to local response
-          const response = generateResponse(transcriptContent)
-          const botResponse = {
-            id: Date.now() + 1,
-            type: 'bot',
-            content: response,
-            timestamp: new Date()
+          if (err.name !== 'AbortError') {
+            console.error('Stream fetch failed:', err)
+            setMessages(prev => {
+              const existing = prev.find(m => m.id === botMsgId)
+              if (!existing) {
+                return [...prev, {
+                  id: botMsgId,
+                  type: 'bot',
+                  content: generateResponse(transcriptContent),
+                  timestamp: new Date()
+                }]
+              }
+              return prev
+            })
           }
-          setMessages(prev => [...prev, botResponse])
         } finally {
           setIsTyping(false)
+          streamAbortRef.current = null
         }
       }
 
