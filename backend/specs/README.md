@@ -259,6 +259,36 @@ specs/
 - `scripts/run_scaffolding_evals.py` - Refactored runner with EVAL_REGISTRY and --eval flag
 - `app/langfuse/criteria.py` - 2 new registry entries
 
+### 021 - Lesson Image Generation & PDF Export
+**Status:** Implemented (v2)
+**Spec:** [021-lesson-image-generation/spec.md](./021-lesson-image-generation/spec.md)
+**Description:** Generator-driven image placement — the handwriting generator places `![desc](IMAGE_N)` placeholders inline, assembly node replaces tokens with S3 URLs, image director extracts descriptions via regex and fires off Gemini 2.5 Flash (no LLM call). Includes PDF export and frontend skeleton placeholders with auto-retry.
+
+**Features:**
+- Generator places 3 `![desc](IMAGE_N)` placeholders inline (Rule 19)
+- Assembly node replaces IMAGE_N tokens with pre-known S3 URLs
+- Image director extracts descriptions via regex + STYLE_SUFFIX (no gpt-4o call)
+- Gemini 2.5 Flash parallel generation via ThreadPoolExecutor (fire-and-forget)
+- Frontend `LessonImage` component: skeleton placeholder + auto-retry every 3s
+- PDF export via weasyprint with centered images (native markdown `<img>` rendering)
+- 24 unit tests (17 image generation + 7 PDF export)
+
+**Related Files:**
+- `app/graph/agents/handwriting_generator.py` - Rule 19: image placeholder instructions
+- `app/graph/nodes/image_assembly.py` - URL computation + IMAGE_N token replacement
+- `app/graph/nodes/image_director.py` - Regex extraction, STYLE_SUFFIX, background Gemini
+- `app/services/image_service.py` - Gemini image generation + S3 upload
+- `app/schemas/image.py` - ImageRequest (prompt + alt_text)
+- `app/routers/export.py` - PDF export endpoint (centered images)
+- `app/services/chat_service.py` - Simple IMAGE_N → URL replacement
+- `frontend/src/components/MarkdownRenderer.jsx` - LessonImage with skeleton + retry
+- `frontend/src/components/Chatbot2.jsx` - Export button (S3 URL detection)
+- `tests/unit/test_image_generation.py` - 17 unit tests
+- `tests/unit/test_pdf_export.py` - 7 unit tests
+- `tests/unit/test_pdf_export.py` - 6 unit tests
+- `Dockerfile` - WeasyPrint system dependencies
+- `requirements.txt` - weasyprint, markdown packages
+
 ---
 
 ## How to Use This Structure

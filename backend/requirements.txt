@@ -33,6 +33,11 @@ speechmatics-python>=5.0.0
 # Langfuse evaluation dependencies
 langfuse>=2.0.0
 langchain-google-genai>=2.0.0
+# Image generation (Gemini native image API)
+google-genai>=1.0.0
+# PDF export (server-side rendering of lesson plans)
+weasyprint>=62.0
+markdown>=3.5.0
 cloudpickle==3.1.1
 cryptography==44.0.3
 debugpy==1.8.16

@@ -23,6 +23,117 @@ export const chat2 = {
   getHistory: () => client.apiGet("/chat/history"),
   // getMessages - Get all messages for a specific conversation
   getMessages: (threadId) => client.apiGet(`/chat/${threadId}/messages`),
+  // exportPdf - Download lesson plan as PDF
+  exportPdf: async (threadId) => {
+    const response = await fetch(`${client.API_BASE}/chat/${threadId}/export-pdf`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${client.getAccessToken()}` },
+    })
+    if (!response.ok) {
+      throw new Error('Failed to export PDF')
+    }
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `lesson-${threadId.slice(0, 8)}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  },
+  /**
+   * Stream a chat response via SSE.
+   * Returns { stream, abort } where:
+   *   stream({ onMeta, onToken, onDone, onError }) - starts consuming the SSE
+   *   abort() - cancels the request
+   */
+  sendStream: (message, threadId) => {
+    const controller = new AbortController()
+    const body = threadId ? { message, thread_id: threadId } : { message }
+
+    const stream = async ({ onMeta, onToken, onDone, onError } = {}) => {
+      const response = await fetch(`${client.API_BASE}/chat/message/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${client.getAccessToken()}`,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        const errText = await response.text()
+        throw new Error(errText || response.statusText)
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let streamComplete = false
+
+      try {
+        while (!streamComplete) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+
+          // Normalize CRLF → LF (sse-starlette uses \r\n line endings)
+          buffer = buffer.replace(/\r\n/g, '\n')
+
+          // Parse SSE frames: split on double newline
+          const frames = buffer.split('\n\n')
+          // Keep the last incomplete frame in the buffer
+          buffer = frames.pop() || ''
+
+          for (const frame of frames) {
+            if (!frame.trim()) continue
+
+            let eventType = 'message'
+            let data = ''
+
+            for (const line of frame.split('\n')) {
+              if (line.startsWith('event:')) {
+                eventType = line.slice(6).trim()
+              } else if (line.startsWith('data:')) {
+                data = line.slice(5).trim()
+              }
+            }
+
+            if (!data) continue
+
+            try {
+              const parsed = JSON.parse(data)
+              switch (eventType) {
+                case 'meta':
+                  onMeta?.(parsed)
+                  break
+                case 'token':
+                  onToken?.(parsed)
+                  break
+                case 'done':
+                  onDone?.(parsed)
+                  streamComplete = true
+                  break
+                case 'error':
+                  onError?.(parsed)
+                  streamComplete = true
+                  break
+              }
+            } catch {
+              // Non-JSON data lines (e.g. SSE comments) — skip
+            }
+          }
+        }
+      } finally {
+        reader.cancel()
+      }
+    }
+
+    return { stream, abort: () => controller.abort() }
+  },
 };
 
 // WebSocket helper (uses environment-based configuration)

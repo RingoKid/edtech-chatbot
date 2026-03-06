@@ -4,10 +4,11 @@ Contains HTTP and WebSocket endpoints for chat functionality.
 Production logic is delegated to `ChatService`.
 """
 from functools import lru_cache
-from fastapi import APIRouter, HTTPException, Depends, WebSocket, status
+from fastapi import APIRouter, HTTPException, Depends, WebSocket, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
+from sse_starlette.sse import EventSourceResponse
 
 from app.services.chat_service import ChatService
 from app.services.chat_history_service import get_chat_history_service
@@ -87,6 +88,34 @@ async def send_message(
             status_code=500,
             detail=f"Failed to process message: {str(e)}"
         )
+
+
+@router.post("/message/stream")
+async def send_message_stream(
+    request_body: ChatMessageRequest,
+    request: Request,
+    current_user: UserInDB = Depends(get_current_user),
+    chat_service: ChatService = Depends(get_chat_service),
+):
+    """
+    Stream a chat response as Server-Sent Events (SSE).
+    Same auth and input as POST /message, but returns an SSE stream.
+
+    Event types: meta, token, done, error.
+
+    **Requires authentication.**
+    """
+    async def event_generator():
+        async for event in chat_service.handle_message_stream(
+            user_message=request_body.message,
+            user_id=current_user.user_id,
+            thread_id=request_body.thread_id,
+        ):
+            if await request.is_disconnected():
+                break
+            yield event
+
+    return EventSourceResponse(event_generator())
 
 
 @router.get("/history", response_model=ConversationListResponse)

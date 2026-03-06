@@ -119,3 +119,5 @@ Every implemented spec should have:
 - **Keep status in sync** — Update `backend/specs/README.md` when implementation status changes
 - **Record decisions** — Use ADRs in `decisions/` folder for significant architectural choices
 - **Single source of truth** — Avoid duplicating info across multiple docs
+- **No code templates in specs** — Specs describe *what* to change, not copy-paste code. The implementer reads live files via MCP tools (Read, Glob, Grep) before making changes. This avoids stale snippets.
+- **Use Context7 MCP** — When implementing specs, always use Context7 MCP tools to pull latest docs for libraries (React, Vitest, Tailwind, Framer Motion, etc.). Resolve library IDs first, then query for relevant patterns.
