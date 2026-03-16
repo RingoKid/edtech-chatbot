@@ -52,8 +52,8 @@ FIXTURES_DIR = "tests/fixtures/handwriting_generator"
 EXPERT_FIXTURES_DIR = "tests/fixtures/handwriting_expert"
 RESULTS_DIR = "tests/evals/results"
 RUBRICS_DIR = "tests/evals/rubrics"
-FORM_D_PATH = "prompt/Handwriting & Spelling (Transcription) AI Codes/Supplementary Forms/FORM D Scaffolded Activities .md"
-FORM_B_PATH = "prompt/Handwriting & Spelling (Transcription) AI Codes/FORM B-Codes for Lesson Parts Handwriting & Spelling.md"
+FORM_D_PATH = "prompt/reference_materials/handwriting/form-d-scaffolded-activities.md"
+FORM_B_PATH = "prompt/reference_materials/handwriting/form-b-lesson-structure.md"
 
 DEFAULT_JUDGE_MODEL = "gpt-5.2"
 JUDGE_TIMEOUT = 120  # seconds per API call before raising an exception

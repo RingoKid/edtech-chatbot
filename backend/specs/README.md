@@ -289,6 +289,16 @@ specs/
 - `Dockerfile` - WeasyPrint system dependencies
 - `requirements.txt` - weasyprint, markdown packages
 
+### 022 - Split Reference Materials + Update Form D
+**Status:** Planned
+**Spec:** [022-split-reference-materials/spec.md](./022-split-reference-materials/spec.md)
+**Description:** Split the handwriting reference mega-file (856 lines) into individual form files with runtime assembly. Update Form D with 3 new activities from Dr. Farrow (Sound Echo, Word Sound Echo, Sound Check). Eliminates dual-maintenance of form content.
+
+**Related Files:**
+- `app/graph/agents/handwriting_generator.py` - Rewrite `load_reference_materials()` for file-based assembly
+- `prompt/reference_materials/handwriting/` - New directory with 11 individual form files
+- `scripts/run_scaffolding_evals.py` - Update form file paths
+
 ---
 
 ## How to Use This Structure
