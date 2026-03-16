@@ -1,0 +1,2 @@
+# Utility script dependencies (run locally, not in Docker)
+# Install: backend/scripts/venv/bin/pip install -r backend/scripts/requirements-utils.txt
