@@ -4,6 +4,8 @@ description: Review code diff or audit test coverage against a plan
 
 # /dev review
 
+**Run mode:** agent-safe for `"diff"` mode. For `"plan"` mode, pass the plan as an argument or file path — agents can't access main chat context.
+
 Read the shared context first: `.claude/commands/dev/_context.md`
 
 ## Arguments

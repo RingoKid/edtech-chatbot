@@ -4,6 +4,8 @@ description: Implement a TODO item or feature with rebuild-test-fix loop
 
 # /dev implement
 
+**Run mode:** main-chat only — requires plan mode interaction and iterative steering.
+
 Read the shared context first: `.claude/commands/dev/_context.md`
 
 ## Arguments

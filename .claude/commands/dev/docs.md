@@ -4,22 +4,22 @@ description: Manage reference materials — check for updates, convert new files
 
 # /dev docs
 
+**Run mode:** agent-safe (status check, conversions) — review changes via `git diff` before committing.
+
 Read the shared context first: `.claude/commands/dev/_context.md`
 
 ## Arguments
 
-`$ARGUMENTS` — what to do. Examples:
+`$ARGUMENTS` — what to do:
 
 - (empty) → **Status check**: scan Dropbox and codebase, report what's new/stale/missing
-- `"form D was updated"` → Find the file in Dropbox, convert, show diff against codebase version, ask before replacing
-- `"new file: Activity Framework"` → Find in Dropbox, convert, ask where to save
-- `"convert <path>"` → Direct conversion of a specific file (delegates to `/dev convert`)
+- `"form D was updated"` → Find in Dropbox, convert, write to codebase, report what changed
+- `"new file: Activity Framework"` → Find in Dropbox, convert, save to correct destination
+- `"convert <path>"` → Direct conversion of a specific .docx file
 
-## Dropbox Location
+## Dropbox → Codebase Mapping
 
 Root: `~/Library/CloudStorage/Dropbox/`
-
-Reference materials are organized by language process:
 
 | Dropbox Folder | Codebase Destination |
 |---|---|
@@ -28,32 +28,28 @@ Reference materials are organized by language process:
 | `Vocabulary & Syntax (language construction) AI codes/` | `backend/prompt/reference_materials/vocabulary_syntax/` |
 | `Idea Generation & Organization AI Codes/` | `backend/prompt/reference_materials/idea_generation/` |
 
-Expert feedback and test plans go to: `backend/resources/expert-feedback/`
+Expert feedback / test plans → `backend/resources/expert-feedback/`
 
 ## Status Check (no arguments)
 
-1. List all `.docx` files in the Dropbox folders above (with modification dates)
-2. List all `.md` files in the codebase reference material directories
+1. List `.docx` files in the Dropbox folders above
+2. List `.md` files in codebase reference material directories
 3. Read `backend/resources/docs-manifest.json` for conversion history
-4. Report:
-   - Files in Dropbox with no codebase equivalent → `❌ MISSING`
-   - Files converted but Dropbox version is newer than last conversion → `⚠️ STALE`
-   - Files up to date → `✅ CURRENT`
-   - Files in codebase with no Dropbox source → `ℹ️ LOCAL ONLY`
+4. Report: `❌ MISSING` / `⚠️ STALE` / `✅ CURRENT` / `ℹ️ LOCAL ONLY`
 
 ## Converting a File
 
-When the user says a file was updated or asks to add a new file:
-
-1. **Find the file** in the Dropbox folders. Match by filename keywords (fuzzy is fine).
+1. **Find** the file in Dropbox folders (match by filename keywords)
 2. **Extract** using the utility venv:
    ```bash
-   backend/scripts/venv/bin/python backend/scripts/extract_docx.py "<dropbox-path>"
+   backend/scripts/venv/bin/python backend/scripts/extract_docx.py "<path>"
    ```
-3. **Check for comments** — if `comment_count > 0`, highlight this to the user. Comments often contain actionable feedback.
-4. **If updating an existing file**: diff the new extraction against the current codebase version. Show what changed (new activities, removed content, etc.) before overwriting.
-5. **If adding a new file**: suggest a destination path following existing naming conventions (lowercase, hyphens, `.md`). Ask the user before saving.
-6. **After saving**: update `backend/resources/docs-manifest.json`:
+3. **Format** the JSON output as clean markdown:
+   - Use document structure (headings, paragraphs, tables)
+   - Insert comments as: `> **[Author] (YYYY-MM-DD):** text`
+   - Preserve emoji markers (💡 🗣️ 💬 👉 🤚 ✏️ 🔄)
+4. **Save** to the correct codebase destination (use mapping above, follow existing naming: lowercase, hyphens, `.md`)
+5. **Update** `backend/resources/docs-manifest.json`:
    ```json
    {
      "<file-key>": {
@@ -64,10 +60,17 @@ When the user says a file was updated or asks to add a new file:
      }
    }
    ```
-7. **If comments contained feedback**: ask the user if TODO.md should be updated.
+6. **Report** what was done:
+   ```
+   ✅ AGENT DONE: converted form-d-scaffolded-activities
+   - Source: ~/Library/CloudStorage/Dropbox/.../Form D.docx
+   - Saved to: backend/prompt/reference_materials/handwriting/form-d-scaffolded-activities.md
+   - 5 comments found (3 from Dr. Farrow)
+   - Review changes with: git diff
+   ```
 
 ## Important
 
-- **Never auto-replace codebase files** — always show the diff and ask first. Reference material changes can alter generator behavior.
-- Use `⚠️ AGENT ERROR:`, `ℹ️ AGENT NOTE:`, `✅ AGENT DONE:` markers per `_context.md`.
-- The extraction script runs locally (not in Docker): `backend/scripts/venv/bin/python`
+- **Don't ask, just do it.** The user reviews via `git diff` before committing. If something looks wrong, `git restore` undoes it.
+- If comments contain actionable feedback, add items to `backend/resources/TODO.md`.
+- Use reporting markers per `_context.md`.

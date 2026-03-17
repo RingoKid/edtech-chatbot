@@ -4,6 +4,8 @@ description: View, add, or check off project TODO items
 
 # /dev todo
 
+**Run mode:** agent-safe (read-only). Edits should run in main chat.
+
 Read the shared context first: `.claude/commands/dev/_context.md`
 
 TODO file: `backend/resources/TODO.md`

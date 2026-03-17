@@ -4,6 +4,8 @@ description: Run tests and evals, report results — spawnable as background age
 
 # /dev test
 
+**Run mode:** agent-safe — spawnable as background agent for parallel test runs.
+
 Read the shared context first: `.claude/commands/dev/_context.md`
 
 ## Arguments
