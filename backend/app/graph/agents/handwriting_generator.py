@@ -16,7 +16,7 @@ GENERATOR_MODEL = "gpt-5.1"
 
 # Path to reference materials
 REFERENCE_MATERIALS_DIR = Path(__file__).parent.parent.parent.parent / "prompt" / "reference_materials"
-REFERENCE_MATERIALS_PATH = REFERENCE_MATERIALS_DIR / "handwriting_reference.md"
+HANDWRITING_DIR = REFERENCE_MATERIALS_DIR / "handwriting"
 STANDARDS_PATH = REFERENCE_MATERIALS_DIR / "handwriting-spelling-standards.md"
 
 # Map grade parameter to section header in standards doc
@@ -26,12 +26,25 @@ GRADE_TO_STANDARDS_HEADER = {
     "1st": "1st Grade",
 }
 
-# Map grade parameter to Form C section header in reference materials
-GRADE_TO_FORM_C_HEADER = {
-    "PreK": "FORM C: PreK Example Output",
-    "K": "FORM C: K Example Output",
-    "1st": "FORM C: 1st Example Output",
+# Map grade parameter to Form C file
+GRADE_TO_FORM_C_FILE = {
+    "PreK": "form-c-prek.md",
+    "K": "form-c-k.md",
+    "1st": "form-c-1st.md",
 }
+
+# Common form files loaded for every grade (Form C inserted at index 3 at runtime)
+COMMON_FORM_FILES = [
+    "training-codes.md",
+    "form-b-lesson-structure.md",
+    "form-a-objectives.md",
+    # Form C inserted here at runtime (position 3)
+    "form-d-scaffolded-activities.md",
+    "form-e-best-practices.md",
+    "form-f-verbal-cues.md",
+    "form-g-phoneme-gestures.md",
+    "form-h-modifications.md",
+]
 
 
 # Default prompt used when Langfuse is unavailable or prompt doesn't exist
@@ -228,36 +241,34 @@ def load_grade_standards(grade: str) -> str:
 
 def load_reference_materials(grade: str) -> str:
     """
-    Load the handwriting reference materials, filtered to the matching grade's Form C example.
+    Load handwriting reference materials from individual form files.
 
-    Keeps only the Form C section that matches the requested grade, removing
-    the other two grade-specific Form C sections so the LLM sees a relevant example.
+    Reads each form file from the handwriting/ directory and inserts the
+    grade-specific Form C at the correct position.
 
     Args:
         grade: Grade level (PreK, K, 1st)
 
     Returns:
-        str: The contents of handwriting_reference.md with only the matching Form C
+        str: Assembled reference materials with only the matching Form C
     """
-    try:
-        content = REFERENCE_MATERIALS_PATH.read_text()
-    except FileNotFoundError:
-        return "ERROR: Reference materials not found. Please ensure handwriting_reference.md exists."
+    form_c_file = GRADE_TO_FORM_C_FILE.get(grade)
+    if not form_c_file:
+        return f"ERROR: Unknown grade '{grade}'."
 
-    target_header = GRADE_TO_FORM_C_HEADER.get(grade)
-    if not target_header:
-        return content
+    # Build file list with Form C inserted at position 3
+    files = list(COMMON_FORM_FILES)
+    files.insert(3, form_c_file)
 
-    # Split on section headers and filter out non-matching Form C sections
-    sections = content.split("\n## ")
-    filtered = []
-    for section in sections:
-        is_form_c = section.startswith("FORM C:")
-        if is_form_c and not section.startswith(target_header):
-            continue
-        filtered.append(section)
+    parts = []
+    for filename in files:
+        path = HANDWRITING_DIR / filename
+        try:
+            parts.append(path.read_text().strip())
+        except FileNotFoundError:
+            parts.append(f"ERROR: {filename} not found.")
 
-    return "\n## ".join(filtered)
+    return "\n\n---\n\n".join(parts)
 
 
 def get_handwriting_generator_prompt(
