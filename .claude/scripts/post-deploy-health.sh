@@ -9,14 +9,18 @@ MAX_ATTEMPTS=10
 INTERVAL=60
 LOG="/tmp/claude-deploy-health.log"
 
-echo "$(date) — Deploy health check started (polling every ${INTERVAL}s, max ${MAX_ATTEMPTS} attempts)" > "$LOG"
+echo "$(date) — Deploy health check started" > "$LOG"
+echo "$(date) — Waiting 90s for CodeBuild to trigger..." >> "$LOG"
+osascript -e 'display notification "Deploy monitor started — waiting 90s for build..." with title "🚀 Deploy"' 2>/dev/null
+sleep 90
 
 # Poll App Runner until deployment completes
 for i in $(seq 1 $MAX_ATTEMPTS); do
   STATUS=$(aws apprunner list-operations --service-arn "$ARN" --max-results 1 \
     --query 'OperationSummaryList[0].Status' --output text --region "$REGION" 2>&1)
 
-  echo "$(date) — Check $i/$MAX_ATTEMPTS: $STATUS" >> "$LOG"
+  echo "$(date) — Poll $i/$MAX_ATTEMPTS: $STATUS" >> "$LOG"
+  osascript -e "display notification \"Poll $i/$MAX_ATTEMPTS: $STATUS\" with title \"🔄 Deploy Monitor\"" 2>/dev/null
 
   if [ "$STATUS" = "SUCCEEDED" ]; then
     break
