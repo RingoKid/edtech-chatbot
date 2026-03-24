@@ -9,9 +9,13 @@ MAX_ATTEMPTS=10
 INTERVAL=60
 LOG="/tmp/claude-deploy-health.log"
 
+notify() {
+  terminal-notifier -title "$1" -message "$2" -group "deploy-health" 2>/dev/null
+}
+
 echo "$(date) — Deploy health check started" > "$LOG"
 echo "$(date) — Waiting 90s for CodeBuild to trigger..." >> "$LOG"
-osascript -e 'display notification "Deploy monitor started — waiting 90s for build..." with title "🚀 Deploy"' 2>/dev/null
+notify "🚀 Deploy started" "Waiting 90s for build to trigger..."
 sleep 90
 
 # Poll App Runner until deployment completes
@@ -20,13 +24,13 @@ for i in $(seq 1 $MAX_ATTEMPTS); do
     --query 'OperationSummaryList[0].Status' --output text --region "$REGION" 2>&1)
 
   echo "$(date) — Poll $i/$MAX_ATTEMPTS: $STATUS" >> "$LOG"
-  osascript -e "display notification \"Poll $i/$MAX_ATTEMPTS: $STATUS\" with title \"🔄 Deploy Monitor\"" 2>/dev/null
+  notify "🔄 Deploy poll $i/$MAX_ATTEMPTS" "$STATUS"
 
   if [ "$STATUS" = "SUCCEEDED" ]; then
     break
   elif [ "$STATUS" = "FAILED" ]; then
-    echo "$(date) — ⚠️ App Runner deployment FAILED" >> "$LOG"
-    osascript -e 'display notification "App Runner deployment FAILED" with title "⚠️ Deploy Health"' 2>/dev/null
+    echo "$(date) — App Runner deployment FAILED" >> "$LOG"
+    notify "🛑 Deploy FAILED" "App Runner deployment failed — check logs"
     exit 1
   fi
 
@@ -44,9 +48,8 @@ RESULT=$("$SCRIPT_DIR/health-check.sh" 2>&1)
 EXIT_CODE=$?
 echo "$RESULT" >> "$LOG"
 
-# macOS notification
 if [ $EXIT_CODE -eq 0 ]; then
-  osascript -e 'display notification "All systems green ✅" with title "Deploy Health Check"' 2>/dev/null
+  notify "✅ Deploy healthy" "All systems green"
 else
-  osascript -e 'display notification "Issues detected — check /tmp/claude-deploy-health.log" with title "⚠️ Deploy Health"' 2>/dev/null
+  notify "🛑 Deploy issues" "Check /tmp/claude-deploy-health.log"
 fi
