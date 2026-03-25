@@ -3,6 +3,7 @@ Chat history service for managing conversation records in DynamoDB.
 Handles user-thread mappings for the chat history API.
 """
 
+import asyncio
 from datetime import datetime, timezone
 from typing import List, Optional
 import boto3
@@ -82,7 +83,7 @@ class ChatHistoryService:
             'updated_at': now,
         }
 
-        self.table.put_item(Item=item)
+        await asyncio.to_thread(self.table.put_item, Item=item)
 
         return Conversation(**item)
 
@@ -100,7 +101,7 @@ class ChatHistoryService:
         pk = self._make_pk(user_id)
         sk = self._make_sk(thread_id)
 
-        response = self.table.get_item(Key={'PK': pk, 'SK': sk})
+        response = await asyncio.to_thread(self.table.get_item, Key={'PK': pk, 'SK': sk})
         item = response.get('Item')
 
         if item is None:
@@ -120,7 +121,8 @@ class ChatHistoryService:
         """
         pk = self._make_pk(user_id)
 
-        response = self.table.query(
+        response = await asyncio.to_thread(
+            self.table.query,
             KeyConditionExpression=Key('PK').eq(pk) & Key('SK').begins_with('THREAD#')
         )
 
@@ -146,7 +148,8 @@ class ChatHistoryService:
         # Map task name to display title
         title = TASK_NAME_TO_TITLE.get(task_name, task_name)
 
-        self.table.update_item(
+        await asyncio.to_thread(
+            self.table.update_item,
             Key={'PK': pk, 'SK': sk},
             UpdateExpression='SET title = :title, updated_at = :updated_at',
             ExpressionAttributeValues={
@@ -170,7 +173,8 @@ class ChatHistoryService:
         # Truncate to 100 characters
         preview = message[:100] if len(message) > 100 else message
 
-        self.table.update_item(
+        await asyncio.to_thread(
+            self.table.update_item,
             Key={'PK': pk, 'SK': sk},
             UpdateExpression='SET last_message_preview = :preview, updated_at = :updated_at',
             ExpressionAttributeValues={

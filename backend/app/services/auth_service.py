@@ -3,6 +3,7 @@ Authentication service layer.
 Handles user management and refresh token storage in DynamoDB.
 """
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 import uuid
 from typing import Optional, List
@@ -19,7 +20,7 @@ class AuthService:
     def __init__(self):
         self.table = dynamodb.Table(settings.table_name)
 
-    def get_user_by_email(self, email: str) -> Optional[UserInDB]:
+    async def get_user_by_email(self, email: str) -> Optional[UserInDB]:
         """
         Get user by email using GSI1.
 
@@ -29,7 +30,8 @@ class AuthService:
         Returns:
             UserInDB object if found, None otherwise
         """
-        response = self.table.query(
+        response = await asyncio.to_thread(
+            self.table.query,
             IndexName='GSI1',
             KeyConditionExpression=Key('GSI1PK').eq(f'EMAIL#{email}')
         )
@@ -40,7 +42,7 @@ class AuthService:
         item = response['Items'][0]
         return UserInDB(**item)
 
-    def get_user_by_id(self, user_id: str) -> Optional[UserInDB]:
+    async def get_user_by_id(self, user_id: str) -> Optional[UserInDB]:
         """
         Get user by user ID.
 
@@ -50,7 +52,8 @@ class AuthService:
         Returns:
             UserInDB object if found, None otherwise
         """
-        response = self.table.get_item(
+        response = await asyncio.to_thread(
+            self.table.get_item,
             Key={
                 'PK': f'USER#{user_id}',
                 'SK': 'PROFILE'
@@ -62,7 +65,7 @@ class AuthService:
 
         return UserInDB(**response['Item'])
 
-    def create_user(self, user: UserCreate) -> UserInDB:
+    async def create_user(self, user: UserCreate) -> UserInDB:
         """
         Create a new user.
 
@@ -76,7 +79,7 @@ class AuthService:
             ValueError: If email already exists
         """
         # Check if email already exists
-        existing_user = self.get_user_by_email(user.email)
+        existing_user = await self.get_user_by_email(user.email)
         if existing_user:
             raise ValueError("Email already registered")
 
@@ -97,10 +100,10 @@ class AuthService:
             'updated_at': now
         }
 
-        self.table.put_item(Item=user_data)
+        await asyncio.to_thread(self.table.put_item, Item=user_data)
         return UserInDB(**user_data)
 
-    def authenticate_user(self, email: str, password: str) -> Optional[UserInDB]:
+    async def authenticate_user(self, email: str, password: str) -> Optional[UserInDB]:
         """
         Authenticate user by email and password.
 
@@ -111,14 +114,14 @@ class AuthService:
         Returns:
             UserInDB if authentication succeeds, None otherwise
         """
-        user = self.get_user_by_email(email)
+        user = await self.get_user_by_email(email)
         if not user:
             return None
         if not verify_password(password, user.hashed_password):
             return None
         return user
 
-    def store_refresh_token(
+    async def store_refresh_token(
         self,
         user_id: str,
         token_id: str,
@@ -149,9 +152,9 @@ class AuthService:
             'expires_at': int(expires_at.timestamp())  # Unix timestamp for TTL
         }
 
-        self.table.put_item(Item=token_data)
+        await asyncio.to_thread(self.table.put_item, Item=token_data)
 
-    def is_refresh_token_valid(self, user_id: str, token_id: str) -> bool:
+    async def is_refresh_token_valid(self, user_id: str, token_id: str) -> bool:
         """
         Check if refresh token exists (not revoked).
 
@@ -162,7 +165,8 @@ class AuthService:
         Returns:
             True if token exists and not revoked, False otherwise
         """
-        response = self.table.get_item(
+        response = await asyncio.to_thread(
+            self.table.get_item,
             Key={
                 'PK': f'USER#{user_id}',
                 'SK': f'REFRESH_TOKEN#{token_id}'
@@ -171,7 +175,7 @@ class AuthService:
 
         return 'Item' in response
 
-    def revoke_refresh_token(self, user_id: str, token_id: str) -> None:
+    async def revoke_refresh_token(self, user_id: str, token_id: str) -> None:
         """
         Revoke a specific refresh token (logout).
 
@@ -179,14 +183,15 @@ class AuthService:
             user_id: User's ID
             token_id: Token ID to revoke
         """
-        self.table.delete_item(
+        await asyncio.to_thread(
+            self.table.delete_item,
             Key={
                 'PK': f'USER#{user_id}',
                 'SK': f'REFRESH_TOKEN#{token_id}'
             }
         )
 
-    def revoke_all_refresh_tokens(self, user_id: str) -> int:
+    async def revoke_all_refresh_tokens(self, user_id: str) -> int:
         """
         Revoke all refresh tokens for a user (logout all devices).
 
@@ -196,13 +201,15 @@ class AuthService:
         Returns:
             Number of tokens revoked
         """
-        response = self.table.query(
+        response = await asyncio.to_thread(
+            self.table.query,
             KeyConditionExpression=Key('PK').eq(f'USER#{user_id}') & Key('SK').begins_with('REFRESH_TOKEN#')
         )
 
         count = 0
         for item in response.get('Items', []):
-            self.table.delete_item(
+            await asyncio.to_thread(
+                self.table.delete_item,
                 Key={'PK': item['PK'], 'SK': item['SK']}
             )
             count += 1

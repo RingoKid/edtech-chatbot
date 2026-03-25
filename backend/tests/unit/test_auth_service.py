@@ -79,7 +79,8 @@ def dynamodb_table():
         pass
 
 
-def test_create_user(dynamodb_table):
+@pytest.mark.asyncio
+async def test_create_user(dynamodb_table):
     """Test user creation."""
     auth_service = AuthService()
 
@@ -90,7 +91,7 @@ def test_create_user(dynamodb_table):
         role="USER"
     )
 
-    user = auth_service.create_user(user_data)
+    user = await auth_service.create_user(user_data)
 
     assert user.email == "test1@example.com"
     assert user.full_name == "Test User"
@@ -99,7 +100,8 @@ def test_create_user(dynamodb_table):
     assert user.hashed_password != "password123"  # Should be hashed
 
 
-def test_create_duplicate_email(dynamodb_table):
+@pytest.mark.asyncio
+async def test_create_duplicate_email(dynamodb_table):
     """Test creating user with duplicate email raises error."""
     auth_service = AuthService()
 
@@ -110,14 +112,15 @@ def test_create_duplicate_email(dynamodb_table):
     )
 
     # First creation should succeed
-    auth_service.create_user(user_data)
+    await auth_service.create_user(user_data)
 
     # Second creation should fail
     with pytest.raises(ValueError, match="Email already registered"):
-        auth_service.create_user(user_data)
+        await auth_service.create_user(user_data)
 
 
-def test_authenticate_user_success(dynamodb_table):
+@pytest.mark.asyncio
+async def test_authenticate_user_success(dynamodb_table):
     """Test successful authentication."""
     auth_service = AuthService()
 
@@ -127,16 +130,17 @@ def test_authenticate_user_success(dynamodb_table):
         password="password123",
         full_name="Test User"
     )
-    auth_service.create_user(user_data)
+    await auth_service.create_user(user_data)
 
     # Authenticate
-    user = auth_service.authenticate_user("test3@example.com", "password123")
+    user = await auth_service.authenticate_user("test3@example.com", "password123")
 
     assert user is not None
     assert user.email == "test3@example.com"
 
 
-def test_authenticate_user_wrong_password(dynamodb_table):
+@pytest.mark.asyncio
+async def test_authenticate_user_wrong_password(dynamodb_table):
     """Test authentication with wrong password."""
     auth_service = AuthService()
 
@@ -146,18 +150,19 @@ def test_authenticate_user_wrong_password(dynamodb_table):
         password="password123",
         full_name="Test User"
     )
-    auth_service.create_user(user_data)
+    await auth_service.create_user(user_data)
 
     # Authenticate with wrong password
-    user = auth_service.authenticate_user("test4@example.com", "wrongpassword")
+    user = await auth_service.authenticate_user("test4@example.com", "wrongpassword")
 
     assert user is None
 
 
-def test_authenticate_user_not_found(dynamodb_table):
+@pytest.mark.asyncio
+async def test_authenticate_user_not_found(dynamodb_table):
     """Test authentication for non-existent user."""
     auth_service = AuthService()
 
-    user = auth_service.authenticate_user("notfound@example.com", "password123")
+    user = await auth_service.authenticate_user("notfound@example.com", "password123")
 
     assert user is None

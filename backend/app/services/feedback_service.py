@@ -3,6 +3,7 @@ Feedback service for persisting user feedback to DynamoDB.
 Handles save and query operations for feedback records.
 """
 
+import asyncio
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -85,7 +86,7 @@ class FeedbackService:
         if rating and rating > 0:
             item['rating'] = rating
 
-        self.table.put_item(Item=item)
+        await asyncio.to_thread(self.table.put_item, Item=item)
         return item
 
     async def get_feedback_by_thread(self, thread_id: str) -> List[dict]:
@@ -98,7 +99,8 @@ class FeedbackService:
         Returns:
             List of feedback items
         """
-        response = self.table.query(
+        response = await asyncio.to_thread(
+            self.table.query,
             KeyConditionExpression=(
                 Key('PK').eq(f'THREAD#{thread_id}')
                 & Key('SK').begins_with('FEEDBACK#')
@@ -116,7 +118,8 @@ class FeedbackService:
         Returns:
             List of feedback items sorted by creation time
         """
-        response = self.table.query(
+        response = await asyncio.to_thread(
+            self.table.query,
             IndexName='GSI1',
             KeyConditionExpression=(
                 Key('GSI1PK').eq(f'USER#{user_id}')

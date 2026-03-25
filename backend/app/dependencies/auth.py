@@ -55,7 +55,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
 
     # Get user from database
     auth_service = AuthService()
-    user = auth_service.get_user_by_id(user_id)
+    user = await auth_service.get_user_by_id(user_id)
 
     if user is None:
         raise credentials_exception
@@ -149,6 +149,6 @@ async def get_websocket_user(token: Optional[str] = Query(None)) -> Optional[Use
 
     # Get user from database
     auth_service = AuthService()
-    user = auth_service.get_user_by_id(user_id)
+    user = await auth_service.get_user_by_id(user_id)
 
     return user

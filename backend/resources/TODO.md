@@ -4,7 +4,7 @@
 
 ## Async/Performance Fixes (audit, 2026-03-17)
 
-- [ ] **Sync DynamoDB calls block event loop** — `chat_history_service.py`, `auth_service.py`, `feedback_service.py` all declare `async def` but call blocking boto3 methods (`table.put_item`, `table.query`, etc.). Every DB call serializes the event loop — 2 concurrent users block each other. Fix: wrap in `asyncio.to_thread()` or switch to `aioboto3`.
+- [x] **Sync DynamoDB calls block event loop** — `chat_history_service.py`, `auth_service.py`, `feedback_service.py` all declare `async def` but call blocking boto3 methods (`table.put_item`, `table.query`, etc.). Every DB call serializes the event loop — 2 concurrent users block each other. Fix: wrap in `asyncio.to_thread()` or switch to `aioboto3`.
 - [ ] **Graph nodes use sync `.invoke()` in async context** — `graph.py` nodes (`routing_agent_node`, `param_agent_node`, `handwriting_generator_node`, `feedback_collector_node`) call `agent.invoke()` synchronously. The outer `handle_message()` uses `await graph.ainvoke()` but each node blocks the loop during LLM calls. Fix: switch to `await agent.ainvoke()` and make nodes async.
 - [ ] **Blocking `time.sleep()` in WebSocket buffer** — `transcription.py:56` uses `time.sleep(0.01)` in a sync `read()` method called from async context. Blocks event loop during audio streaming. Fix: use `asyncio.Event` signaling or `asyncio.to_thread()`.
 - [ ] **`asyncio.create_task()` in sync callbacks** — `speechmatics_service.py:84,91` calls `asyncio.create_task()` from sync event handlers without ensuring event loop context. Can fail or race. Fix: use `loop.call_soon_threadsafe()` or restructure callbacks.

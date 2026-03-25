@@ -35,7 +35,7 @@ async def signup(user_data: UserCreate):
     auth_service = AuthService()
 
     try:
-        user = auth_service.create_user(user_data)
+        user = await auth_service.create_user(user_data)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -69,7 +69,7 @@ async def login(
     auth_service = AuthService()
 
     # OAuth2 spec uses "username", but we use email
-    user = auth_service.authenticate_user(form_data.username, form_data.password)
+    user = await auth_service.authenticate_user(form_data.username, form_data.password)
 
     if not user:
         raise HTTPException(
@@ -91,7 +91,7 @@ async def login(
     client_host = request.client.host if request.client else "Unknown"
     user_agent = request.headers.get("user-agent", "Unknown")
 
-    auth_service.store_refresh_token(
+    await auth_service.store_refresh_token(
         user_id=user.user_id,
         token_id=token_id,
         expires_in_days=settings.refresh_token_expire_days,
@@ -142,7 +142,7 @@ async def refresh_token_endpoint(
 
     # Verify user exists and token is not revoked
     auth_service = AuthService()
-    user = auth_service.get_user_by_id(user_id)
+    user = await auth_service.get_user_by_id(user_id)
 
     if not user:
         raise HTTPException(
@@ -150,7 +150,7 @@ async def refresh_token_endpoint(
             detail="User not found"
         )
 
-    if not auth_service.is_refresh_token_valid(user_id, token_id):
+    if not await auth_service.is_refresh_token_valid(user_id, token_id):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token revoked or expired"
@@ -166,8 +166,8 @@ async def refresh_token_endpoint(
     )
 
     # Revoke old refresh token, store new one
-    auth_service.revoke_refresh_token(user_id, token_id)
-    auth_service.store_refresh_token(
+    await auth_service.revoke_refresh_token(user_id, token_id)
+    await auth_service.store_refresh_token(
         user_id=user.user_id,
         token_id=new_token_id,
         expires_in_days=settings.refresh_token_expire_days
@@ -202,7 +202,7 @@ async def logout(
         payload = decode_token(refresh_token)
         if payload and payload.get("token_id"):
             token_id = payload["token_id"]
-            auth_service.revoke_refresh_token(current_user.user_id, token_id)
+            await auth_service.revoke_refresh_token(current_user.user_id, token_id)
 
     # Clear cookie
     response.delete_cookie(key="refresh_token")
@@ -217,7 +217,7 @@ async def logout_all_devices(current_user: UserInDB = Depends(get_current_user))
     Useful after password change or security concern.
     """
     auth_service = AuthService()
-    count = auth_service.revoke_all_refresh_tokens(current_user.user_id)
+    count = await auth_service.revoke_all_refresh_tokens(current_user.user_id)
 
     return {"message": f"Logged out from {count} device(s)"}
 
