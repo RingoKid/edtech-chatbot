@@ -73,7 +73,7 @@ curl -s https://mkbifgscip.us-east-1.awsapprunner.com/api/v1/health
 
 # App Runner logs (last 30 min)
 aws logs filter-log-events \
-  --log-group-name /aws/apprunner/edtech-chatbot-service-develop \
+  --log-group-name /aws/apprunner/edtech-chatbot-service-develop/1b0e5f1b973c4671862ae5b771feab6b/application \
   --start-time $(date -v-30M +%s000) --limit 50 --region us-east-1
 ```
 

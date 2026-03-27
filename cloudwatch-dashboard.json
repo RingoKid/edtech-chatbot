@@ -1,0 +1,98 @@
+{
+  "widgets": [
+    {
+      "type": "text",
+      "x": 0, "y": 0, "width": 24, "height": 1,
+      "properties": {
+        "markdown": "# EdTech Chatbot — App Runner Metrics"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0, "y": 1, "width": 12, "height": 6,
+      "properties": {
+        "title": "Requests",
+        "region": "us-east-1",
+        "metrics": [
+          ["AWS/AppRunner", "Requests", "ServiceName", "edtech-chatbot-service-develop", "ServiceID", "1b0e5f1b973c4671862ae5b771feab6b"]
+        ],
+        "stat": "Sum",
+        "period": 3600,
+        "view": "timeSeries"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12, "y": 1, "width": 12, "height": 6,
+      "properties": {
+        "title": "Request Latency (ms)",
+        "region": "us-east-1",
+        "metrics": [
+          ["AWS/AppRunner", "RequestLatency", "ServiceName", "edtech-chatbot-service-develop", "ServiceID", "1b0e5f1b973c4671862ae5b771feab6b"]
+        ],
+        "stat": "Average",
+        "period": 3600,
+        "view": "timeSeries"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0, "y": 7, "width": 12, "height": 6,
+      "properties": {
+        "title": "Response Status Codes",
+        "region": "us-east-1",
+        "metrics": [
+          ["AWS/AppRunner", "2xxStatusResponses", "ServiceName", "edtech-chatbot-service-develop", "ServiceID", "1b0e5f1b973c4671862ae5b771feab6b"],
+          ["AWS/AppRunner", "4xxStatusResponses", "ServiceName", "edtech-chatbot-service-develop", "ServiceID", "1b0e5f1b973c4671862ae5b771feab6b"],
+          ["AWS/AppRunner", "5xxStatusResponses", "ServiceName", "edtech-chatbot-service-develop", "ServiceID", "1b0e5f1b973c4671862ae5b771feab6b"]
+        ],
+        "stat": "Sum",
+        "period": 3600,
+        "view": "timeSeries"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0, "y": 13, "width": 12, "height": 6,
+      "properties": {
+        "title": "Active Instances & Concurrency",
+        "region": "us-east-1",
+        "metrics": [
+          ["AWS/AppRunner", "ActiveInstances", "ServiceName", "edtech-chatbot-service-develop", "ServiceID", "1b0e5f1b973c4671862ae5b771feab6b"],
+          ["AWS/AppRunner", "Concurrency", "ServiceName", "edtech-chatbot-service-develop", "ServiceID", "1b0e5f1b973c4671862ae5b771feab6b"]
+        ],
+        "stat": "Maximum",
+        "period": 3600,
+        "view": "timeSeries"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12, "y": 7, "width": 12, "height": 6,
+      "properties": {
+        "title": "CPU Utilization (%)",
+        "region": "us-east-1",
+        "metrics": [
+          ["AWS/AppRunner", "CPUUtilization", "ServiceName", "edtech-chatbot-service-develop", "ServiceID", "1b0e5f1b973c4671862ae5b771feab6b"]
+        ],
+        "stat": "Average",
+        "period": 3600,
+        "view": "timeSeries"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12, "y": 13, "width": 12, "height": 6,
+      "properties": {
+        "title": "Memory Utilization (%)",
+        "region": "us-east-1",
+        "metrics": [
+          ["AWS/AppRunner", "MemoryUtilization", "ServiceName", "edtech-chatbot-service-develop", "ServiceID", "1b0e5f1b973c4671862ae5b771feab6b"]
+        ],
+        "stat": "Average",
+        "period": 3600,
+        "view": "timeSeries"
+      }
+    }
+  ]
+}
