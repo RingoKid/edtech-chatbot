@@ -1,12 +1,14 @@
 """
-Unit tests verifying DynamoDB calls go through asyncio.to_thread().
+Unit tests verifying async wiring across the app:
 
-These tests mock asyncio.to_thread and the DynamoDB table to confirm
-that every blocking boto3 call is properly wrapped, keeping the
-event loop unblocked.
+1. DynamoDB calls go through asyncio.to_thread()
+2. Graph nodes that do I/O are async and use .ainvoke() (not .invoke())
 """
 
+import ast
 import asyncio
+import inspect
+import textwrap
 from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
@@ -191,3 +193,118 @@ class TestAuthServiceAsync:
         assert mock.call_args_list[0][0][0] == service.table.query
         assert mock.call_args_list[1][0][0] == service.table.delete_item
         assert count == 1
+
+
+# ---------------------------------------------------------------------------
+# Graph node async checks (auto-discovered from graph definition)
+# ---------------------------------------------------------------------------
+
+class TestGraphNodesAsync:
+    """Verify graph nodes that do I/O are async and don't use blocking calls.
+
+    Nodes are auto-discovered from graph.add_node() calls in create_graph().
+    Pure-function nodes (no I/O) are exempt via SYNC_ALLOWLIST.
+    """
+
+    # Pure-function nodes with no I/O — intentionally sync
+    SYNC_ALLOWLIST = {
+        "image_assembly_node",
+        "handwriting_placeholder",
+        "vocabulary_placeholder",
+        "idea_generation_placeholder",
+        "vocabulary_generator_placeholder",
+        "idea_generation_generator_placeholder",
+    }
+
+    @staticmethod
+    def _get_graph_node_functions() -> dict:
+        """Auto-discover all node functions registered in create_graph()."""
+        import sys
+        from app.graph.graph import create_graph  # noqa: F401 — forces module load
+        graph_module = sys.modules['app.graph.graph']
+
+        source = inspect.getsource(create_graph)
+        tree = ast.parse(textwrap.dedent(source))
+
+        nodes = {}
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "add_node"
+                and len(node.args) >= 2
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[1], ast.Name)
+            ):
+                name = node.args[0].value
+                func_name = node.args[1].id
+                func = getattr(graph_module, func_name, None)
+                if func is not None:
+                    nodes[name] = func
+
+        return nodes
+
+    def test_discovers_nodes(self):
+        """Sanity check: auto-discovery finds the nodes we expect."""
+        nodes = self._get_graph_node_functions()
+        assert len(nodes) >= 4, f"Expected at least 4 nodes, found {len(nodes)}: {list(nodes)}"
+
+    def test_io_nodes_are_async(self):
+        """Every node not on the sync allowlist must be async def."""
+        nodes = self._get_graph_node_functions()
+
+        non_async = [
+            name for name, func in nodes.items()
+            if func.__name__ not in self.SYNC_ALLOWLIST
+            and not inspect.iscoroutinefunction(func)
+        ]
+
+        assert not non_async, (
+            f"Graph nodes must be async def (or added to SYNC_ALLOWLIST if pure): {non_async}"
+        )
+
+    def test_no_sync_invoke_in_nodes(self):
+        """No graph node should call .invoke() — must use .ainvoke() instead."""
+        nodes = self._get_graph_node_functions()
+
+        violations = []
+        for name, func in nodes.items():
+            source = textwrap.dedent(inspect.getsource(func))
+            tree = ast.parse(source)
+
+            for node in ast.walk(tree):
+                if (
+                    isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "invoke"
+                ):
+                    violations.append(name)
+                    break
+
+        assert not violations, (
+            f"Graph nodes must use .ainvoke(), not .invoke(): {violations}"
+        )
+
+    def test_no_time_sleep_in_nodes(self):
+        """No graph node should call time.sleep() — blocks the event loop."""
+        nodes = self._get_graph_node_functions()
+
+        violations = []
+        for name, func in nodes.items():
+            source = textwrap.dedent(inspect.getsource(func))
+            tree = ast.parse(source)
+
+            for node in ast.walk(tree):
+                if (
+                    isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "sleep"
+                    and isinstance(node.func.value, ast.Name)
+                    and node.func.value.id == "time"
+                ):
+                    violations.append(name)
+                    break
+
+        assert not violations, (
+            f"Graph nodes must not use time.sleep() (blocks event loop): {violations}"
+        )

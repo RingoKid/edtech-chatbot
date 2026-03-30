@@ -64,7 +64,7 @@ if settings.dynamodb_endpoint_url:
     os.environ['AWS_DEFAULT_REGION'] = settings.aws_region
 
 
-def routing_agent_node(state: GraphState) -> dict:
+async def routing_agent_node(state: GraphState) -> dict:
     """
     Node that runs the routing ReAct agent.
 
@@ -78,7 +78,7 @@ def routing_agent_node(state: GraphState) -> dict:
     agent = create_routing_agent()
 
     # Invoke the agent with current messages
-    result = agent.invoke({"messages": state["messages"]})
+    result = await agent.ainvoke({"messages": state["messages"]})
 
     # Extract messages from agent result
     new_messages = result.get("messages", [])
@@ -124,7 +124,7 @@ def route_after_agent(state: GraphState) -> str:
         return END
 
 
-def param_agent_node(state: GraphState) -> dict:
+async def param_agent_node(state: GraphState) -> dict:
     """
     Node that runs the parameter collection ReAct agent.
 
@@ -139,7 +139,7 @@ def param_agent_node(state: GraphState) -> dict:
     agent = create_param_agent()
 
     # Invoke the agent with current messages
-    result = agent.invoke({"messages": state["messages"]})
+    result = await agent.ainvoke({"messages": state["messages"]})
 
     # Extract messages from agent result
     new_messages = result.get("messages", [])
@@ -253,7 +253,7 @@ def route_after_param_agent(state: GraphState) -> str:
     return END
 
 
-def handwriting_generator_node(state: GraphState) -> dict:
+async def handwriting_generator_node(state: GraphState) -> dict:
     """
     Node that runs the handwriting generator ReAct agent.
 
@@ -280,7 +280,7 @@ def handwriting_generator_node(state: GraphState) -> dict:
     )
 
     # Invoke the agent with current messages
-    result = agent.invoke({"messages": state["messages"]})
+    result = await agent.ainvoke({"messages": state["messages"]})
 
     # Extract messages from agent result
     new_messages = result.get("messages", [])
@@ -327,7 +327,7 @@ def route_after_handwriting_generator(state: GraphState) -> str:
     return "image_assembly"
 
 
-def feedback_collector_node(state: GraphState) -> dict:
+async def feedback_collector_node(state: GraphState) -> dict:
     """
     Node that runs the feedback collector ReAct agent.
 
@@ -339,7 +339,7 @@ def feedback_collector_node(state: GraphState) -> dict:
     """
     agent = create_feedback_collector_agent()
 
-    result = agent.invoke({"messages": state["messages"]})
+    result = await agent.ainvoke({"messages": state["messages"]})
 
     new_messages = result.get("messages", [])
 

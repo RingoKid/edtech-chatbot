@@ -10,31 +10,52 @@ Read the shared context first: `.claude/commands/dev/_context.md`
 
 ## Arguments
 
-`$ARGUMENTS` — what to test:
+`$ARGUMENTS` — what to test.
 
-- (empty) → Auto-discover from `git diff`: map changed files to relevant tests
-- `"pytest"` → Run all pytest: `docker compose exec backend pytest tests/evals/ -v`
-- `"evals"` → Run all LLM judge evals: `python scripts/run_scaffolding_evals.py`
-- `"evals --eval verbatim structure"` → Specific eval criteria
-- `"fixtures"` → Regenerate fixtures: `python scripts/generate_eval_fixtures.py`
-- Test file path → Run that specific test
+## Behavior
 
-## Auto-discovery mapping
+### Step 1: Discover
 
-| Changed file | Tests to run |
+Discover all available tests dynamically — never hardcode paths or filenames:
+
+- List `backend/tests/unit/` for unit tests
+- List `backend/tests/integration/` for integration tests
+- List `backend/tests/evals/` for LLM judge eval tests
+- List `backend/tests/evals/rubrics/` for eval rubric files
+- Check if `backend/scripts/run_scaffolding_evals.py` exists for full eval runner
+- Check if `backend/scripts/generate_eval_fixtures.py` exists for fixture regeneration
+
+### Step 2: Match
+
+Match `$ARGUMENTS` to discovered tests:
+
+| Argument | Action |
 |---|---|
-| `handwriting_generator.py` | pytest + LLM judge evals. Warn: fixtures may need regeneration. |
-| `reference_materials/handwriting/*` | LLM judge evals (verbatim, activity_naming) |
-| `tests/evals/rubrics/*` | LLM judge evals for that rubric |
-| `state.py`, `graph.py` | Full pytest suite |
+| (empty) | Show summary of all discovered tests grouped by type. Ask what to run. |
+| `"unit"` | List all unit test files. Ask which to run (all or specific). |
+| `"integration"` | List all integration test files. Ask which to run. |
+| `"evals"` | List all eval test files. Ask which to run. |
+| `"fixtures"` | Regenerate eval fixtures via script. Confirm first. |
+| `"all"` | Run everything. Confirm first. |
+| keyword (e.g. `"async"`, `"routing"`) | Search all test filenames for matches across unit/integration/evals. Show matches, ask which to run. |
+| file path | Run that specific test file directly. |
 
-## Report format
+**Always ask before running.** Show what you found and what you'll execute. Wait for confirmation.
+
+### Step 3: Run
+
+Run tests using Docker (see `_context.md` for commands):
+
+- **Unit/integration/eval pytest:** `docker compose exec backend pytest <path> -v`
+- **Full LLM judge evals:** `docker compose exec -e GIT_SHA=$(git rev-parse --short HEAD) backend python scripts/run_scaffolding_evals.py`
+- **Fixtures:** `docker compose exec backend python scripts/generate_eval_fixtures.py`
+
+### Step 4: Report
 
 ```
 ✅ AGENT DONE: test results
-- pytest: 12/12 passed
-- evals: verbatim 85%, structure 92%, activity_naming 78%
-- ⚠️ activity_naming dropped from 90% → 78% (regression?)
+- <type>: X/Y passed
+- ⚠️ <any failures or regressions>
 ```
 
-Flag any score drops as potential regressions.
+Flag any score drops in evals as potential regressions.
