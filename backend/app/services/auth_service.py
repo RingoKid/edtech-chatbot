@@ -93,7 +93,7 @@ class AuthService:
             'GSI1SK': f'USER#{user_id}',
             'user_id': user_id,
             'email': user.email,
-            'hashed_password': get_password_hash(user.password),
+            'hashed_password': await asyncio.to_thread(get_password_hash, user.password),
             'full_name': user.full_name,
             'role': user.role,
             'created_at': now,
@@ -117,7 +117,7 @@ class AuthService:
         user = await self.get_user_by_email(email)
         if not user:
             return None
-        if not verify_password(password, user.hashed_password):
+        if not await asyncio.to_thread(verify_password, password, user.hashed_password):
             return None
         return user
 

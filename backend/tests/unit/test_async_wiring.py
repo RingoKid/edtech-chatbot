@@ -138,15 +138,17 @@ class TestAuthServiceAsync:
     @pytest.mark.asyncio
     async def test_create_user_uses_to_thread(self, service):
         from app.schemas.auth import UserCreate
+        from app.core.security import get_password_hash
         with patch("app.services.auth_service.asyncio.to_thread", new_callable=AsyncMock) as mock:
-            # First call = get_user_by_email (query), second = put_item
-            mock.side_effect = [{'Items': []}, None]
+            # call 1 = get_user_by_email (query), 2 = get_password_hash, 3 = put_item
+            mock.side_effect = [{'Items': []}, 'hashed_pw', None]
             await service.create_user(UserCreate(
                 email="new@test.com", password="pass1234", full_name="Test"
             ))
-        assert mock.call_count == 2
+        assert mock.call_count == 3
         assert mock.call_args_list[0][0][0] == service.table.query
-        assert mock.call_args_list[1][0][0] == service.table.put_item
+        assert mock.call_args_list[1][0][0] == get_password_hash
+        assert mock.call_args_list[2][0][0] == service.table.put_item
 
     @pytest.mark.asyncio
     async def test_authenticate_user_uses_to_thread(self, service):
@@ -156,6 +158,24 @@ class TestAuthServiceAsync:
         # get_user_by_email returns None → early return, only 1 call
         mock.assert_called_once()
         assert mock.call_args[0][0] == service.table.query
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_authenticate_user_bcrypt_uses_to_thread(self, service):
+        from app.core.security import verify_password
+        fake_user = {
+            'PK': 'USER#u1', 'SK': 'PROFILE', 'GSI1PK': 'EMAIL#a@b.com',
+            'GSI1SK': 'USER#u1', 'user_id': 'u1', 'email': 'a@b.com',
+            'hashed_password': 'fakehash', 'full_name': 'Test',
+            'role': 'USER', 'created_at': '2026-01-01', 'updated_at': '2026-01-01',
+        }
+        with patch("app.services.auth_service.asyncio.to_thread", new_callable=AsyncMock) as mock:
+            # call 1 = query (finds user), call 2 = verify_password (returns False)
+            mock.side_effect = [{'Items': [fake_user]}, False]
+            result = await service.authenticate_user("a@b.com", "wrong")
+        assert mock.call_count == 2
+        assert mock.call_args_list[0][0][0] == service.table.query
+        assert mock.call_args_list[1][0][0] == verify_password
         assert result is None
 
     @pytest.mark.asyncio
