@@ -14,7 +14,8 @@ def client():
     Returns:
         TestClient: A test client wrapping the FastAPI app
     """
-    yield TestClient(app)
+    with TestClient(app) as c:
+        yield c
 
 
 def test_health_check_returns_ok(client):

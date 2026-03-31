@@ -12,7 +12,8 @@ from tests.conftest import unique_email
 @pytest.fixture(scope="module")
 def client():
     """Create test client. DynamoDB tables are managed by session-scoped fixture in conftest.py."""
-    return TestClient(app)
+    with TestClient(app) as c:
+        yield c
 
 
 def test_signup_success(client):

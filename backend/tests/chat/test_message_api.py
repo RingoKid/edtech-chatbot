@@ -36,8 +36,8 @@ def client():
     """
     app.dependency_overrides[get_chat_service] = get_test_chat_service
     app.dependency_overrides[get_current_user] = get_test_user
-    client = TestClient(app)
-    yield client
+    with TestClient(app) as c:
+        yield c
     app.dependency_overrides.clear()
 
 

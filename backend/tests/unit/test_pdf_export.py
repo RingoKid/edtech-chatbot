@@ -117,8 +117,8 @@ def test_pdf_endpoint_returns_pdf():
         mock_graph.aget_state = AsyncMock(return_value=mock_state)
         instance._get_graph.return_value = mock_graph
 
-        client = TestClient(app)
-        response = client.post("/api/v1/chat/test-thread/export-pdf")
+        with TestClient(app) as client:
+            response = client.post("/api/v1/chat/test-thread/export-pdf")
 
     # Clean up overrides
     app.dependency_overrides.clear()

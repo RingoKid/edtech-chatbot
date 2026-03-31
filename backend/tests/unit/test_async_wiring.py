@@ -216,6 +216,62 @@ class TestAuthServiceAsync:
 
 
 # ---------------------------------------------------------------------------
+# Database init (lifespan-based, not import-time)
+# ---------------------------------------------------------------------------
+
+class TestDatabaseInit:
+    """Verify database uses lifespan init, not module-level init."""
+
+    def setup_method(self):
+        """Reset module globals before each test."""
+        import app.database as db
+        db._dynamodb = None
+        db._table = None
+
+    def teardown_method(self):
+        """Re-init so other tests aren't affected."""
+        import app.database as db
+        db.init_db()
+
+    def test_get_db_raises_before_init(self):
+        """get_db() must raise if init_db() hasn't been called."""
+        from app.database import get_db
+        with pytest.raises(RuntimeError, match="not initialized"):
+            get_db()
+
+    def test_get_dynamodb_raises_before_init(self):
+        """get_dynamodb() must raise if init_db() hasn't been called."""
+        from app.database import get_dynamodb
+        with pytest.raises(RuntimeError, match="not initialized"):
+            get_dynamodb()
+
+    def test_init_db_sets_globals(self):
+        """init_db() should populate both _dynamodb and _table."""
+        import app.database as db
+        db.init_db()
+        assert db._dynamodb is not None
+        assert db._table is not None
+
+    def test_get_db_returns_table_after_init(self):
+        """get_db() returns the table after init_db()."""
+        import app.database as db
+        db.init_db()
+        table = db.get_db()
+        assert table is db._table
+
+    @pytest.mark.asyncio
+    async def test_lifespan_calls_init_db(self):
+        """FastAPI lifespan handler must call init_db()."""
+        import app.main as main_module
+        import app.database as db
+
+        assert db._table is None  # reset by setup_method
+        async with main_module.lifespan(main_module.app):
+            pass
+        assert db._table is not None
+
+
+# ---------------------------------------------------------------------------
 # Graph node async checks (auto-discovered from graph definition)
 # ---------------------------------------------------------------------------
 

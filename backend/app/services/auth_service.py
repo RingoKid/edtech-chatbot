@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 import uuid
 from typing import Optional, List
 from boto3.dynamodb.conditions import Key
-from app.database import dynamodb
+from app.database import get_db
 from app.config import settings
 from app.schemas.auth import UserCreate, UserInDB
 from app.core.security import get_password_hash, verify_password
@@ -18,7 +18,7 @@ class AuthService:
     """Service for authentication operations."""
 
     def __init__(self):
-        self.table = dynamodb.Table(settings.table_name)
+        self.table = get_db()
 
     async def get_user_by_email(self, email: str) -> Optional[UserInDB]:
         """

@@ -1,16 +1,18 @@
 import boto3
 from .config import settings, AppEnv
 
+_dynamodb = None
+_table = None
 
-def get_dynamodb_resource():
+
+def _create_dynamodb_resource():
     """
     Create and return a DynamoDB resource based on the application environment.
-    
+
     Returns:
         boto3.resource: DynamoDB resource configured for local, sandbox, or production environment
     """
     if settings.app_env == AppEnv.LOCAL:
-        # Local environment configuration - uses local DynamoDB endpoint
         return boto3.resource(
             'dynamodb',
             endpoint_url=settings.dynamodb_endpoint_url,
@@ -19,7 +21,6 @@ def get_dynamodb_resource():
             aws_secret_access_key=settings.aws_secret_access_key or "dummy"
         )
     elif settings.app_env == AppEnv.SANDBOX:
-        # Sandbox environment configuration - uses AWS DynamoDB with explicit credentials
         return boto3.resource(
             'dynamodb',
             region_name=settings.aws_region,
@@ -27,25 +28,28 @@ def get_dynamodb_resource():
             aws_secret_access_key=settings.aws_secret_access_key
         )
     else:  # PRODUCTION
-        # Production environment configuration - uses AWS DynamoDB with IAM role/profile
         return boto3.resource(
             'dynamodb',
             region_name=settings.aws_region
         )
 
 
-# Global DynamoDB resource
-dynamodb = get_dynamodb_resource()
-
-# Global table reference
-table = dynamodb.Table(settings.table_name)
+def init_db():
+    """Initialize DynamoDB connection. Called once at app startup via lifespan."""
+    global _dynamodb, _table
+    _dynamodb = _create_dynamodb_resource()
+    _table = _dynamodb.Table(settings.table_name)
 
 
 def get_db():
-    """
-    FastAPI dependency function to provide database access.
-    
-    Returns:
-        boto3.resources.dynamodb.Table: The DynamoDB table resource
-    """
-    return table
+    """Get the DynamoDB table. Must be called after init_db()."""
+    if _table is None:
+        raise RuntimeError("Database not initialized — init_db() not called yet")
+    return _table
+
+
+def get_dynamodb():
+    """Get the DynamoDB resource. Must be called after init_db()."""
+    if _dynamodb is None:
+        raise RuntimeError("Database not initialized — init_db() not called yet")
+    return _dynamodb

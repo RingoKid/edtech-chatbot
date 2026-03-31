@@ -201,7 +201,7 @@ async def generate_all(
     if s3_client is None:
         s3_client = get_s3_client()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     results = []
 
     with ThreadPoolExecutor(max_workers=3) as executor:

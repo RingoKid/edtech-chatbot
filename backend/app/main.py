@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, APIRouter, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -8,16 +9,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import health, chat, auth, users, transcription, handwriting_analysis, export
 from app.langfuse.router import router as evals_router
 from app.config import settings
+from app.database import init_db
 from app.dependencies.auth import get_current_user
 
 # Configuration
 API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """App lifecycle: startup and shutdown."""
+    init_db()
+    yield
+
+
 # Initialize the FastAPI application
 app = FastAPI(
     title="EdTech Chatbot API",
     description="AI-powered chatbot for early childhood education",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Add CORS middleware (for httpOnly cookies and credentials)
