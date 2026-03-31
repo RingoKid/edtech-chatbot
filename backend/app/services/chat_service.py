@@ -3,6 +3,7 @@ Chat service module containing the core chatbot logic.
 This service encapsulates LangGraph integration and message handling.
 """
 
+import asyncio
 from typing import Dict, Any, List, Optional, AsyncGenerator
 import uuid
 import json
@@ -29,14 +30,16 @@ class ChatService:
         Uses lazy initialization for the graph since create_graph() is async.
         """
         self._graph = None
+        self._lock = asyncio.Lock()
 
     async def _get_graph(self):
         """
         Lazy initialization of the graph.
         Creates the graph on first use in an async context.
         """
-        if self._graph is None:
-            self._graph = await create_graph()
+        async with self._lock:
+            if self._graph is None:
+                self._graph = await create_graph()
         return self._graph
 
     def create_new_thread(self) -> str:
