@@ -6,7 +6,8 @@
 # and are loaded only for selected activities.
 #
 # Fields:
-#   name        — Canonical activity name
+#   name        — Canonical activity name (display)
+#   id          — Stable slug matching framework headings ### [slug] (machine ID)
 #   rank        — Difficulty order within section (1 = easiest)
 #   summary     — One-line description for planner context
 #   skill_focus — Primary skills developed: isolating_sounds, blending, letter_formation, spelling
@@ -22,6 +23,7 @@ sections:
     activities:
 
       - name: Sound Echo
+        id: sound_echo
         rank: 1
         summary: "Teacher says sound, children repeat. Echo routine for hearing and memory."
         skill_focus: [isolating_sounds]
@@ -35,6 +37,7 @@ sections:
           1st: null
 
       - name: Tap that Sound
+        id: tap_that_sound
         rank: 2
         summary: "Teacher says sound, children tap matching sound card on desk. Identification task."
         skill_focus: [isolating_sounds]
@@ -48,6 +51,7 @@ sections:
           1st: null
 
       - name: Sound Spark
+        id: sound_spark
         rank: 3
         summary: "Teacher points to letter-sound card, children chorally pronounce. Retrieval — no sound given."
         skill_focus: [isolating_sounds]
@@ -61,6 +65,7 @@ sections:
             levels: [struggling, on-level, advanced]
 
       - name: Sort the Sound
+        id: sort_the_sound
         rank: 4
         summary: "Teacher says sound, children sort by voiced/unvoiced or continuous/stops. Categorization."
         skill_focus: [isolating_sounds]
@@ -75,6 +80,7 @@ sections:
             notes: "same scaffolding as K"
 
       - name: "Write the Sound (Review)"
+        id: write_the_sound_review
         rank: 5
         summary: "Teacher says sound, children write corresponding letter on whiteboard. Grapheme retrieval."
         skill_focus: [letter_formation, spelling]
@@ -89,6 +95,7 @@ sections:
             notes: "all 1st graders can do this; struggling may need Tap/Spark warm-up first"
 
       - name: How Many Sounds
+        id: how_many_sounds
         rank: 6
         summary: "Teacher says word, children count sounds with manipulatives. Segmentation for spelling prep."
         skill_focus: [blending, spelling]
@@ -109,6 +116,7 @@ sections:
     activities:
 
       - name: Sound Check
+        id: sound_check
         rank: 1
         summary: "Teacher says sound, children thumbs up/down if it matches target. Simple binary identification."
         skill_focus: [isolating_sounds]
@@ -121,6 +129,7 @@ sections:
           1st: null
 
       - name: Word Sound Echo
+        id: word_sound_echo
         rank: 2
         summary: "Children repeat word with target sound, then isolate first sound. Segmentation + identification."
         skill_focus: [isolating_sounds]
@@ -134,6 +143,7 @@ sections:
           1st: null
 
       - name: Sound Hunt
+        id: sound_hunt
         rank: 3
         summary: "Teacher says word, children find target sound position (beginning/middle/end). Adjustable."
         skill_focus: [isolating_sounds]
@@ -150,6 +160,7 @@ sections:
             notes: "medial vowel discrimination"
 
       - name: Silly Sentence
+        id: silly_sentence
         rank: 4
         summary: "Children brainstorm words with target sound, class builds sentence collaboratively."
         skill_focus: [isolating_sounds]
@@ -166,6 +177,7 @@ sections:
             notes: "can work independently or with partner"
 
       - name: Stretch the Sounds
+        id: stretch_the_sounds
         rank: 5
         summary: "Children segment words into individual sounds using Elkonin boxes, tapping each sound."
         skill_focus: [isolating_sounds]
@@ -183,6 +195,7 @@ sections:
             notes: "4-5 sound words for advanced"
 
       - name: Chop the Sound
+        id: chop_the_sound
         rank: 6
         summary: "Children remove a sound from a word and say what remains. Phoneme deletion."
         skill_focus: [blending]
@@ -197,6 +210,7 @@ sections:
             notes: "most can do it; struggling may need more support. Can extend to blends."
 
       - name: Sound Switch-a-Roo
+        id: sound_switch_a_roo
         rank: 7
         summary: "Children substitute one sound in a word to create new word. Most difficult phonological task."
         skill_focus: [blending]
@@ -220,6 +234,7 @@ sections:
       # --- Rehearsal (no pencil) ---
 
       - name: Finger Run
+        id: finger_run
         rank: 1
         summary: "Children run finger left-to-right across lines, naming top/middle/bottom. Concepts of print."
         skill_focus: [letter_formation]
@@ -233,6 +248,7 @@ sections:
           1st: null
 
       - name: SkyWrite
+        id: skywrite
         rank: 2
         summary: "Children write letters in air with big arm movements, saying strokes aloud. Motor memory."
         skill_focus: [letter_formation]
@@ -246,6 +262,7 @@ sections:
           1st: null
 
       - name: FingerTrace
+        id: finger_trace
         rank: 3
         summary: "Children trace textured/arrow letter cards with fingers. Stroke path precision without pencil."
         skill_focus: [letter_formation]
@@ -258,6 +275,7 @@ sections:
           1st: null
 
       - name: Magic Finger Write
+        id: magic_finger_write
         rank: 4
         summary: "Children trace letters within lines using pointer finger following teacher's verbal cues."
         skill_focus: [letter_formation]
@@ -274,6 +292,7 @@ sections:
       # --- Writing (pencil in hand) ---
 
       - name: Trace & Say
+        id: trace_and_say
         rank: 5
         summary: "Children trace dotted letters with pencil while saying stroke cues and letter sound."
         skill_focus: [letter_formation]
@@ -288,6 +307,7 @@ sections:
           1st: null
 
       - name: Start Dot & Say
+        id: start_dot_and_say
         rank: 6
         summary: "Children write letters from start dot (no tracing), saying cues. Must recall full stroke sequence."
         skill_focus: [letter_formation]
@@ -302,6 +322,7 @@ sections:
             levels: [struggling, on-level]
 
       - name: Write the Sound Challenge
+        id: write_the_sound_challenge
         rank: 7
         summary: "Children write letters independently, no tracing or dots. Teacher checks accuracy, stars earned."
         skill_focus: [letter_formation]
@@ -315,6 +336,7 @@ sections:
             levels: [struggling, on-level, advanced]
 
       - name: Cover & Try
+        id: cover_and_try
         rank: 8
         summary: "Trace model letter, cover it, write from short-term memory. Fluency + accuracy."
         skill_focus: [letter_formation]
@@ -328,6 +350,7 @@ sections:
             levels: [on-level, advanced]
 
       - name: Disappearing Letter
+        id: disappearing_letter
         rank: 9
         summary: "Study letter model, teacher says 'disappear,' write from memory with increasing delay."
         skill_focus: [letter_formation]
@@ -340,6 +363,7 @@ sections:
             levels: [on-level, advanced]
 
       - name: Letter Sprint
+        id: letter_sprint
         rank: 10
         summary: "Timed writing of letters/words for speed + accuracy (30-60 sec). Automaticity building."
         skill_focus: [letter_formation]
@@ -359,6 +383,7 @@ sections:
     activities:
 
       - name: Trace the Sound
+        id: trace_the_sound
         rank: 1
         summary: "Teacher says sounds, children trace matching letter when they hear target. Tracing support provided."
         skill_focus: [spelling]
@@ -372,6 +397,7 @@ sections:
           1st: null
 
       - name: "Write the Sound (Spelling)"
+        id: write_the_sound_spelling
         rank: 2
         summary: "Teacher says sound, children write matching letter. Reference sheet provided, no tracing."
         skill_focus: [spelling]
@@ -385,6 +411,7 @@ sections:
           1st: null
 
       - name: Sound-Letter Hunt
+        id: sound_letter_hunt
         rank: 3
         summary: "Teacher says word, children find target sound position and write the letter. Middle-level."
         skill_focus: [spelling, isolating_sounds]
@@ -400,6 +427,7 @@ sections:
             levels: [struggling, on-level, advanced]
 
       - name: Stretch-and-Write
+        id: stretch_and_write
         rank: 4
         summary: "Segment word into sounds, write each letter in Elkonin boxes. 4 levels of complexity."
         skill_focus: [spelling, blending]
@@ -415,6 +443,7 @@ sections:
             notes: "increasing intensity through the year"
 
       - name: Switch-A-Roo Write
+        id: switch_a_roo_write
         rank: 5
         summary: "Replace one sound in word, write new word. Manipulation + encoding. 4 levels."
         skill_focus: [spelling, blending]
@@ -429,6 +458,7 @@ sections:
             levels: [struggling, on-level, advanced]
 
       - name: Sentence Challenge
+        id: sentence_challenge
         rank: 6
         summary: "Brainstorm words with target sound/pattern, write sentence using them. Integrates all skills."
         skill_focus: [spelling]
@@ -442,6 +472,7 @@ sections:
             levels: [on-level, advanced]
 
       - name: Spell Sprint
+        id: spell_sprint
         rank: 7
         summary: "Timed dictation — teacher says words, children write quickly. Spelling fluency + accuracy."
         skill_focus: [spelling]

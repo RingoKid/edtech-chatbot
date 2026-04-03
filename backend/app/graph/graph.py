@@ -23,6 +23,7 @@ from app.graph.state import (
     GraphState,
     FeedbackData,
     HandwritingParams,
+    ActivityPlan,
     VocabularySyntaxParams,
     IdeaGenerationParams,
 )
@@ -45,6 +46,7 @@ from app.graph.agents.feedback_collector import (
     SUBMIT_FEEDBACK_TOOL_NAME,
     SKIP_FEEDBACK_TOOL_NAME,
 )
+from app.graph.nodes.activity_planner import activity_planner_node
 from app.graph.nodes.placeholders import (
     handwriting_placeholder,
     vocabulary_placeholder,
@@ -174,10 +176,16 @@ def extract_handwriting_params(messages: list) -> HandwritingParams | None:
                     args = tool_call.get('args', {})
                     # Normalize letter to uppercase
                     letter = args.get('letter', '').upper().strip()
+                    previously_learned = [
+                        s.lower().strip()
+                        for s in args.get('previously_learned', [])
+                    ]
                     return HandwritingParams(
                         grade=args.get('grade'),
                         letter=letter,
                         student_level=args.get('student_level', 'on-level'),
+                        previously_learned=previously_learned,
+                        skill_focus=args.get('skill_focus', 'isolating_sounds'),
                     )
     return None
 
@@ -237,11 +245,11 @@ def route_after_param_agent(state: GraphState) -> str:
     """
     Routing function: decide where to go after the param agent runs.
 
-    If params were collected, go to appropriate generator.
+    If params were collected, go to appropriate planner/generator.
     Otherwise, end the graph (user needs to provide more info).
     """
     if state.get("handwriting_params") is not None:
-        return "handwriting_generator"
+        return "activity_planner"
 
     if state.get("vocabulary_params") is not None:
         return "vocabulary_generator_placeholder"
@@ -272,11 +280,17 @@ async def handwriting_generator_node(state: GraphState) -> dict:
             "messages": [AIMessage(content="Error: No handwriting parameters found.")],
         }
 
+    # Get activity plan
+    activity_plan = state.get("activity_plan")
+
     # Create agent with params
     agent = create_handwriting_generator_agent(
         grade=params["grade"],
         letter=params["letter"],
         student_level=params["student_level"],
+        previously_learned=params.get("previously_learned", []),
+        skill_focus=params.get("skill_focus", "isolating_sounds"),
+        activity_plan=activity_plan,
     )
 
     # Invoke the agent with current messages
@@ -386,17 +400,24 @@ def entry_router(state: GraphState) -> str:
 
     Priority:
     1. Mid-feedback: finalized but feedback not yet submitted → feedback_collector
-    2. Mid-generation: params set, not finalized → generator
-    3. Default: routing_agent
+    2. Mid-generation: params + plan set → generator (skip planner on modifications)
+    3. Mid-planning: params set but no plan → activity_planner
+    4. Default: routing_agent
     """
     hw_params = state.get("handwriting_params")
-    print(f"[ENTRY] hw_params={'set' if hw_params else 'None'}")
+    activity_plan = state.get("activity_plan")
+    print(f"[ENTRY] hw_params={'set' if hw_params else 'None'}, "
+          f"activity_plan={'set' if activity_plan else 'None'}")
 
-    # Active handwriting session — route back to generator
-    # (handles both initial generation and modification requests)
-    if hw_params is not None:
+    if hw_params is not None and activity_plan is not None:
+        # Active session with plan — route to generator (modification flow)
         print(f"[ENTRY] → handwriting_generator")
         return "handwriting_generator"
+
+    if hw_params is not None:
+        # Params set but no plan yet — route to planner
+        print(f"[ENTRY] → activity_planner")
+        return "activity_planner"
 
     # Default: go through routing
     print(f"[ENTRY] → routing_agent")
@@ -427,6 +448,7 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
     # Add nodes
     graph.add_node("routing_agent", routing_agent_node)
     graph.add_node("param_agent", param_agent_node)
+    graph.add_node("activity_planner", activity_planner_node)
     graph.add_node("handwriting_placeholder", handwriting_placeholder)
     graph.add_node("handwriting_generator", handwriting_generator_node)
     graph.add_node("image_assembly", image_assembly_node)
@@ -442,6 +464,7 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
         entry_router,
         {
             "routing_agent": "routing_agent",
+            "activity_planner": "activity_planner",
             "handwriting_generator": "handwriting_generator",
         }
     )
@@ -463,12 +486,15 @@ async def create_graph(checkpointer: BaseCheckpointSaver | None = None):
         "param_agent",
         route_after_param_agent,
         {
-            "handwriting_generator": "handwriting_generator",
+            "activity_planner": "activity_planner",
             "vocabulary_generator_placeholder": "vocabulary_generator_placeholder",
             "idea_generation_generator_placeholder": "idea_generation_generator_placeholder",
             END: END,
         }
     )
+
+    # Activity planner always flows into handwriting generator
+    graph.add_edge("activity_planner", "handwriting_generator")
 
     # Handwriting generator always flows into image pipeline
     # (images regenerate on every lesson generation + modification)

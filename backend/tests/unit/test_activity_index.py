@@ -104,11 +104,21 @@ class TestSlugs:
     """Validate slug uniqueness and format."""
 
     def test_all_activities_have_id_field(self, all_activities):
-        """Each activity must have an 'id' slug field (to be added during implementation)."""
-        # NOTE: The current index uses 'name' as display name.
-        # The implementation must add 'id' fields matching the framework slugs.
-        # For now, we derive slugs from names and verify uniqueness.
-        pass  # Will be enforced once 'id' field is added to index
+        """Each activity must have an 'id' slug field matching framework headings."""
+        seen_ids = set()
+        for activity in all_activities:
+            assert "id" in activity, (
+                f"Activity '{activity['name']}' in {activity['_section']} "
+                f"missing 'id' field"
+            )
+            slug = activity["id"]
+            assert isinstance(slug, str) and len(slug) > 0, (
+                f"Activity '{activity['name']}' has empty id"
+            )
+            assert slug not in seen_ids, (
+                f"Duplicate id '{slug}' in {activity['_section']}"
+            )
+            seen_ids.add(slug)
 
     def test_exactly_30_activities(self, all_activities):
         assert len(all_activities) == 30, (
@@ -214,6 +224,10 @@ class TestFrameworkCrossReference:
 
     def test_every_activity_name_appears_in_framework(self, all_activities, framework_text):
         for activity in all_activities:
-            assert activity["name"] in framework_text, (
-                f"Activity '{activity['name']}' from index not found in framework"
+            # Check by id (slug) since disambiguated names like
+            # "Write the Sound (Review)" may not appear literally
+            slug = activity["id"]
+            assert f"[{slug}]" in framework_text, (
+                f"Activity '{activity['name']}' (id={slug}) "
+                f"from index not found in framework"
             )

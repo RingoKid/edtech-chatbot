@@ -8,9 +8,7 @@ gesture, selected activity descriptions, pre-selected standards).
 No LLM calls — tests the prompt string itself.
 """
 
-import re
 from pathlib import Path
-from typing import TypedDict
 
 import pytest
 
@@ -18,21 +16,8 @@ import pytest
 REFERENCE_DIR = Path(__file__).parent.parent.parent / "prompt" / "reference_materials"
 HANDWRITING_DIR = REFERENCE_DIR / "handwriting"
 
-# These imports will exist after implementation
-# from app.graph.agents.handwriting_generator import get_handwriting_generator_prompt
-# from app.graph.state import ActivityPlan
-
-# ---------------------------------------------------------------------------
-# Temporary inline type
-# ---------------------------------------------------------------------------
-
-class ActivityPlan(TypedDict):
-    review: str
-    sound_target: str
-    handwriting: str
-    handwriting_chain: str | None
-    spelling: str
-    standards: list[str]
+from app.graph.agents.handwriting_generator import get_handwriting_generator_prompt
+from app.graph.state import ActivityPlan
 
 
 # ---------------------------------------------------------------------------
@@ -84,20 +69,18 @@ def sample_plan_with_chain():
 class TestPromptFiltering:
     """Test that the prompt assembly correctly filters reference materials."""
 
-    @pytest.fixture(autouse=True)
-    def _skip_until_implemented(self):
-        """Skip these tests until get_handwriting_generator_prompt is updated."""
-        pytest.skip("Prompt assembly not yet implemented — contract tests only")
+    @pytest.fixture(scope="class")
+    def prompt(self, sample_plan):
+        """Build the prompt once for all filtering tests."""
+        return get_handwriting_generator_prompt(
+            grade="K", letter="B", student_level="on-level",
+            previously_learned=["m", "a", "s", "t"],
+            skill_focus="isolating_sounds",
+            activity_plan=sample_plan,
+        )
 
-    def test_contains_only_target_letter_cues(self, sample_plan):
+    def test_contains_only_target_letter_cues(self, prompt):
         """Only letter B cues should appear, not other letters."""
-        # prompt = get_handwriting_generator_prompt(
-        #     grade="K", letter="B", student_level="on-level",
-        #     previously_learned=["m", "a", "s", "t"],
-        #     skill_focus="isolating_sounds",
-        #     activity_plan=sample_plan,
-        # )
-        prompt = ""  # placeholder
 
         # Target letter present
         assert "B \u2013 Big line down, rainbow bump, rainbow bump" in prompt
@@ -108,10 +91,8 @@ class TestPromptFiltering:
         assert "Z \u2013 Little line across" not in prompt
         assert "C \u2013 Start at the top" not in prompt
 
-    def test_contains_only_target_sound_gesture(self, sample_plan):
+    def test_contains_only_target_sound_gesture(self, prompt):
         """Only /b/ gesture should appear, not other sounds."""
-        prompt = ""  # placeholder
-
         assert "/b/" in prompt
         assert "Bounce a ball" in prompt
 
@@ -119,10 +100,8 @@ class TestPromptFiltering:
         assert "/z/" not in prompt
         assert "buzzing bee" not in prompt
 
-    def test_contains_selected_activity_descriptions(self, sample_plan):
+    def test_contains_selected_activity_descriptions(self, prompt):
         """Full descriptions for selected activities should be present."""
-        prompt = ""  # placeholder
-
         # Sound Spark (review activity)
         assert "chorally pronounce the sound" in prompt
         # Sound Hunt (sound target activity)
@@ -132,10 +111,8 @@ class TestPromptFiltering:
         # Sound-Letter Hunt (spelling activity)
         assert "write the corresponding letter" in prompt
 
-    def test_excludes_non_selected_activities(self, sample_plan):
+    def test_excludes_non_selected_activities(self, prompt):
         """Activities NOT in the plan should not have descriptions in prompt."""
-        prompt = ""  # placeholder
-
         # Finger Run — not selected
         assert "run their finger from left to right across the handwriting lines" not in prompt
         # Spell Sprint — not selected
@@ -143,27 +120,28 @@ class TestPromptFiltering:
         # Chop the Sound — not selected
         assert 'remove (or "chop")' not in prompt
 
-    def test_excludes_form_d(self, sample_plan):
-        """Form D content should not be in the prompt."""
-        prompt = ""  # placeholder
+    def test_excludes_form_d(self, prompt):
+        """Form D content should not be in the prompt.
 
-        assert "FORM D" not in prompt
+        Note: "FORM D" may appear as a cross-reference in training-codes.md
+        or form-b, but the actual Form D content (activity levels) must not
+        be present.
+        """
         assert "form-d-scaffolded-activities" not in prompt
         assert "(low-level)" not in prompt
         assert "(middle-level)" not in prompt
         assert "(high-level)" not in prompt
 
-    def test_excludes_form_h_on_initial_generation(self, sample_plan):
-        """Form H should not be present during initial lesson generation."""
-        prompt = ""  # placeholder
+    def test_excludes_form_h_on_initial_generation(self, prompt):
+        """Form H modifications content should not be present.
 
-        assert "FORM H" not in prompt
+        Note: "FORM H" may appear as a cross-reference in other forms,
+        but the actual modification examples must not be loaded.
+        """
         assert "Modification of Activity Examples" not in prompt
 
-    def test_contains_universal_forms(self, sample_plan):
+    def test_contains_universal_forms(self, prompt):
         """Forms A, B, and E should always be present."""
-        prompt = ""  # placeholder
-
         # Form A — objectives verb list
         assert "Orient, Point, Match, Name" in prompt
         # Form B — lesson structure
@@ -172,32 +150,30 @@ class TestPromptFiltering:
         # Form E — best practices
         assert "evidence-based" in prompt.lower() or "proper way to hold a pencil" in prompt
 
-    def test_contains_grade_specific_form_c(self, sample_plan):
+    def test_contains_grade_specific_form_c(self, prompt):
         """Form C for the target grade should be present."""
-        prompt = ""  # placeholder
-
-        # K Form C example is about letter B
         assert "FORM C" in prompt or "form-c" in prompt.lower() or "Example" in prompt
 
-    def test_contains_previously_learned_sounds(self, sample_plan):
+    def test_contains_previously_learned_sounds(self, prompt):
         """Previously learned sounds must appear as explicit list."""
-        prompt = ""  # placeholder
-
         assert "m" in prompt
         assert "a" in prompt
         assert "s" in prompt
         assert "t" in prompt
 
-    def test_contains_pre_selected_standards(self, sample_plan):
+    def test_contains_pre_selected_standards(self, prompt, sample_plan):
         """Standards from the plan should be in the prompt."""
-        prompt = ""  # placeholder
-
         for code in sample_plan["standards"]:
             assert code in prompt
 
     def test_handwriting_chain_included_when_present(self, sample_plan_with_chain):
         """If handwriting_chain is set, its description should be in prompt."""
-        prompt = ""  # placeholder
+        prompt = get_handwriting_generator_prompt(
+            grade="PreK", letter="M", student_level="struggling",
+            previously_learned=[],
+            skill_focus="isolating_sounds",
+            activity_plan=sample_plan_with_chain,
+        )
 
         # SkyWrite (primary handwriting)
         assert "write letters in the air" in prompt
@@ -208,22 +184,23 @@ class TestPromptFiltering:
 class TestPromptParameters:
     """Test that prompt parameters are correctly substituted."""
 
-    @pytest.fixture(autouse=True)
-    def _skip_until_implemented(self):
-        pytest.skip("Prompt assembly not yet implemented — contract tests only")
+    @pytest.fixture(scope="class")
+    def prompt(self, sample_plan):
+        return get_handwriting_generator_prompt(
+            grade="K", letter="B", student_level="on-level",
+            previously_learned=["m", "a", "s", "t"],
+            skill_focus="isolating_sounds",
+            activity_plan=sample_plan,
+        )
 
-    def test_grade_appears_in_prompt(self):
-        prompt = ""  # placeholder
+    def test_grade_appears_in_prompt(self, prompt):
         assert "K" in prompt or "Kindergarten" in prompt
 
-    def test_letter_appears_in_prompt(self):
-        prompt = ""  # placeholder
+    def test_letter_appears_in_prompt(self, prompt):
         assert "B" in prompt
 
-    def test_student_level_appears_in_prompt(self):
-        prompt = ""  # placeholder
+    def test_student_level_appears_in_prompt(self, prompt):
         assert "on-level" in prompt
 
-    def test_skill_focus_appears_in_prompt(self):
-        prompt = ""  # placeholder
+    def test_skill_focus_appears_in_prompt(self, prompt):
         assert "isolating_sounds" in prompt or "isolating sounds" in prompt

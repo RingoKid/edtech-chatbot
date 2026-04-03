@@ -7,10 +7,19 @@ based on user feedback before finalizing.
 """
 
 from pathlib import Path
+from typing import Optional
+
 from langchain_core.tools import tool
 from langchain.agents import create_agent
 
 from app.llm.client import get_chat_model
+from app.graph.state import ActivityPlan
+from app.graph.utils.extractors import (
+    extract_activity,
+    extract_verbal_cues,
+    extract_gesture,
+    extract_grade_standards,
+)
 
 GENERATOR_MODEL = "gpt-5.1"
 
@@ -33,18 +42,22 @@ GRADE_TO_FORM_C_FILE = {
     "1st": "form-c-1st.md",
 }
 
-# Common form files loaded for every grade (Form C inserted at index 3 at runtime)
-COMMON_FORM_FILES = [
+# Universal form files loaded for every grade (Form C inserted at runtime)
+# Form D removed (replaced by activity plan)
+# Form F/G loaded in filtered form (target letter/sound only)
+# Form H lazy-loaded on modification requests only
+UNIVERSAL_FORM_FILES = [
     "training-codes.md",
     "form-b-lesson-structure.md",
     "form-a-objectives.md",
     # Form C inserted here at runtime (position 3)
-    "form-d-scaffolded-activities.md",
     "form-e-best-practices.md",
-    "form-f-verbal-cues.md",
-    "form-g-phoneme-gestures.md",
-    "form-h-modifications.md",
 ]
+
+# Paths for filtered extraction
+FRAMEWORK_PATH = HANDWRITING_DIR / "activity-framework.md"
+FORM_F_PATH = HANDWRITING_DIR / "form-f-verbal-cues.md"
+FORM_G_PATH = HANDWRITING_DIR / "form-g-phoneme-gestures.md"
 
 
 # Default prompt used when Langfuse is unavailable or prompt doesn't exist
@@ -69,15 +82,12 @@ Generate a complete handwriting and spelling lesson following the structure in t
 
 1. **Verbatim Explanations**: Each section's 💡 **Explanation:** text MUST be copied EXACTLY from Form B in the reference materials. Do not paraphrase or modify these explanations.
 
-2. **Verbal Cues**: The ✏️ **Verbal Cues:** for the target letter MUST match Form F exactly. Look up the correct verbal cues for letter "{letter}" in Form F.
+2. **Verbal Cues**: The ✏️ **Verbal Cues:** for the target letter are provided below. Use them EXACTLY as shown — do not look them up elsewhere.
 
-3. **Activity Selection**: Based on student level "{student_level}":
-   - struggling → Use LOW-LEVEL activities from Form D
-   - on-level → Use MIDDLE-LEVEL activities from Form D
-   - advanced → Use HIGH-LEVEL activities from Form D
-   - **Name every activity by its Form D name** in the teacher script (e.g., "Let's play Sound Spark", "Time for Magic Finger Write"). Do NOT describe activities generically.
-   - **Every section** (1-4) MUST include at least one named Form D activity.
-   - **Materials section** MUST list all Form D activities used in the lesson by name.
+3. **Activity Selection**: Follow the Activity Plan below. Each lesson section has a pre-selected activity.
+   - **Name every activity exactly as shown** in the teacher script (e.g., "Let's play Sound Spark", "Time for Magic Finger Write"). Do NOT describe activities generically.
+   - **Every section** (1-4) MUST use the planned activity.
+   - **Materials section** MUST list all planned activities by name.
 
 4. **Notation Conventions** (MUST use these exactly):
    - 💡 **Explanation:** → AI explains the parts of the lesson
@@ -148,7 +158,7 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - Include specific example words (at least 2-3) in Sound Hunt and Application activities — do not leave word lists to the teacher.
    - Script specific child responses with 💬 **Child Response:**, not generic "💬 **Child Response:** Children respond".
 
-12. **Prior Practice Awareness**: Do not use sounds that have not been directly taught at the given grade level. Do not use words that contain sounds that have not been directly taught. When selecting example words for activities, choose words whose sounds are appropriate for the grade level and likely within students' phonological repertoire.
+12. **Prior Practice Awareness**: The student has learned these sounds: {previously_learned}. Use ONLY these sounds plus the target sound when selecting example words. Do not use words that contain sounds not in this list. If the list is empty, this is the student's first lesson — use only the target sound.
 
 ## GRADE-LEVEL DELIVERY RULES
 
@@ -204,6 +214,30 @@ Generate the lesson in clean markdown format following the Form C example for yo
 
 ---
 
+## Skill Focus
+
+The primary skill to develop in this lesson is: **{skill_focus}**
+
+---
+
+## Activity Plan
+
+{activity_plan_section}
+
+---
+
+## Verbal Cues (Letter {letter})
+
+{verbal_cues}
+
+---
+
+## Phoneme Gesture
+
+{phoneme_gesture}
+
+---
+
 ## Grade-Specific Standards Reference
 
 {grade_standards}
@@ -217,47 +251,18 @@ Generate the lesson in clean markdown format following the Form C example for yo
 
 
 
-def load_grade_standards(grade: str) -> str:
+def load_universal_materials(grade: str) -> str:
     """
-    Load grade-specific standards from the standards reference doc.
+    Load universal reference materials (Forms A, B, C, E).
 
-    Extracts only the section matching the given grade level so the LLM
-    only sees the correct standards system (GELDS for PreK, K-12 ELA for K/1st).
-    """
-    try:
-        content = STANDARDS_PATH.read_text()
-    except FileNotFoundError:
-        return "ERROR: Standards reference not found."
-
-    header_key = GRADE_TO_STANDARDS_HEADER.get(grade, grade)
-    sections = content.split("\n## ")
-
-    for section in sections:
-        if section.startswith(header_key):
-            return f"## {section}".strip()
-
-    return f"ERROR: No standards found for grade '{grade}'."
-
-
-def load_reference_materials(grade: str) -> str:
-    """
-    Load handwriting reference materials from individual form files.
-
-    Reads each form file from the handwriting/ directory and inserts the
-    grade-specific Form C at the correct position.
-
-    Args:
-        grade: Grade level (PreK, K, 1st)
-
-    Returns:
-        str: Assembled reference materials with only the matching Form C
+    These are always included regardless of activity selection.
     """
     form_c_file = GRADE_TO_FORM_C_FILE.get(grade)
     if not form_c_file:
         return f"ERROR: Unknown grade '{grade}'."
 
     # Build file list with Form C inserted at position 3
-    files = list(COMMON_FORM_FILES)
+    files = list(UNIVERSAL_FORM_FILES)
     files.insert(3, form_c_file)
 
     parts = []
@@ -271,39 +276,106 @@ def load_reference_materials(grade: str) -> str:
     return "\n\n---\n\n".join(parts)
 
 
+def build_activity_plan_section(activity_plan: Optional[ActivityPlan]) -> str:
+    """Build the activity plan section with extracted descriptions."""
+    if not activity_plan:
+        return "(No activity plan provided — select activities based on student level.)"
+
+    try:
+        framework = FRAMEWORK_PATH.read_text()
+    except FileNotFoundError:
+        return "ERROR: Activity framework not found."
+
+    sections = []
+    plan_fields = [
+        ("Review", "review"),
+        ("Sound Target Focus", "sound_target"),
+        ("Handwriting Focus", "handwriting"),
+        ("Spelling Focus", "spelling"),
+    ]
+
+    for section_name, field in plan_fields:
+        slug = activity_plan[field]
+        description = extract_activity(framework, slug)
+        sections.append(f"### {section_name}: {slug}\n\n{description}")
+
+    if activity_plan.get("handwriting_chain"):
+        chain_slug = activity_plan["handwriting_chain"]
+        chain_desc = extract_activity(framework, chain_slug)
+        sections.append(
+            f"### Handwriting Chain (rehearsal→writing): {chain_slug}\n\n{chain_desc}"
+        )
+
+    if activity_plan.get("standards"):
+        standards_str = ", ".join(activity_plan["standards"])
+        sections.append(f"### Standards\n\n{standards_str}")
+
+    return "\n\n".join(sections)
+
+
 def get_handwriting_generator_prompt(
     grade: str,
     letter: str,
     student_level: str,
+    previously_learned: Optional[list[str]] = None,
+    skill_focus: str = "isolating_sounds",
+    activity_plan: Optional[ActivityPlan] = None,
 ) -> str:
     """
-    Compile the handwriting generator prompt.
+    Compile the handwriting generator prompt with filtered materials.
 
-    Combines:
-    1. Default prompt template
-    2. Reference materials from local file
-    3. Grade-specific standards
-    4. Parameter substitution for grade, letter, student_level
-
-    Args:
-        grade: Grade level (PreK, K, 1st)
-        letter: Target letter (A-Z)
-        student_level: Student ability level (struggling, on-level, advanced)
-
-    Returns:
-        str: The complete system prompt with reference materials
+    Uses the activity plan to include only relevant reference content:
+    - Universal forms (A, B, C, E)
+    - Filtered Form F (target letter only)
+    - Filtered Form G (target sound only)
+    - Selected activity descriptions from framework
+    - Grade-specific standards
     """
-    # Load reference materials and grade-specific standards
-    reference_materials = load_reference_materials(grade)
-    grade_standards = load_grade_standards(grade)
+    if previously_learned is None:
+        previously_learned = []
 
-    # Substitute parameters
+    # Universal materials (Forms A, B, C, E)
+    reference_materials = load_universal_materials(grade)
+
+    # Grade-specific standards via regex extraction
+    try:
+        standards_content = STANDARDS_PATH.read_text()
+    except FileNotFoundError:
+        standards_content = ""
+    header_key = GRADE_TO_STANDARDS_HEADER.get(grade, grade)
+    grade_standards = extract_grade_standards(standards_content, header_key)
+
+    # Filtered verbal cues (target letter only)
+    try:
+        form_f_content = FORM_F_PATH.read_text()
+    except FileNotFoundError:
+        form_f_content = ""
+    verbal_cues = extract_verbal_cues(form_f_content, letter)
+
+    # Filtered phoneme gesture (target sound only)
+    try:
+        form_g_content = FORM_G_PATH.read_text()
+    except FileNotFoundError:
+        form_g_content = ""
+    phoneme_gesture = extract_gesture(form_g_content, letter)
+
+    # Activity plan with descriptions
+    activity_plan_section = build_activity_plan_section(activity_plan)
+
+    # Previously learned sounds
+    learned_str = ", ".join(previously_learned) if previously_learned else "(none — first lesson)"
+
     return DEFAULT_HANDWRITING_GENERATOR_PROMPT.format(
         grade=grade,
         letter=letter.upper(),
         student_level=student_level,
+        previously_learned=learned_str,
+        skill_focus=skill_focus,
         reference_materials=reference_materials,
         grade_standards=grade_standards,
+        verbal_cues=verbal_cues,
+        phoneme_gesture=phoneme_gesture,
+        activity_plan_section=activity_plan_section,
     )
 
 
@@ -336,6 +408,9 @@ def create_handwriting_generator_agent(
     grade: str,
     letter: str,
     student_level: str,
+    previously_learned: Optional[list[str]] = None,
+    skill_focus: str = "isolating_sounds",
+    activity_plan: Optional[ActivityPlan] = None,
     recursion_limit: int = 10,
 ):
     """
@@ -345,6 +420,9 @@ def create_handwriting_generator_agent(
         grade: Grade level for the lesson
         letter: Target letter for the lesson
         student_level: Student ability level for differentiation
+        previously_learned: Sounds/letters already taught
+        skill_focus: Primary skill to target
+        activity_plan: Pre-selected activities from the planner
         recursion_limit: Maximum number of agent turns
 
     Returns:
@@ -353,11 +431,14 @@ def create_handwriting_generator_agent(
     # Get model from registry (streaming keeps TCP alive, prevents VPN/proxy idle drops)
     model = get_chat_model(GENERATOR_MODEL, streaming=True)
 
-    # Get prompt with parameters and reference materials
+    # Get prompt with parameters and filtered reference materials
     system_prompt = get_handwriting_generator_prompt(
         grade=grade,
-        letter=letter,
+        letter=letter.upper(),
         student_level=student_level,
+        previously_learned=previously_learned,
+        skill_focus=skill_focus,
+        activity_plan=activity_plan,
     )
 
     # Create ReAct agent with finalize tool

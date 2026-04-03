@@ -14,6 +14,9 @@ GradeLevel = Literal["PreK", "K", "1st"]
 # Student level literals for differentiation
 StudentLevel = Literal["struggling", "on-level", "advanced"]
 
+# Skill focus for activity selection
+SkillFocus = Literal["isolating_sounds", "blending", "letter_formation", "spelling"]
+
 
 class HandwritingParams(TypedDict):
     """
@@ -24,6 +27,22 @@ class HandwritingParams(TypedDict):
     grade: GradeLevel
     letter: str
     student_level: StudentLevel
+    previously_learned: list[str]
+    skill_focus: SkillFocus
+
+
+class ActivityPlan(TypedDict):
+    """
+    Structured output from the activity planner.
+
+    Each field holds a slug (id) from the activity index.
+    """
+    review: str
+    sound_target: str
+    handwriting: str
+    handwriting_chain: Optional[str]
+    spelling: str
+    standards: list[str]
 
 
 # Writing type literals for vocabulary lessons
@@ -94,6 +113,9 @@ class GraphState(TypedDict):
 
     # Handwriting lesson parameters (set by param agent)
     handwriting_params: Optional[HandwritingParams]
+
+    # Activity plan (set by activity planner, used by handwriting generator)
+    activity_plan: Optional[ActivityPlan]
 
     # Vocabulary & syntax lesson parameters (set by param agent)
     vocabulary_params: Optional[VocabularySyntaxParams]

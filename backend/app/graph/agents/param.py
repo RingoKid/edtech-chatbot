@@ -16,6 +16,7 @@ from app.graph.state import (
     GraphState,
     GradeLevel,
     StudentLevel,
+    SkillFocus,
     WritingType,
     Genre,
     WritingStage,
@@ -51,6 +52,8 @@ AVAILABLE TOOLS:
 1. submit_handwriting_params: For handwriting/letter formation lessons
    Required: grade (PreK/K/1st), letter (A-Z)
    Optional: student_level (defaults to on-level)
+   Optional: previously_learned (list of sounds/letters already taught, e.g., ["m", "a", "s", "t"]. Defaults to empty = first lesson.)
+   Optional: skill_focus (isolating_sounds, blending, letter_formation, or spelling. Defaults to isolating_sounds.)
 
 2. submit_vocabulary_params: For vocabulary & sentence structure lessons
    Required:
@@ -70,6 +73,7 @@ AVAILABLE TOOLS:
    Optional: student_level (defaults to on-level)
 
 COLLECTION TIPS:
+- For handwriting lessons, after grade/letter/level, ask: "What sounds or letters have the students already learned?" and "Would you like to focus on a particular skill — isolating sounds, blending, letter formation, or spelling?" If the teacher doesn't know or skips these, use the defaults (empty list, isolating_sounds).
 - For vocabulary lessons, ask about the writing unit type and key vocabulary words
 - For idea generation, ask about the genre, what component they're focusing on, and what stage of writing
 - Always confirm the grade level if not clear from context
@@ -121,6 +125,14 @@ class SubmitHandwritingParams(BaseModel):
     student_level: Literal["struggling", "on-level", "advanced"] = Field(
         default="on-level",
         description="Student ability level for differentiation"
+    )
+    previously_learned: list[str] = Field(
+        default=[],
+        description="Sounds/letters already taught (e.g., ['m', 'a', 's', 't']). Empty = first lesson."
+    )
+    skill_focus: Literal["isolating_sounds", "blending", "letter_formation", "spelling"] = Field(
+        default="isolating_sounds",
+        description="Primary skill to target: isolating_sounds, blending, letter_formation, or spelling"
     )
 
 
@@ -175,6 +187,8 @@ def submit_handwriting_params(
     grade: Literal["PreK", "K", "1st"],
     letter: str,
     student_level: Literal["struggling", "on-level", "advanced"] = "on-level",
+    previously_learned: list[str] = [],
+    skill_focus: Literal["isolating_sounds", "blending", "letter_formation", "spelling"] = "isolating_sounds",
 ) -> str:
     """
     Submit the collected handwriting lesson parameters.
@@ -183,16 +197,21 @@ def submit_handwriting_params(
     - grade: The grade level (PreK, K, or 1st)
     - letter: The letter to practice (A-Z)
     - student_level: Optional, defaults to "on-level"
+    - previously_learned: Optional, sounds/letters already taught
+    - skill_focus: Optional, primary skill to target
 
     This signals that parameter collection is complete and the lesson
     can be generated.
     """
     # Normalize letter to uppercase
     letter_upper = letter.upper().strip()
+    # Normalize previously_learned
+    learned = [s.lower().strip() for s in previously_learned]
 
     return (
         f"Parameters submitted: grade={grade}, letter={letter_upper}, "
-        f"student_level={student_level}. Proceeding to lesson generation."
+        f"student_level={student_level}, previously_learned={learned}, "
+        f"skill_focus={skill_focus}. Proceeding to activity planning."
     )
 
 
