@@ -58,6 +58,7 @@ UNIVERSAL_FORM_FILES = [
 FRAMEWORK_PATH = HANDWRITING_DIR / "activity-framework.md"
 FORM_F_PATH = HANDWRITING_DIR / "form-f-verbal-cues.md"
 FORM_G_PATH = HANDWRITING_DIR / "form-g-phoneme-gestures.md"
+FORM_H_PATH = HANDWRITING_DIR / "form-h-modifications.md"
 
 
 # Default prompt used when Langfuse is unavailable or prompt doesn't exist
@@ -276,6 +277,14 @@ def load_universal_materials(grade: str) -> str:
     return "\n\n---\n\n".join(parts)
 
 
+def _slug_to_display_name(framework: str, slug: str) -> str:
+    """Extract display name from framework heading: ### [slug] Display Name."""
+    import re
+    pattern = rf"^### \[{re.escape(slug)}\] (.+)$"
+    match = re.search(pattern, framework, re.MULTILINE)
+    return match.group(1).strip() if match else slug
+
+
 def build_activity_plan_section(activity_plan: Optional[ActivityPlan]) -> str:
     """Build the activity plan section with extracted descriptions."""
     if not activity_plan:
@@ -296,14 +305,16 @@ def build_activity_plan_section(activity_plan: Optional[ActivityPlan]) -> str:
 
     for section_name, field in plan_fields:
         slug = activity_plan[field]
+        display_name = _slug_to_display_name(framework, slug)
         description = extract_activity(framework, slug)
-        sections.append(f"### {section_name}: {slug}\n\n{description}")
+        sections.append(f"### {section_name}: {display_name}\n\n{description}")
 
     if activity_plan.get("handwriting_chain"):
         chain_slug = activity_plan["handwriting_chain"]
+        chain_name = _slug_to_display_name(framework, chain_slug)
         chain_desc = extract_activity(framework, chain_slug)
         sections.append(
-            f"### Handwriting Chain (rehearsal→writing): {chain_slug}\n\n{chain_desc}"
+            f"### Handwriting Chain (rehearsal\u2192writing): {chain_name}\n\n{chain_desc}"
         )
 
     if activity_plan.get("standards"):
@@ -320,6 +331,7 @@ def get_handwriting_generator_prompt(
     previously_learned: Optional[list[str]] = None,
     skill_focus: str = "isolating_sounds",
     activity_plan: Optional[ActivityPlan] = None,
+    is_modification: bool = False,
 ) -> str:
     """
     Compile the handwriting generator prompt with filtered materials.
@@ -330,12 +342,20 @@ def get_handwriting_generator_prompt(
     - Filtered Form G (target sound only)
     - Selected activity descriptions from framework
     - Grade-specific standards
+    - Form H (modification examples) — only when is_modification=True
     """
     if previously_learned is None:
         previously_learned = []
 
-    # Universal materials (Forms A, B, C, E)
+    # Universal materials (Forms A, B, C, E) + Form H on modifications
     reference_materials = load_universal_materials(grade)
+
+    if is_modification:
+        try:
+            form_h = FORM_H_PATH.read_text().strip()
+            reference_materials += "\n\n---\n\n" + form_h
+        except FileNotFoundError:
+            pass  # Form H missing is non-fatal
 
     # Grade-specific standards via regex extraction
     try:
@@ -411,6 +431,7 @@ def create_handwriting_generator_agent(
     previously_learned: Optional[list[str]] = None,
     skill_focus: str = "isolating_sounds",
     activity_plan: Optional[ActivityPlan] = None,
+    is_modification: bool = False,
     recursion_limit: int = 10,
 ):
     """
@@ -439,6 +460,7 @@ def create_handwriting_generator_agent(
         previously_learned=previously_learned,
         skill_focus=skill_focus,
         activity_plan=activity_plan,
+        is_modification=is_modification,
     )
 
     # Create ReAct agent with finalize tool

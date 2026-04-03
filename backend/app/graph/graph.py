@@ -283,6 +283,9 @@ async def handwriting_generator_node(state: GraphState) -> dict:
     # Get activity plan
     activity_plan = state.get("activity_plan")
 
+    # Detect modification re-entry (lesson_markdown already exists from prior generation)
+    is_modification = state.get("lesson_markdown") is not None
+
     # Create agent with params
     agent = create_handwriting_generator_agent(
         grade=params["grade"],
@@ -291,6 +294,7 @@ async def handwriting_generator_node(state: GraphState) -> dict:
         previously_learned=params.get("previously_learned", []),
         skill_focus=params.get("skill_focus", "isolating_sounds"),
         activity_plan=activity_plan,
+        is_modification=is_modification,
     )
 
     # Invoke the agent with current messages

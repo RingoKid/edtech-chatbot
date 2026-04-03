@@ -5,10 +5,13 @@ Extracts the ActivityPlan from the planner's tool call, validates it against
 the activity index, and retries with error feedback if validation fails.
 """
 
+import logging
 from pathlib import Path
 
 import yaml
 from langchain_core.messages import AIMessage, HumanMessage
+
+logger = logging.getLogger(__name__)
 
 from app.graph.state import GraphState, ActivityPlan
 from app.graph.agents.activity_planner import (
@@ -191,6 +194,10 @@ async def activity_planner_node(state: GraphState) -> dict:
 
         plan = _extract_plan(new_messages)
         if plan is None:
+            logger.warning(
+                "Planner attempt %d/%d: no tool call found in response",
+                attempt + 1, 1 + MAX_RETRIES,
+            )
             messages = new_messages
             continue
 
@@ -214,7 +221,20 @@ async def activity_planner_node(state: GraphState) -> dict:
             )
             messages = new_messages + [HumanMessage(content=error_feedback)]
 
-    # Max retries exhausted — return last attempt anyway
+    # Max retries exhausted
+    if plan is not None:
+        logger.warning(
+            "Planner exhausted %d retries with validation errors, "
+            "using last plan anyway: %s",
+            MAX_RETRIES, errors,
+        )
+    else:
+        logger.error(
+            "Planner exhausted %d retries without producing a plan. "
+            "Generator will run without activity plan.",
+            MAX_RETRIES,
+        )
+
     return {
         "messages": new_messages,
         "activity_plan": plan,

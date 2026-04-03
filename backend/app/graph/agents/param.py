@@ -187,7 +187,7 @@ def submit_handwriting_params(
     grade: Literal["PreK", "K", "1st"],
     letter: str,
     student_level: Literal["struggling", "on-level", "advanced"] = "on-level",
-    previously_learned: list[str] = [],
+    previously_learned: list[str] | None = None,
     skill_focus: Literal["isolating_sounds", "blending", "letter_formation", "spelling"] = "isolating_sounds",
 ) -> str:
     """
@@ -206,7 +206,7 @@ def submit_handwriting_params(
     # Normalize letter to uppercase
     letter_upper = letter.upper().strip()
     # Normalize previously_learned
-    learned = [s.lower().strip() for s in previously_learned]
+    learned = [s.lower().strip() for s in (previously_learned or [])]
 
     return (
         f"Parameters submitted: grade={grade}, letter={letter_upper}, "
