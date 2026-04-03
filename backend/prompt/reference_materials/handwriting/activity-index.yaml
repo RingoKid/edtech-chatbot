@@ -1,0 +1,455 @@
+# Activity Index for Handwriting & Spelling Lessons
+#
+# Source of truth: activity-framework.md (Dr. Farrow, March 2026)
+# This index is the structured metadata the dispatcher/planner uses
+# to select activities. Full descriptions stay in activity-framework.md
+# and are loaded only for selected activities.
+#
+# Fields:
+#   name        — Canonical activity name
+#   rank        — Difficulty order within section (1 = easiest)
+#   summary     — One-line description for planner context
+#   skill_focus — Primary skills developed: isolating_sounds, blending, letter_formation, spelling
+#   prerequisites — Readiness conditions (or "none")
+#   by_grade    — Grade-keyed levels + notes. null = not appropriate for that grade.
+#   notes       — Additional context for the planner (optional)
+
+sections:
+
+  review:
+    time: "5 min"
+    purpose: "Quick warm-up reviewing previously taught sounds through retrieval practice"
+    activities:
+
+      - name: Sound Echo
+        rank: 1
+        summary: "Teacher says sound, children repeat. Echo routine for hearing and memory."
+        skill_focus: [isolating_sounds]
+        prerequisites: none
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+          K:
+            levels: [struggling]
+            notes: "best for early K"
+          1st: null
+
+      - name: Tap that Sound
+        rank: 2
+        summary: "Teacher says sound, children tap matching sound card on desk. Identification task."
+        skill_focus: [isolating_sounds]
+        prerequisites: none
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+          K:
+            levels: [struggling, on-level]
+            notes: "best for early K"
+          1st: null
+
+      - name: Sound Spark
+        rank: 3
+        summary: "Teacher points to letter-sound card, children chorally pronounce. Retrieval — no sound given."
+        skill_focus: [isolating_sounds]
+        prerequisites: "~90% accuracy on Tap that Sound; sufficient exposure to target sounds"
+        by_grade:
+          PreK:
+            levels: [on-level, advanced]
+          K:
+            levels: [on-level, advanced]
+          1st:
+            levels: [struggling, on-level, advanced]
+
+      - name: Sort the Sound
+        rank: 4
+        summary: "Teacher says sound, children sort by voiced/unvoiced or continuous/stops. Categorization."
+        skill_focus: [isolating_sounds]
+        prerequisites: "several sounds learned; can discriminate between phonemes"
+        by_grade:
+          PreK: null
+          K:
+            levels: [struggling, on-level, advanced]
+            notes: "struggling: 2 categories. Advanced: 4 categories (voiced/unvoiced stops + continuous)."
+          1st:
+            levels: [struggling, on-level, advanced]
+            notes: "same scaffolding as K"
+
+      - name: "Write the Sound (Review)"
+        rank: 5
+        summary: "Teacher says sound, children write corresponding letter on whiteboard. Grapheme retrieval."
+        skill_focus: [letter_formation, spelling]
+        prerequisites: "sufficient exposure to identify sounds + explicit letter formation instruction"
+        by_grade:
+          PreK: null
+          K:
+            levels: [on-level, advanced]
+            notes: "advanced K can start here; struggling K should do Tap/Spark first"
+          1st:
+            levels: [struggling, on-level, advanced]
+            notes: "all 1st graders can do this; struggling may need Tap/Spark warm-up first"
+
+      - name: How Many Sounds
+        rank: 6
+        summary: "Teacher says word, children count sounds with manipulatives. Segmentation for spelling prep."
+        skill_focus: [blending, spelling]
+        prerequisites: "mastered basic letter-sound correspondences; teacher uses only previously learned spelling patterns"
+        by_grade:
+          PreK: null
+          K:
+            levels: [advanced]
+            notes: "mid-to-late year only"
+          1st:
+            levels: [on-level, advanced]
+            notes: "beginning of year onward"
+
+  sound_target_focus:
+    time: "7 min"
+    purpose: "Prime children for matching target sound to grapheme during handwriting and spelling"
+    lesson_section: "Model, Explain & Engage"
+    activities:
+
+      - name: Sound Check
+        rank: 1
+        summary: "Teacher says sound, children thumbs up/down if it matches target. Simple binary identification."
+        skill_focus: [isolating_sounds]
+        prerequisites: none
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+          K:
+            levels: [struggling]
+          1st: null
+
+      - name: Word Sound Echo
+        rank: 2
+        summary: "Children repeat word with target sound, then isolate first sound. Segmentation + identification."
+        skill_focus: [isolating_sounds]
+        prerequisites: "some exposure to isolating beginning sounds"
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+            notes: "can modify to only two possible beginning sounds for struggling"
+          K:
+            levels: [struggling, on-level]
+          1st: null
+
+      - name: Sound Hunt
+        rank: 3
+        summary: "Teacher says word, children find target sound position (beginning/middle/end). Adjustable."
+        skill_focus: [isolating_sounds]
+        prerequisites: "can isolate sounds at grade-appropriate position"
+        by_grade:
+          PreK:
+            levels: [struggling, on-level, advanced]
+            notes: "beginning sounds only"
+          K:
+            levels: [struggling, on-level, advanced]
+            notes: "beginning + ending sounds"
+          1st:
+            levels: [struggling, on-level, advanced]
+            notes: "medial vowel discrimination"
+
+      - name: Silly Sentence
+        rank: 4
+        summary: "Children brainstorm words with target sound, class builds sentence collaboratively."
+        skill_focus: [isolating_sounds]
+        prerequisites: "can isolate beginning sounds and retrieve words from memory"
+        notes: "good for initial and ending sound work"
+        by_grade:
+          PreK:
+            levels: [struggling, on-level, advanced]
+            notes: "whole group with strong teacher guidance"
+          K:
+            levels: [struggling, on-level, advanced]
+          1st:
+            levels: [struggling, on-level, advanced]
+            notes: "can work independently or with partner"
+
+      - name: Stretch the Sounds
+        rank: 5
+        summary: "Children segment words into individual sounds using Elkonin boxes, tapping each sound."
+        skill_focus: [isolating_sounds]
+        prerequisites: "sufficient practice isolating single sounds"
+        notes: "adjust word length by level: 2-sound → 3-sound → 4-5 sound"
+        by_grade:
+          PreK:
+            levels: [struggling, on-level, advanced]
+            notes: "2-sound words with familiar phonemes"
+          K:
+            levels: [struggling, on-level, advanced]
+            notes: "struggling: 2-sound. On-level: 3-sound."
+          1st:
+            levels: [struggling, on-level, advanced]
+            notes: "4-5 sound words for advanced"
+
+      - name: Chop the Sound
+        rank: 6
+        summary: "Children remove a sound from a word and say what remains. Phoneme deletion."
+        skill_focus: [blending]
+        prerequisites: "ample practice isolating, pronouncing, discriminating, segmenting"
+        by_grade:
+          PreK: null
+          K:
+            levels: [advanced]
+            notes: "only advanced children with strong sound-symbol knowledge"
+          1st:
+            levels: [struggling, on-level, advanced]
+            notes: "most can do it; struggling may need more support. Can extend to blends."
+
+      - name: Sound Switch-a-Roo
+        rank: 7
+        summary: "Children substitute one sound in a word to create new word. Most difficult phonological task."
+        skill_focus: [blending]
+        prerequisites: "same as Chop the Sound + additional cognitive step"
+        notes: "beginning, middle, or ending sound substitution"
+        by_grade:
+          PreK: null
+          K:
+            levels: [advanced]
+            notes: "only advanced children; on-level may reach this later in the year"
+          1st:
+            levels: [struggling, on-level, advanced]
+            notes: "most can do it; support varies by level"
+
+  handwriting_focus:
+    time: "5-10 min"
+    purpose: "Guided practice writing the letter with proper grip and stroke sequence"
+    lesson_section: "Guided Practice"
+    activities:
+
+      # --- Rehearsal (no pencil) ---
+
+      - name: Finger Run
+        rank: 1
+        summary: "Children run finger left-to-right across lines, naming top/middle/bottom. Concepts of print."
+        skill_focus: [letter_formation]
+        prerequisites: none
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+          K:
+            levels: [struggling]
+            notes: "only if insufficient exposure in PreK"
+          1st: null
+
+      - name: SkyWrite
+        rank: 2
+        summary: "Children write letters in air with big arm movements, saying strokes aloud. Motor memory."
+        skill_focus: [letter_formation]
+        prerequisites: none
+        notes: "easier than Magic Finger Write and FingerTrace — no line precision needed"
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+          K:
+            levels: [struggling, on-level]
+          1st: null
+
+      - name: FingerTrace
+        rank: 3
+        summary: "Children trace textured/arrow letter cards with fingers. Stroke path precision without pencil."
+        skill_focus: [letter_formation]
+        prerequisites: none
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+          K:
+            levels: [struggling, on-level]
+          1st: null
+
+      - name: Magic Finger Write
+        rank: 4
+        summary: "Children trace letters within lines using pointer finger following teacher's verbal cues."
+        skill_focus: [letter_formation]
+        prerequisites: none
+        notes: "removes fine motor demands; primer for writing within lines"
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+          K:
+            levels: [struggling, on-level]
+            notes: "helpful for children without sufficient PreK exposure"
+          1st: null
+
+      # --- Writing (pencil in hand) ---
+
+      - name: Trace & Say
+        rank: 5
+        summary: "Children trace dotted letters with pencil while saying stroke cues and letter sound."
+        skill_focus: [letter_formation]
+        prerequisites: "exposure to letter formation"
+        notes: "links motor movement with sound; pencil in hand — this IS writing"
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+          K:
+            levels: [struggling]
+            notes: "for struggling K who need additional motor/formation support"
+          1st: null
+
+      - name: Start Dot & Say
+        rank: 6
+        summary: "Children write letters from start dot (no tracing), saying cues. Must recall full stroke sequence."
+        skill_focus: [letter_formation]
+        prerequisites: "successful with Trace & Say"
+        notes: "one step harder than Trace & Say — child writes independently from dot"
+        by_grade:
+          PreK:
+            levels: [on-level, advanced]
+          K:
+            levels: [on-level, advanced]
+          1st:
+            levels: [struggling, on-level]
+
+      - name: Write the Sound Challenge
+        rank: 7
+        summary: "Children write letters independently, no tracing or dots. Teacher checks accuracy, stars earned."
+        skill_focus: [letter_formation]
+        prerequisites: "successful with tracing and start-dot routines; greater working memory"
+        by_grade:
+          PreK: null
+          K:
+            levels: [on-level, advanced]
+            notes: "struggling K may need more time with tracing first"
+          1st:
+            levels: [struggling, on-level, advanced]
+
+      - name: Cover & Try
+        rank: 8
+        summary: "Trace model letter, cover it, write from short-term memory. Fluency + accuracy."
+        skill_focus: [letter_formation]
+        prerequisites: "successful with Write the Sound Challenge; can reproduce letter form"
+        notes: "easier than Disappearing Letter — model just briefly removed"
+        by_grade:
+          PreK: null
+          K:
+            levels: [advanced]
+          1st:
+            levels: [on-level, advanced]
+
+      - name: Disappearing Letter
+        rank: 9
+        summary: "Study letter model, teacher says 'disappear,' write from memory with increasing delay."
+        skill_focus: [letter_formation]
+        prerequisites: "strong stroke knowledge; can write letter without visual model"
+        by_grade:
+          PreK: null
+          K:
+            levels: [advanced]
+          1st:
+            levels: [on-level, advanced]
+
+      - name: Letter Sprint
+        rank: 10
+        summary: "Timed writing of letters/words for speed + accuracy (30-60 sec). Automaticity building."
+        skill_focus: [letter_formation]
+        prerequisites: "strong letter knowledge and formation already in place"
+        notes: "focus is fluency, not learning formation"
+        by_grade:
+          PreK: null
+          K:
+            levels: [advanced]
+          1st:
+            levels: [advanced]
+
+  spelling_focus:
+    time: "5-10 min"
+    purpose: "Children spell letter/patterns when they hear sounds — coordinate sound to letter for spelling"
+    lesson_section: "Application"
+    activities:
+
+      - name: Trace the Sound
+        rank: 1
+        summary: "Teacher says sounds, children trace matching letter when they hear target. Tracing support provided."
+        skill_focus: [spelling]
+        prerequisites: none
+        notes: "lowest demand — teacher provides sound + tracing model"
+        by_grade:
+          PreK:
+            levels: [struggling, on-level]
+          K:
+            levels: [struggling]
+          1st: null
+
+      - name: "Write the Sound (Spelling)"
+        rank: 2
+        summary: "Teacher says sound, children write matching letter. Reference sheet provided, no tracing."
+        skill_focus: [spelling]
+        prerequisites: "can recognize sound and retrieve grapheme"
+        notes: "handwriting sheet with previously learned letters serves as visual reference"
+        by_grade:
+          PreK:
+            levels: [on-level, advanced]
+          K:
+            levels: [struggling, on-level]
+          1st: null
+
+      - name: Sound-Letter Hunt
+        rank: 3
+        summary: "Teacher says word, children find target sound position and write the letter. Middle-level."
+        skill_focus: [spelling, isolating_sounds]
+        prerequisites: "can identify sound position in words"
+        notes: "PreK: dotted lines for tracing. K: write letter. 1st: write full word."
+        by_grade:
+          PreK:
+            levels: [on-level, advanced]
+            notes: "with dotted-line tracing support"
+          K:
+            levels: [on-level, advanced]
+          1st:
+            levels: [struggling, on-level, advanced]
+
+      - name: Stretch-and-Write
+        rank: 4
+        summary: "Segment word into sounds, write each letter in Elkonin boxes. 4 levels of complexity."
+        skill_focus: [spelling, blending]
+        prerequisites: "can segment sounds"
+        notes: "L1: either/or beginning sound. L2: CVC with known rimes. L3: multiple rimes. L4: blends/digraphs."
+        by_grade:
+          PreK: null
+          K:
+            levels: [on-level, advanced]
+            notes: "start with Level 1-2"
+          1st:
+            levels: [struggling, on-level, advanced]
+            notes: "increasing intensity through the year"
+
+      - name: Switch-A-Roo Write
+        rank: 5
+        summary: "Replace one sound in word, write new word. Manipulation + encoding. 4 levels."
+        skill_focus: [spelling, blending]
+        prerequisites: "prior segmentation practice"
+        notes: "L1: beginning sound change. L2: ending sound. L3: middle vowel. L4: blends/digraphs."
+        by_grade:
+          PreK: null
+          K:
+            levels: [on-level, advanced]
+            notes: "on-level at end of year; advanced earlier"
+          1st:
+            levels: [struggling, on-level, advanced]
+
+      - name: Sentence Challenge
+        rank: 6
+        summary: "Brainstorm words with target sound/pattern, write sentence using them. Integrates all skills."
+        skill_focus: [spelling]
+        prerequisites: "can retrieve words with target pattern and write sentences"
+        notes: "harder than Silly Sentence — requires writing with learned spelling patterns"
+        by_grade:
+          PreK: null
+          K:
+            levels: [advanced]
+          1st:
+            levels: [on-level, advanced]
+
+      - name: Spell Sprint
+        rank: 7
+        summary: "Timed dictation — teacher says words, children write quickly. Spelling fluency + accuracy."
+        skill_focus: [spelling]
+        prerequisites: "strong spelling of previously taught patterns"
+        notes: "countdown decreases: 10s → 6s → 3s. Focus is automaticity."
+        by_grade:
+          PreK: null
+          K:
+            levels: [advanced]
+          1st:
+            levels: [on-level, advanced]
