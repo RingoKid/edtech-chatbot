@@ -381,3 +381,42 @@ class TestInvalidStandards:
         errors = validate_plan_standards(plan, standards_text, "K")
         assert any("Phoneme-Grapheme" in e or "Phonics" in e or "P.1" in e
                     for e in errors)
+
+    def test_1st_grade_missing_category_rejected(self, standards_text):
+        """1st grade also requires 4 categories — not just K."""
+        plan = ActivityPlan(
+            review="how_many_sounds",
+            sound_target="chop_the_sound",
+            handwriting="cover_and_try",
+            handwriting_chain=None,
+            spelling="switch_a_roo_write",
+            standards=["1.F.PA.6.a", "1.F.P.1.a", "1.F.P.3.a"],  # missing H
+        )
+        errors = validate_plan_standards(plan, standards_text, "1st")
+        assert any("Handwriting" in e for e in errors)
+
+    def test_empty_standards_rejected_for_k(self, standards_text):
+        """K with no standards at all must fail."""
+        plan = ActivityPlan(
+            review="sound_spark",
+            sound_target="sound_hunt",
+            handwriting="start_dot_and_say",
+            handwriting_chain=None,
+            spelling="sound_letter_hunt",
+            standards=[],
+        )
+        errors = validate_plan_standards(plan, standards_text, "K")
+        assert len(errors) > 0
+
+    def test_empty_standards_rejected_for_prek(self, standards_text):
+        """PreK with no standards must also fail."""
+        plan = ActivityPlan(
+            review="sound_echo",
+            sound_target="sound_check",
+            handwriting="magic_finger_write",
+            handwriting_chain=None,
+            spelling="trace_the_sound",
+            standards=[],
+        )
+        errors = validate_plan_standards(plan, standards_text, "PreK")
+        assert len(errors) > 0

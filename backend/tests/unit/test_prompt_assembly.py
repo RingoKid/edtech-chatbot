@@ -243,6 +243,13 @@ class TestStandardsNotInGenerator:
         for code in sample_plan["standards"]:
             assert code in prompt
 
+    def test_plan_standards_include_descriptions(self, prompt):
+        """Standards must include descriptions, not just bare codes."""
+        # K.F.PA.6.a description from the reference file
+        assert "Isolate and pronounce initial" in prompt
+        # K.F.H.1.a description
+        assert "Form all uppercase and lowercase letters" in prompt
+
     def test_no_select_standards_instruction(self, prompt):
         """Generator must NOT be told to 'Select' standards."""
         # Old Rule 5 said "Select 1-3 standards" / "Include at least 4 standards"
