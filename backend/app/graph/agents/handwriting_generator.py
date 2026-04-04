@@ -6,6 +6,7 @@ The agent generates lessons following the L4C methodology and can iterate
 based on user feedback before finalizing.
 """
 
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -279,7 +280,6 @@ def load_universal_materials(grade: str) -> str:
 
 def _slug_to_display_name(framework: str, slug: str) -> str:
     """Extract display name from framework heading: ### [slug] Display Name."""
-    import re
     pattern = rf"^### \[{re.escape(slug)}\] (.+)$"
     match = re.search(pattern, framework, re.MULTILINE)
     return match.group(1).strip() if match else slug

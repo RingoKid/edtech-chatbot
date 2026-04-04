@@ -187,6 +187,8 @@ async def activity_planner_node(state: GraphState) -> dict:
     )
 
     messages = list(state["messages"])
+    plan = None
+    errors = []
 
     for attempt in range(1 + MAX_RETRIES):
         result = await agent.ainvoke({"messages": messages})
