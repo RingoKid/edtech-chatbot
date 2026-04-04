@@ -52,7 +52,7 @@ FIXTURES_DIR = "tests/fixtures/handwriting_generator"
 EXPERT_FIXTURES_DIR = "tests/fixtures/handwriting_expert"
 RESULTS_DIR = "tests/evals/results"
 RUBRICS_DIR = "tests/evals/rubrics"
-FORM_D_PATH = "prompt/reference_materials/handwriting/form-d-scaffolded-activities.md"
+ACTIVITY_REF_PATH = "prompt/reference_materials/handwriting/activity-framework.md"
 FORM_B_PATH = "prompt/reference_materials/handwriting/form-b-lesson-structure.md"
 
 DEFAULT_JUDGE_MODEL = "gpt-5.2"
@@ -109,9 +109,9 @@ def get_git_sha() -> str:
         return "unknown"
 
 
-def load_form_d() -> str:
-    """Load Form D from the source markdown file."""
-    with open(FORM_D_PATH) as f:
+def load_activity_ref() -> str:
+    """Load the activity framework reference for eval rubrics."""
+    with open(ACTIVITY_REF_PATH) as f:
         return f.read()
 
 
@@ -150,10 +150,10 @@ def get_available_fixtures(fixtures_dir: str = FIXTURES_DIR) -> list[str]:
 # Judge functions
 # ---------------------------------------------------------------------------
 
-def run_within_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[WithinSectionOutput, dict]:
+def run_within_judge(lesson_output: str, model_key: str, activity_ref: str) -> tuple[WithinSectionOutput, dict]:
     """Run the within-section scaffolding judge."""
     rubric_template = load_rubric("scaffolding_within_activity")
-    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+    prompt = rubric_template.replace("{activity_ref}", activity_ref).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(WithinSectionOutput, include_raw=True)
@@ -161,10 +161,10 @@ def run_within_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[W
     return result["parsed"], extract_usage(result["raw"])
 
 
-def run_across_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[AcrossSectionOutput, dict]:
+def run_across_judge(lesson_output: str, model_key: str, activity_ref: str) -> tuple[AcrossSectionOutput, dict]:
     """Run the across-section scaffolding judge."""
     rubric_template = load_rubric("scaffolding_between_activity")
-    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+    prompt = rubric_template.replace("{activity_ref}", activity_ref).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(AcrossSectionOutput, include_raw=True)
@@ -172,10 +172,10 @@ def run_across_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[A
     return result["parsed"], extract_usage(result["raw"])
 
 
-def run_release_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[GradualReleaseOutput, dict]:
+def run_release_judge(lesson_output: str, model_key: str, activity_ref: str) -> tuple[GradualReleaseOutput, dict]:
     """Run the gradual release scaffolding judge."""
     rubric_template = load_rubric("scaffolding_gradual_release")
-    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+    prompt = rubric_template.replace("{activity_ref}", activity_ref).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(GradualReleaseOutput, include_raw=True)
@@ -183,10 +183,10 @@ def run_release_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[
     return result["parsed"], extract_usage(result["raw"])
 
 
-def run_decomposition_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[DecompositionOutput, dict]:
+def run_decomposition_judge(lesson_output: str, model_key: str, activity_ref: str) -> tuple[DecompositionOutput, dict]:
     """Run the decomposition scaffolding judge."""
     rubric_template = load_rubric("scaffolding_decomposition")
-    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+    prompt = rubric_template.replace("{activity_ref}", activity_ref).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(DecompositionOutput, include_raw=True)
@@ -283,10 +283,10 @@ def run_grade_standards_judge(lesson_output: str, model_key: str, form_content: 
     return result["parsed"], extract_usage(result["raw"])
 
 
-def run_activity_naming_judge(lesson_output: str, model_key: str, form_d: str) -> tuple[ActivityNamingOutput, dict]:
+def run_activity_naming_judge(lesson_output: str, model_key: str, activity_ref: str) -> tuple[ActivityNamingOutput, dict]:
     """Run the activity naming judge."""
     rubric_template = load_rubric("activity_naming")
-    prompt = rubric_template.replace("{form_d}", form_d).replace("{lesson_output}", lesson_output)
+    prompt = rubric_template.replace("{activity_ref}", activity_ref).replace("{lesson_output}", lesson_output)
 
     model = get_chat_model(model_key, temperature=0, timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES)
     judge = model.with_structured_output(ActivityNamingOutput, include_raw=True)
@@ -1233,7 +1233,7 @@ EVAL_REGISTRY = {
     "within": {
         "label": "Within",
         "unit": "pairs",
-        "form": "form_d",
+        "form": "activity_ref",
         "description": "Activities within each section progress from simpler to more complex",
         "judge_fn": run_within_judge,
         "compute_fn": compute_within_score,
@@ -1242,7 +1242,7 @@ EVAL_REGISTRY = {
     "across": {
         "label": "Across",
         "unit": "links",
-        "form": "form_d",
+        "form": "activity_ref",
         "description": "Later sections build on skills taught in earlier sections",
         "judge_fn": run_across_judge,
         "compute_fn": compute_across_score,
@@ -1251,7 +1251,7 @@ EVAL_REGISTRY = {
     "release": {
         "label": "Release",
         "unit": "transitions",
-        "form": "form_d",
+        "form": "activity_ref",
         "description": "Teacher support decreases progressively (gradual release of responsibility)",
         "judge_fn": run_release_judge,
         "compute_fn": compute_release_score,
@@ -1260,7 +1260,7 @@ EVAL_REGISTRY = {
     "decomposition": {
         "label": "Decomp",
         "unit": "components",
-        "form": "form_d",
+        "form": "activity_ref",
         "description": "Complex tasks in Section 4 have sub-skills taught in earlier sections",
         "judge_fn": run_decomposition_judge,
         "compute_fn": compute_decomposition_score,
@@ -1342,8 +1342,8 @@ EVAL_REGISTRY = {
     "activity_naming": {
         "label": "ActName",
         "unit": "composite",
-        "form": "form_d",
-        "description": "Activities referenced by Form D name, not described generically",
+        "form": "activity_ref",
+        "description": "Activities referenced by name from the activity framework, not described generically",
         "judge_fn": run_activity_naming_judge,
         "compute_fn": compute_activity_naming_score,
         "format_fn": format_activity_naming_detail,
@@ -1563,9 +1563,9 @@ def main():
     # Load forms only when needed
     needed_forms = set(EVAL_REGISTRY[name]["form"] for name in eval_names)
     forms = {}
-    if "form_d" in needed_forms:
-        forms["form_d"] = load_form_d()
-        print(f"  Form D: loaded from {FORM_D_PATH}")
+    if "activity_ref" in needed_forms:
+        forms["activity_ref"] = load_activity_ref()
+        print(f"  Activity ref: loaded from {ACTIVITY_REF_PATH}")
     if "form_b" in needed_forms:
         forms["form_b"] = load_form_b()
         print(f"  Form B: loaded from {FORM_B_PATH}")

@@ -78,9 +78,9 @@ This applies to any brief logistical/compliance moment that is not itself an ins
 - "Remember we slant our paper. Your free hand holds the paper."
 - "Take out your whiteboards."
 
-## Form D — Activity Reference
+## Activity Framework — Reference
 
-{form_d}
+{activity_ref}
 
 ## Instructions
 

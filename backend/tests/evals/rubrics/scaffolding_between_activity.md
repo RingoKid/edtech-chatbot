@@ -17,7 +17,7 @@ Analyze the **across-section sequencing** of the handwriting lesson below. Deter
 ### Between-Activity Examples
 
 **Example 1 — Model/Explain to Application:**
-In *Model, Explain & Engage*, the teacher does *Stretch the Sounds* — children practice segmenting words into individual sounds (e.g., /b/-/i/-/g/). In the *Application* section, children do *Stretch and Spell* — they segment words AND write each sound. The segmentation practice in the earlier section is a prerequisite for the spelling task in the later section, which requires segmenting then writing each sound.
+In *Model, Explain & Engage*, the teacher does *Stretch the Sounds* — children practice segmenting words into individual sounds (e.g., /b/-/i/-/g/). In the *Application* section, children do *Stretch and Write* — they segment words AND write each sound. The segmentation practice in the earlier section is a prerequisite for the spelling task in the later section, which requires segmenting then writing each sound.
 
 **Example 2 — Review to Model/Explain:**
 In *Review & Connect*, children isolate and identify the /b/ sound (perceptual task). In *Model, Explain & Engage*, children practice letter formation for /b/ (productive motor task). Identifying the sound in the earlier section prepares children for the motor production in the later section.
@@ -40,13 +40,13 @@ Each lesson introduces **one new target sound**. All other sounds, letters, and 
 When evaluating cross-section links — especially links into Section 4 (Application):
 - Do NOT penalize for "missing prerequisite phonemes" that are not the target sound. If Application uses phonemes like /a/, /t/, /g/ alongside the target /b/, those other phonemes are assumed already known.
 - Do NOT require the lesson to teach every phoneme used in the Application task from scratch. Only evaluate whether the **target sound** and its corresponding letter are properly scaffolded across sections.
-- If Application uses a familiar activity format (e.g., Sound Puzzle, Stretch and Spell), assume children have been exposed to that activity type before. Evaluate whether the target sound's component skills (identification, formation, sound-letter mapping) are scaffolded — not whether the activity format itself was introduced.
+- If Application uses a familiar activity format (e.g., Sound-Letter Hunt, Stretch and Write), assume children have been exposed to that activity type before. Evaluate whether the target sound's component skills (identification, formation, sound-letter mapping) are scaffolded — not whether the activity format itself was introduced.
 
-## Form D — Activity Reference (Difficulty Labels)
+## Activity Framework — Difficulty Reference
 
-Use this as your authoritative reference for understanding activity purposes and complexity. If an activity in the lesson matches or closely resembles one below, use that context.
+Use this as your authoritative reference for understanding activity purposes and complexity. Activities are organized by section with a **rank** (1 = easiest, higher = harder). If an activity in the lesson matches or closely resembles one below, use that context.
 
-{form_d}
+{activity_ref}
 
 ## Instructions
 
