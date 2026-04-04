@@ -201,7 +201,7 @@ def create_activity_planner_agent(
     Returns:
         CompiledStateGraph: The compiled ReAct agent
     """
-    model = get_chat_model(PLANNER_MODEL)
+    model = get_chat_model(PLANNER_MODEL, reasoning_effort="medium")
 
     system_prompt = get_activity_planner_prompt(
         grade=grade,
