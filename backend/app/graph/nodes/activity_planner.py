@@ -208,15 +208,7 @@ def validate_plan_standards(
     if grade in ("K", "1st"):
         grade_prefix = GRADE_TO_CODE_PREFIX[grade]
         for category_name, category_suffix in REQUIRED_CATEGORIES.items():
-            # Build the expected pattern: e.g. "K.F.PA" or "K.F.H" or "1.F.P.1"
-            if category_suffix == "H":
-                cat_prefix = f"{grade_prefix}{category_suffix}"
-            elif category_suffix == "PA":
-                cat_prefix = f"{grade_prefix}{category_suffix}"
-            else:
-                # P.1 or P.3
-                cat_prefix = f"{grade_prefix}{category_suffix}"
-
+            cat_prefix = f"{grade_prefix}{category_suffix}"
             if not any(c.startswith(cat_prefix) for c in codes):
                 errors.append(
                     f"standards: missing required category {category_name}"

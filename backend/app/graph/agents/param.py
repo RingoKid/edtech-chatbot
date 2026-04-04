@@ -299,7 +299,7 @@ def create_param_agent(recursion_limit: int = 10):
         CompiledStateGraph: The compiled ReAct agent
     """
     # Get model from registry
-    model = get_chat_model("gpt-5.4-nano")
+    model = get_chat_model("gpt-5.4-mini")
 
     # Get prompt from Langfuse (or default)
     system_prompt = get_param_prompt()

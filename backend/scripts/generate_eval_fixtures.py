@@ -82,6 +82,7 @@ FIXTURE_PARAMS = [
     {"id": "k_letter_w_advanced", "grade": "K", "letter": "W", "student_level": "advanced"},
     {"id": "k_letter_b_advanced", "grade": "K", "letter": "B", "student_level": "advanced"},
     {"id": "k_letter_b_onlevel", "grade": "K", "letter": "B", "student_level": "on-level"},
+    {"id": "k_letter_b_struggling", "grade": "K", "letter": "B", "student_level": "struggling"},
     # 1st
     {"id": "first_letter_p_onlevel", "grade": "1st", "letter": "P", "student_level": "on-level"},
     {"id": "first_letter_r_struggling", "grade": "1st", "letter": "R", "student_level": "struggling"},

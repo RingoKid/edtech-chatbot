@@ -147,8 +147,8 @@ def create_routing_agent(recursion_limit: int = 10):
     Returns:
         CompiledStateGraph: The compiled ReAct agent
     """
-    # Get model from registry (fast + cheap for intent classification)
-    model = get_chat_model("gpt-5.4-nano")
+    # Get model from registry (fast for intent classification)
+    model = get_chat_model("gpt-5.4-mini")
 
     # Get prompt from Langfuse (or default)
     system_prompt = get_routing_prompt()

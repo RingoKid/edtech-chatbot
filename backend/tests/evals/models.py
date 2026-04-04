@@ -12,10 +12,10 @@ class Activity(BaseModel):
 
     name: str = Field(description="Name of the activity (e.g., 'Sound Sparks', 'Magic Finger Write')")
     difficulty_level: Literal["low", "middle", "high"] = Field(
-        description="Difficulty level from Form D: low, middle, or high"
+        description="Difficulty level based on activity framework rank: low, middle, or high"
     )
     reasoning: str = Field(
-        description="Why this difficulty level, referencing Form D activity descriptions"
+        description="Why this difficulty level, referencing activity framework descriptions and rank"
     )
 
 
@@ -465,14 +465,14 @@ class GradeStandardsOutput(BaseModel):
 
 
 class SectionActivityCheck(BaseModel):
-    """Check for named Form D activities in a single lesson section."""
+    """Check for named activities from the activity framework in a single lesson section."""
 
     section: str = Field(description="Which section (e.g., 'Review & Connect')")
     named_activities: list[str] = Field(
-        description="Form D activity names found in this section (e.g., ['Sound Spark', 'Sound Hunt'])"
+        description="Activity framework names found in this section (e.g., ['Sound Spark', 'Sound Hunt'])"
     )
     has_named_activity: bool = Field(
-        description="Does this section reference at least one Form D activity by name?"
+        description="Does this section reference at least one activity by name from the framework?"
     )
     generic_descriptions: list[str] = Field(
         description="Generic action descriptions found instead of named activities (e.g., ['teacher reviews previously learned sounds'])"
