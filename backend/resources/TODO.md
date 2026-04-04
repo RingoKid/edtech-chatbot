@@ -16,15 +16,15 @@
 
 ## Reference Material Updates (Dr. Farrow, 2026-03-16)
 
-- [ ] **Update Form D** — Dropbox version has major changes: 13 activities removed, 10 added, 4 renamed, most grade/level annotations removed. Cannot just swap the file — generator prompt rules (lines 74-80 in handwriting_generator.py) reference level tags that no longer exist. Needs coordinated update with prompt rules.
-- [ ] **Add Activity Framework** — New file from Dr. Farrow. 193 paragraphs of cognitive rationale for when/why each activity is appropriate. Not in codebase yet. Dropbox: `Activity Framework Transcription.docx`. Converted markdown at `/tmp/activity-framework.md`.
+- [x] **Update Form D** — Replaced by activity-framework.md + activity-index.yaml in spec 023. Form D still on disk for reference but no longer loaded by generator or evals.
+- [x] **Add Activity Framework** — Added as `activity-framework.md` with slug headings for regex extraction. Used by planner and generator via dispatcher pattern. (commits `284302f`, `bc3406e`)
 - [ ] **Add First Grade Scripted Lesson** — Dr. Farrow's hand-written reference lesson (3 comments, Feb 21). Not in codebase. Dropbox: `First grade scripted lesson .docx`. Converted markdown at `/tmp/first-grade-scripted-lesson.md`.
 
 ## Generator Prompt Changes (Dr. Farrow feedback, 2026-03-09)
 
-- [ ] **AI does not prompt for previously learned skills** — "kinda screwed up the activity selection" (kindergarten test plan comment #1, email #2)
+- [x] **AI does not prompt for previously learned skills** — Fixed in spec 023. Added `previously_learned` intake question + Rule 12 constrains word choices to taught sounds only.
+- [x] **Activity name confusion** — Fixed by planner pipeline. Activities selected by slug, descriptions extracted by regex, names displayed from framework headings. Activity naming eval now scores 100%.
 - [ ] **Review section incorrect** — Generator confuses what Review is. Review = going through previously learned letter-sounds with a focus on sounds. Generator was introducing the new letter in Review instead. (comments #3, #4)
-- [ ] **Activity name confusion** — Generator labels activities with wrong names (e.g., says "Sound Spark" but describes "Sound Echo", says "Sound Hunt" but it's actually a different activity). (comments #5, #6)
 - [ ] **Form B explanations not verbatim** — Generator writes "(Use the exact Form B explanation for Section X here)" placeholder instead of the actual text. (comments #2, #8, #14, #18)
 - [ ] **Lowercase only by default for K** — "should just focus on lowercase unless teacher specifies they want uppercase as well" (comment #10)
 - [ ] **Verbal cues not populated** — Generator writes placeholder instead of actual cues from Form F. "The generator should either use the verbal cue or create its own" (comments #11, #12)
@@ -48,14 +48,31 @@
 
 ## Activity Planner (spec 023, 2026-04-03)
 
-- [ ] **Fix standards selection pipeline** — Standards don't follow the dispatcher pattern like activities do. Three parts:
-  1. **Planner has no standards reference** — The planner prompt tells it to "Select grade-appropriate K.F.* codes" but doesn't provide the actual standards file (`handwriting-spelling-standards.md`). It has no list of valid codes, so it may hallucinate. Fix: load grade-specific standards into the planner prompt (~300-500 tokens). Same pattern as activity index.
-  2. **No standards lookup function** — Activities use `extract_activity(framework, slug)` to resolve slugs to descriptions. Standards have no equivalent. The planner returns bare code strings (`["K.F.PA.6.a", ...]`) and `build_activity_plan_section()` just comma-joins them — no description lookup. Fix: add `extract_standard(standards_text, code)` that returns the code + description from the reference table. Inject resolved standards into the generator prompt like activities.
-  3. **Generator ignores planner's standards** — Rule 5 says "Select... Include at least 4 standards" which tells the LLM to pick its own. The generated fixture used fabricated codes (K.F.ASR.1, K.F.PGR.3, K.F.ENC.1, K.F.HWR.1 — none exist). Fix: change Rule 5 to "Use the pre-selected standards from the Activity Plan exactly. Do NOT select new ones."
-  4. **No standards validation** — `activity_planner_node` validates slugs, grades, levels but NOT standards codes. Fix: add `validate_plan_standards()` that checks each code exists in the reference for the given grade. Add to validation chain in the retry loop.
-- [ ] **Update activity_naming eval rubric** — The rubric at `tests/evals/rubrics/activity_naming.md` injects `{form_d}` (old Form D) as the reference list for valid activity names. The new system uses activity-framework.md names which differ (e.g., "SkyWrite" vs "Sky Writing", "Trace the Sound" vs "Trace the Sound You Hear"). Scored 69% — false negatives, not real failures. Fix: update rubric to reference activity-framework.md or activity-index.yaml names instead of Form D.
-- [ ] **Regenerate all fixtures** — Current fixtures (15 total in `tests/fixtures/handwriting_generator/`) were generated with old prompt. Need regeneration with new planner pipeline. One fixture (`k_letter_b_onlevel`) already regenerated — scored 100% on structure, 100% within/across/verbatim, but 69% activity naming (eval bug) and 50% grade standards (generator bug).
+- [x] **Fix standards selection pipeline** — Implemented: `extract_standard()`, `validate_plan_standards()`, planner prompt with grade-filtered standards, generator Rule 5 rewritten to use pre-selected standards. All 34 codes validated, fabricated codes eliminated. (commit `ee66f1f`)
+- [x] **Update activity_naming eval rubric** — All 5 eval rubrics updated from Form D to activity-framework.md. Eval runner loads `activity-framework.md` instead of `form-d-scaffolded-activities.md`. Activity naming now scores 100%. (commit `3572ca1`)
+- [x] **Update eval Pydantic models** — `tests/evals/models.py` field descriptions updated from "Form D" to "activity framework". (commit `98b99d1`)
+- [x] **Upgrade models to GPT-5.4 family** — All nodes upgraded: routing/param/planner/feedback → gpt-5.4-mini, generator → gpt-5.4. Model registry updated with pricing. (commits `e32dd48`, `98b99d1`)
+- [ ] **Regenerate all fixtures** — 8 of 20 fixtures regenerated with new pipeline. 12 stale fixtures remain from Feb-Mar (old prompt, old models). `k_letter_b_struggling_mid` fails on param extraction — needs debugging.
 - [ ] **Add eval for previously-learned-skills prompting** — New behavior from spec 023, needs validation that generator only uses sounds from `previously_learned` list in example words.
+
+## Generator Quality Issues (expert comparison, 2026-04-04)
+
+Eval scores with new pipeline: Structure 100%, Within 97.2%, Across 100%, Verbatim 100%, ActName 100%, GradeStd 100%, Release 82.5%, Decomp 87-97%. Quality comparison against Dr. Farrow's expert fixtures revealed these gaps:
+
+- [ ] **1st grade produces intro lesson instead of CVCe** — AI scored 4/10 vs expert 9/10. `previously_learned: ["a", "c", "p"]` doesn't convey that 1st graders should be doing CVCe patterns (cap→cape, kit→kite). Generator produces a K-level CVC intro lesson with nonsense words (pac, pap, cip). Needs either a `spelling_pattern` intake param or planner inference from grade + letter context. Most impactful fix.
+- [ ] **No lesson variant awareness** — Expert "scaffolded" variant uses pre-filled vowels in Application (only write consonants, vowel pre-populated in Elkonin box). Generator has no concept of this — produces standard CVC encoding. May need a `lesson_variant` or `scaffolding_level` parameter.
+- [ ] **Word list poverty** — AI uses 4-7 words per lesson; expert uses 11-13. AI sometimes includes nonsense words (dib, pac, cip). Generator should produce 10+ real CVC words using only `previously_learned` sounds.
+- [ ] **Uppercase handling inconsistent** — PreK: AI skips uppercase Z when expert teaches both cases. K: AI includes uppercase B when expert deprioritizes it. Rule 13 says "PreK: lowercase only" but expert contradicts this for some letters. Needs clarification with Dr. Farrow.
+- [ ] **Guided Practice density** — Expert consistently has 3 graduated sub-activities (e.g., Magic Finger Write → Say and Write → Write and Sound). AI has 2. Missing the "Write and Sound" step that decouples verbal cues from phoneme production.
+- [ ] **Teacher voice too clinical** — AI says "That is correct because a spells the /a/ sound." Expert says "Kiss your brains", "put your listening ears on", uses student names. Classroom management language and warmth markers missing.
+
+## Eval Maintenance
+
+- [x] **Regenerate fixtures after Form D + prompt changes** — Moved to Activity Planner section above
+- [x] **Update activity_naming rubric** — Done (commit `3572ca1`)
+- [ ] **1st grade marker formatting** — 53-62% structure score, uses `[Explanation:]` instead of emoji markers
+- [x] **Add eval for previously-learned-skills prompting** — Moved to Activity Planner section above
+- [ ] **Update scaffolding eval Pydantic models** — `Activity.difficulty_level` still uses `Literal["low", "middle", "high"]` from old Form D system. Framework uses rank (1-7). Judge maps rank→labels naturally for now but schema should align with rank system eventually.
 
 ## Eval Maintenance
 

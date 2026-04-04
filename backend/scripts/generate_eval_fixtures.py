@@ -83,6 +83,22 @@ FIXTURE_PARAMS = [
     {"id": "k_letter_b_advanced", "grade": "K", "letter": "B", "student_level": "advanced"},
     {"id": "k_letter_b_onlevel", "grade": "K", "letter": "B", "student_level": "on-level"},
     {"id": "k_letter_b_struggling", "grade": "K", "letter": "B", "student_level": "struggling"},
+    # Expert-mirror fixtures — matched to expert fixture params + inferred prior sounds
+    {"id": "k_letter_b_onlevel_mid", "grade": "K", "letter": "B", "student_level": "on-level",
+     "previously_learned": ["m", "a", "c", "d", "g", "i"],
+     "skill_focus": "spelling"},
+    {"id": "k_letter_b_struggling_mid", "grade": "K", "letter": "B", "student_level": "struggling",
+     "previously_learned": ["m", "a", "p"],
+     "skill_focus": "isolating_sounds"},
+    {"id": "k_letter_b_onlevel_scaffolded", "grade": "K", "letter": "B", "student_level": "on-level",
+     "previously_learned": ["m", "a", "c", "d", "e", "g", "i", "w"],
+     "skill_focus": "spelling"},
+    {"id": "prek_letter_z_onlevel_mid", "grade": "PreK", "letter": "Z", "student_level": "on-level",
+     "previously_learned": ["m", "a"],
+     "skill_focus": "isolating_sounds"},
+    {"id": "first_letter_i_onlevel_mid", "grade": "1st", "letter": "I", "student_level": "on-level",
+     "previously_learned": ["a", "c", "p"],
+     "skill_focus": "spelling"},
     # 1st
     {"id": "first_letter_p_onlevel", "grade": "1st", "letter": "P", "student_level": "on-level"},
     {"id": "first_letter_r_struggling", "grade": "1st", "letter": "R", "student_level": "struggling"},
@@ -149,10 +165,16 @@ async def run_handwriting_generator(graph, params: dict, thread_id: str, callbac
     grade = params["grade"]
     letter = params["letter"]
     student_level = params["student_level"]
+    previously_learned = params.get("previously_learned", [])
+    skill_focus = params.get("skill_focus", "")
 
     param_input = f"{grade} letter {letter}"
     if student_level != "on-level":
         param_input += f" for {student_level} students"
+    if previously_learned:
+        param_input += f". Students have already learned: {', '.join(previously_learned)}"
+    if skill_focus:
+        param_input += f". Focus on {skill_focus}"
 
     param_result = await graph.ainvoke(
         {"messages": [HumanMessage(content=param_input)]},
