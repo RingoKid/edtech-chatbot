@@ -26,6 +26,7 @@ from app.graph.utils.extractors import (
     extract_verbal_cues,
     extract_gesture,
     extract_grade_standards,
+    extract_standard,
     LETTER_TO_SOUNDS,
 )
 
@@ -288,3 +289,99 @@ class TestExtractGradeStandards:
         assert "K.F.P.1" in result  # Phonics
         assert "K.F.P.3" in result  # Encoding
         assert "K.F.H" in result    # Handwriting
+
+
+# ---------------------------------------------------------------------------
+# Individual standard extraction tests
+# ---------------------------------------------------------------------------
+
+class TestExtractStandard:
+    """Test single standard code + description extraction."""
+
+    def test_extracts_k_pa_code(self, standards_text):
+        result = extract_standard(standards_text, "K.F.PA.6.a")
+        assert "K.F.PA.6.a" in result
+        assert "Isolate and pronounce initial" in result
+
+    def test_extracts_k_phonics_code(self, standards_text):
+        result = extract_standard(standards_text, "K.F.P.1.a")
+        assert "K.F.P.1.a" in result
+        assert "phoneme-grapheme correspondences" in result
+
+    def test_extracts_k_encoding_code(self, standards_text):
+        result = extract_standard(standards_text, "K.F.P.3.a")
+        assert "K.F.P.3.a" in result
+        assert "encode simple one-syllable words" in result
+
+    def test_extracts_k_handwriting_code(self, standards_text):
+        result = extract_standard(standards_text, "K.F.H.1.a")
+        assert "K.F.H.1.a" in result
+        assert "Form all uppercase and lowercase letters" in result
+
+    def test_extracts_prek_cll_code(self, standards_text):
+        result = extract_standard(standards_text, "CLL6.4c")
+        assert "CLL6.4c" in result
+        assert "Isolates the initial" in result
+
+    def test_extracts_1st_grade_code(self, standards_text):
+        result = extract_standard(standards_text, "1.F.PA.6.a")
+        assert "1.F.PA.6.a" in result
+        assert "Isolate and pronounce initial, medial, and final" in result
+
+    def test_returns_empty_for_fabricated_code(self, standards_text):
+        """Fabricated codes that look plausible must return empty."""
+        assert extract_standard(standards_text, "K.F.ASR.1") == ""
+        assert extract_standard(standards_text, "K.F.PGR.3") == ""
+        assert extract_standard(standards_text, "K.F.ENC.1") == ""
+        assert extract_standard(standards_text, "K.F.HWR.1") == ""
+
+    def test_no_partial_match(self, standards_text):
+        """'K.F.PA.6' should NOT match 'K.F.PA.6.a'."""
+        assert extract_standard(standards_text, "K.F.PA.6") == ""
+
+    def test_no_cross_grade_bleed(self, standards_text):
+        """K and 1st codes are distinct — extracting one must not return the other."""
+        k_result = extract_standard(standards_text, "K.F.H.1.a")
+        first_result = extract_standard(standards_text, "1.F.H.1.a")
+        assert "K.F.H.1.a" in k_result
+        assert "1.F.H.1.a" not in k_result
+        assert "1.F.H.1.a" in first_result
+        assert "K.F.H.1.a" not in first_result
+
+    def test_all_prek_codes_extractable(self, standards_text):
+        """Every PreK CLL code in the reference must return non-empty."""
+        prek_codes = [
+            "CLL6.4c", "CLL6.4e", "CLL6.4f",
+            "CLL7.4a", "CLL8.4b", "CLL9.4d",
+        ]
+        for code in prek_codes:
+            result = extract_standard(standards_text, code)
+            assert result, f"Empty extraction for PreK code: {code}"
+
+    def test_all_k_codes_extractable(self, standards_text):
+        """Every K code in the reference must return non-empty."""
+        k_codes = [
+            "K.F.PA.6.a", "K.F.PA.6.b", "K.F.PA.6.c", "K.F.PA.6.d",
+            "K.F.P.1.a", "K.F.P.1.b",
+            "K.F.P.3.a", "K.F.P.3.b",
+            "K.F.H.1.a", "K.F.H.1.b", "K.F.H.1.c",
+            "K.F.H.2.a", "K.F.H.2.b",
+        ]
+        for code in k_codes:
+            result = extract_standard(standards_text, code)
+            assert result, f"Empty extraction for K code: {code}"
+
+    def test_all_1st_codes_extractable(self, standards_text):
+        """Every 1st grade code in the reference must return non-empty."""
+        first_codes = [
+            "1.F.PA.4.d",
+            "1.F.PA.5.a", "1.F.PA.5.b",
+            "1.F.PA.6.a", "1.F.PA.6.b", "1.F.PA.6.c", "1.F.PA.6.d",
+            "1.F.P.1.a", "1.F.P.1.b",
+            "1.F.P.3.a", "1.F.P.3.b", "1.F.P.3.c", "1.F.P.3.d",
+            "1.F.H.1.a", "1.F.H.1.b", "1.F.H.1.c",
+            "1.F.H.2.a", "1.F.H.2.b",
+        ]
+        for code in first_codes:
+            result = extract_standard(standards_text, code)
+            assert result, f"Empty extraction for 1st code: {code}"

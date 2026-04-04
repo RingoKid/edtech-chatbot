@@ -17,6 +17,12 @@ from app.graph.nodes.activity_planner import (
     validate_plan_slugs,
     validate_plan_grade,
     validate_plan_level,
+    validate_plan_standards,
+)
+
+STANDARDS_PATH = (
+    Path(__file__).parent.parent.parent
+    / "prompt" / "reference_materials" / "handwriting-spelling-standards.md"
 )
 
 INDEX_PATH = (
@@ -33,6 +39,11 @@ INDEX_PATH = (
 def index():
     with open(INDEX_PATH) as f:
         return yaml.safe_load(f)
+
+
+@pytest.fixture(scope="module")
+def standards_text():
+    return STANDARDS_PATH.read_text()
 
 
 # ---------------------------------------------------------------------------
@@ -192,3 +203,181 @@ class TestConstraintCoverage:
                             f"No activities for {grade}/{level} in "
                             f"{section_key} — may need fallback logic"
                         )
+
+
+# ---------------------------------------------------------------------------
+# Standards validation tests
+# ---------------------------------------------------------------------------
+
+class TestValidStandards:
+    """Test that well-formed standards pass validation."""
+
+    def test_valid_k_standards_pass(self, standards_text):
+        plan = ActivityPlan(
+            review="sound_spark",
+            sound_target="sound_hunt",
+            handwriting="start_dot_and_say",
+            handwriting_chain=None,
+            spelling="sound_letter_hunt",
+            standards=["K.F.PA.6.a", "K.F.P.1.a", "K.F.P.3.a", "K.F.H.1.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "K")
+        assert errors == []
+
+    def test_valid_prek_standards_pass(self, standards_text):
+        plan = ActivityPlan(
+            review="sound_echo",
+            sound_target="sound_check",
+            handwriting="magic_finger_write",
+            handwriting_chain=None,
+            spelling="trace_the_sound",
+            standards=["CLL6.4c", "CLL7.4a", "CLL9.4d"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "PreK")
+        assert errors == []
+
+    def test_valid_1st_standards_pass(self, standards_text):
+        plan = ActivityPlan(
+            review="how_many_sounds",
+            sound_target="chop_the_sound",
+            handwriting="cover_and_try",
+            handwriting_chain=None,
+            spelling="switch_a_roo_write",
+            standards=["1.F.PA.6.a", "1.F.P.1.a", "1.F.P.3.a", "1.F.H.1.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "1st")
+        assert errors == []
+
+    def test_prek_allows_fewer_standards(self, standards_text):
+        """PreK only needs 1-3 standards, no category coverage rule."""
+        plan = ActivityPlan(
+            review="sound_echo",
+            sound_target="sound_check",
+            handwriting="magic_finger_write",
+            handwriting_chain=None,
+            spelling="trace_the_sound",
+            standards=["CLL6.4c"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "PreK")
+        assert errors == []
+
+
+class TestInvalidStandards:
+    """Test that invalid standards produce specific error messages."""
+
+    def test_fabricated_code_rejected(self, standards_text):
+        plan = ActivityPlan(
+            review="sound_spark",
+            sound_target="sound_hunt",
+            handwriting="start_dot_and_say",
+            handwriting_chain=None,
+            spelling="sound_letter_hunt",
+            standards=["K.F.ASR.1", "K.F.P.1.a", "K.F.P.3.a", "K.F.H.1.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "K")
+        assert any("K.F.ASR.1" in e and "not found" in e for e in errors)
+
+    def test_mixed_valid_and_fabricated(self, standards_text):
+        """3 real + 1 fabricated → exactly 1 error."""
+        plan = ActivityPlan(
+            review="sound_spark",
+            sound_target="sound_hunt",
+            handwriting="start_dot_and_say",
+            handwriting_chain=None,
+            spelling="sound_letter_hunt",
+            standards=["K.F.PA.6.a", "K.F.P.1.a", "K.F.P.3.a", "K.F.HWR.1"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "K")
+        not_found = [e for e in errors if "not found" in e]
+        assert len(not_found) == 1
+        assert "K.F.HWR.1" in not_found[0]
+
+    def test_k_code_in_prek_plan_rejected(self, standards_text):
+        """K.F.* codes are wrong for PreK."""
+        plan = ActivityPlan(
+            review="sound_echo",
+            sound_target="sound_check",
+            handwriting="magic_finger_write",
+            handwriting_chain=None,
+            spelling="trace_the_sound",
+            standards=["K.F.PA.6.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "PreK")
+        assert any("wrong system" in e.lower() or "wrong grade" in e.lower()
+                    for e in errors)
+
+    def test_cll_code_in_k_plan_rejected(self, standards_text):
+        """CLL codes are wrong for K."""
+        plan = ActivityPlan(
+            review="sound_spark",
+            sound_target="sound_hunt",
+            handwriting="start_dot_and_say",
+            handwriting_chain=None,
+            spelling="sound_letter_hunt",
+            standards=["CLL6.4c", "K.F.P.1.a", "K.F.P.3.a", "K.F.H.1.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "K")
+        assert any("CLL6.4c" in e for e in errors)
+
+    def test_k_code_in_1st_plan_rejected(self, standards_text):
+        """K.F.* codes are wrong for 1st grade."""
+        plan = ActivityPlan(
+            review="how_many_sounds",
+            sound_target="chop_the_sound",
+            handwriting="cover_and_try",
+            handwriting_chain=None,
+            spelling="switch_a_roo_write",
+            standards=["K.F.H.1.a", "1.F.P.1.a", "1.F.P.3.a", "1.F.H.1.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "1st")
+        assert any("K.F.H.1.a" in e for e in errors)
+
+    def test_missing_pa_category_rejected(self, standards_text):
+        """K must have one standard from each of PA, P.1, P.3, H."""
+        plan = ActivityPlan(
+            review="sound_spark",
+            sound_target="sound_hunt",
+            handwriting="start_dot_and_say",
+            handwriting_chain=None,
+            spelling="sound_letter_hunt",
+            standards=["K.F.P.1.a", "K.F.P.3.a", "K.F.H.1.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "K")
+        assert any("Phonemic Awareness" in e or "PA" in e for e in errors)
+
+    def test_missing_handwriting_category_rejected(self, standards_text):
+        plan = ActivityPlan(
+            review="sound_spark",
+            sound_target="sound_hunt",
+            handwriting="start_dot_and_say",
+            handwriting_chain=None,
+            spelling="sound_letter_hunt",
+            standards=["K.F.PA.6.a", "K.F.P.1.a", "K.F.P.3.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "K")
+        assert any("Handwriting" in e or "H" in e for e in errors)
+
+    def test_missing_encoding_category_rejected(self, standards_text):
+        plan = ActivityPlan(
+            review="sound_spark",
+            sound_target="sound_hunt",
+            handwriting="start_dot_and_say",
+            handwriting_chain=None,
+            spelling="sound_letter_hunt",
+            standards=["K.F.PA.6.a", "K.F.P.1.a", "K.F.H.1.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "K")
+        assert any("Encoding" in e or "P.3" in e for e in errors)
+
+    def test_missing_phonics_category_rejected(self, standards_text):
+        plan = ActivityPlan(
+            review="sound_spark",
+            sound_target="sound_hunt",
+            handwriting="start_dot_and_say",
+            handwriting_chain=None,
+            spelling="sound_letter_hunt",
+            standards=["K.F.PA.6.a", "K.F.P.3.a", "K.F.H.1.a"],
+        )
+        errors = validate_plan_standards(plan, standards_text, "K")
+        assert any("Phoneme-Grapheme" in e or "Phonics" in e or "P.1" in e
+                    for e in errors)

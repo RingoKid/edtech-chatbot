@@ -204,3 +204,51 @@ class TestPromptParameters:
 
     def test_skill_focus_appears_in_prompt(self, prompt):
         assert "isolating_sounds" in prompt or "isolating sounds" in prompt
+
+    def test_previously_learned_in_task_header(self, prompt):
+        """Previously learned sounds must appear in the Your Task section."""
+        # The task header should list these as a parameter, not just in Rule 12
+        assert "m, a, s, t" in prompt or "m,a,s,t" in prompt
+
+    def test_skill_focus_in_task_header(self, prompt):
+        """Skill focus must appear in the Your Task section."""
+        assert "isolating_sounds" in prompt or "isolating sounds" in prompt
+
+
+class TestStandardsNotInGenerator:
+    """Test that the full standards reference is removed from the generator prompt."""
+
+    @pytest.fixture(scope="class")
+    def prompt(self, sample_plan):
+        return get_handwriting_generator_prompt(
+            grade="K", letter="B", student_level="on-level",
+            previously_learned=["m", "a", "s", "t"],
+            skill_focus="isolating_sounds",
+            activity_plan=sample_plan,
+        )
+
+    def test_no_grade_standards_section(self, prompt):
+        """The full 'Grade-Specific Standards Reference' section must be removed."""
+        assert "Grade-Specific Standards Reference" not in prompt
+
+    def test_no_full_standards_dump(self, prompt):
+        """Codes not in the plan must NOT appear — proves we're not dumping all."""
+        # K.F.PA.6.d is a real K code but not in our sample_plan
+        assert "K.F.PA.6.d" not in prompt
+        # K.F.H.2.b is a real K code but not in the plan
+        assert "K.F.H.2.b" not in prompt
+
+    def test_plan_standards_included(self, prompt, sample_plan):
+        """Standards from the activity plan must appear in the prompt."""
+        for code in sample_plan["standards"]:
+            assert code in prompt
+
+    def test_no_select_standards_instruction(self, prompt):
+        """Generator must NOT be told to 'Select' standards."""
+        # Old Rule 5 said "Select 1-3 standards" / "Include at least 4 standards"
+        # New Rule 5 should say "Use the pre-selected standards"
+        lower = prompt.lower()
+        # Check that the standards sub-section doesn't instruct selection
+        assert "select 1\u20133 standards" not in lower
+        assert "select 1-3 standards" not in lower
+        assert "include at least 4 standards, one from each" not in lower
