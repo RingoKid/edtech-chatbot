@@ -318,11 +318,109 @@ First lesson ever. Planner picks entry-level activities: Sound Echo (review), So
 7. `tests/unit/test_prompt_assembly.py` — Remove skip markers, verify against real implementation
 8. Run existing evals to verify no regression
 
+---
+
+## Standards Pipeline (addendum, 2026-04-03)
+
+The initial implementation left standards selection incomplete — the planner hallucinated codes because it had no reference, and the generator independently selected its own from a full dump. This addendum completes the dispatcher pattern for standards.
+
+### Problem
+
+Three-part gap discovered during eval:
+
+1. **Planner has no standards reference** — prompt tells it to "Select grade-appropriate codes" but provides no valid code list. Result: fabricated codes (`K.F.ASR.1`, `K.F.PGR.3`, `K.F.ENC.1`, `K.F.HWR.1`).
+2. **No standards validation** — `activity_planner_node` validates slugs, grade, and level but not standards codes. Fabricated codes pass through unchecked.
+3. **Generator ignores planner's standards** — Rule 5 says "Select... Include at least 4 standards" and receives the full grade standards section (~300-500 tokens). The planner's selections are comma-joined in the activity plan section but the generator picks its own.
+
+### Solution
+
+Apply the same dispatcher pattern used for activities: reference → planner selects → validator checks → generator receives only selected items.
+
+### New function: `extract_standard()` in `extractors.py`
+
+```python
+def extract_standard(standards_text: str, code: str) -> str:
+    """Extract a single standard code + description from the reference file."""
+    # Match table row: | CODE | description |
+    # Whole-file search — codes are unique across grades (CLL* vs K.F.* vs 1.F.*)
+    # Must not partial-match: K.F.PA.6 must NOT match K.F.PA.6.a
+```
+
+Returns `"CODE — description"` or `""`.
+
+### New function: `validate_plan_standards()` in `activity_planner.py` (node)
+
+Validates the planner's selected standards codes:
+
+1. **Code existence** — each code must exist in the reference file (via `extract_standard`)
+2. **Grade system** — each code must use the correct prefix:
+   - PreK: must start with `CLL`
+   - K: must start with `K.F.`
+   - 1st: must start with `1.F.`
+3. **Category coverage** (K and 1st only) — must have at least one standard from each of:
+   - Phonemic Awareness (PA)
+   - Phoneme-Grapheme Correspondence (P.1)
+   - Encoding (P.3)
+   - Handwriting (H)
+4. **Minimum count** — PreK: 1-3 codes; K/1st: at least 4
+5. **Non-empty** — `standards=[]` is always an error
+
+Wired into the existing retry loop alongside `validate_plan_slugs`, `validate_plan_grade`, `validate_plan_level`.
+
+### Planner prompt changes
+
+Add grade-filtered standards reference to the planner prompt (~300-500 tokens):
+
+- Load `handwriting-spelling-standards.md`
+- Call `extract_grade_standards()` with the grade header (reuse existing `GRADE_TO_STANDARDS_HEADER` mapping)
+- Insert as `{grade_standards}` in the prompt template
+- Update the Standards instruction section to say "Select from the reference below" instead of just listing code formats
+
+### Generator prompt changes
+
+1. **Remove `{grade_standards}` section** — the full "Grade-Specific Standards Reference" dump is no longer needed
+2. **Rewrite Rule 5** — from "Select standards" to "Use the pre-selected standards from the Activity Plan exactly. Do NOT select new ones."
+3. **Update "Your Task" header** — add `previously_learned` and `skill_focus` to the parameter list
+4. **Enhance `build_activity_plan_section()`** — resolve standard codes to `"code — description"` via `extract_standard()` instead of comma-joining bare codes
+
+### Files modified
+
+| File | Changes |
+|------|---------|
+| `app/graph/utils/extractors.py` | Add `extract_standard()` |
+| `app/graph/nodes/activity_planner.py` | Add `validate_plan_standards()`, wire into retry loop, load standards file |
+| `app/graph/agents/activity_planner.py` | Add grade-filtered standards to planner prompt |
+| `app/graph/agents/handwriting_generator.py` | Remove `{grade_standards}`, rewrite Rule 5, update task header, enhance `build_activity_plan_section()` |
+
+### Unit tests (pre-committed)
+
+| Test file | Class | Tests |
+|-----------|-------|-------|
+| `test_extractors.py` | `TestExtractStandard` | 13 tests: code extraction, fabricated codes, partial match, cross-grade, completeness (all 34 codes) |
+| `test_planner_validation.py` | `TestValidStandards` | 4 tests: valid plans for K, PreK, 1st, fewer PreK codes |
+| `test_planner_validation.py` | `TestInvalidStandards` | 10 tests: fabricated codes, wrong grade system, missing categories (PA, P.1, P.3, H), empty list, 1st grade category check |
+| `test_prompt_assembly.py` | `TestStandardsNotInGenerator` | 5 tests: no full dump, no "Select" instruction, plan standards + descriptions included |
+| `test_prompt_assembly.py` | `TestPromptParameters` | 2 tests: `previously_learned` and `skill_focus` in task header |
+
+### Implementation order
+
+1. `extract_standard()` in `extractors.py`
+2. `validate_plan_standards()` in `activity_planner.py` (node) + wire into retry loop
+3. Planner prompt: add grade-filtered standards reference
+4. Generator prompt: remove standards dump, rewrite Rule 5, update task header
+5. `build_activity_plan_section()`: resolve codes to descriptions
+6. Run unit tests
+7. Regenerate K fixture, re-run evals
+
+---
+
 ## Acceptance Criteria
 
 - [ ] All pre-committed unit tests pass (`test_extractors`, `test_activity_index`, `test_planner_validation`, `test_prompt_assembly`)
 - [ ] Planner returns valid `ActivityPlan` for all 9 grade×level combinations
 - [ ] Generator prompt contains only target letter cues (Form F), target sound gesture (Form G), and selected activity descriptions
 - [ ] Generator prompt does NOT contain Form D, full Form F, full Form G, or Form H (on initial generation)
+- [ ] Generator prompt does NOT contain the full grade standards reference
+- [ ] Standards in the generated lesson are real codes from the reference file
 - [ ] Existing handwriting generator evals pass at current or better scores
 - [ ] Existing scaffolding evals pass at current or better scores
