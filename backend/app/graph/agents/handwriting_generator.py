@@ -19,7 +19,7 @@ from app.graph.utils.extractors import (
     extract_activity,
     extract_verbal_cues,
     extract_gesture,
-    extract_grade_standards,
+    extract_standard,
 )
 
 GENERATOR_MODEL = "gpt-5.1"
@@ -28,13 +28,6 @@ GENERATOR_MODEL = "gpt-5.1"
 REFERENCE_MATERIALS_DIR = Path(__file__).parent.parent.parent.parent / "prompt" / "reference_materials"
 HANDWRITING_DIR = REFERENCE_MATERIALS_DIR / "handwriting"
 STANDARDS_PATH = REFERENCE_MATERIALS_DIR / "handwriting-spelling-standards.md"
-
-# Map grade parameter to section header in standards doc
-GRADE_TO_STANDARDS_HEADER = {
-    "PreK": "PreK",
-    "K": "Kindergarten",
-    "1st": "1st Grade",
-}
 
 # Map grade parameter to Form C file
 GRADE_TO_FORM_C_FILE = {
@@ -77,6 +70,8 @@ You have received the following parameters:
 - **Grade Level**: {grade}
 - **Target Letter**: {letter}
 - **Student Level**: {student_level}
+- **Previously Learned Sounds**: {previously_learned}
+- **Skill Focus**: {skill_focus}
 
 Generate a complete handwriting and spelling lesson following the structure in the reference materials.
 
@@ -101,10 +96,7 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - 🔄 **Adaptation:** → End-of-lesson modification prompt
 
 5. **Complete Structure**: Your output MUST include ALL of these sections:
-   - A. Standards (from the Grade-Specific Standards Reference below)
-     - **PreK**: Use GELDS codes (CLL prefix). Select 1–3 standards that align with the lesson objectives.
-     - **K**: Use Georgia K-12 ELA codes (K.F.* format). Include at least 4 standards, one from each category: Phonemic Awareness, Phoneme-Grapheme Correspondence, Encoding, Handwriting.
-     - **1st**: Use Georgia K-12 ELA codes (1.F.* format). Include at least 4 standards, one from each category: Phonemic Awareness, Phoneme-Grapheme Correspondence, Encoding, Handwriting.
+   - A. Standards — Use the pre-selected standards from the Activity Plan exactly as provided. Do NOT select new ones or add extras.
    - B. Objectives (scaffolded objectives)
    - C. Materials (list of materials)
    - D. Scripted Lesson Plan:
@@ -240,12 +232,6 @@ The primary skill to develop in this lesson is: **{skill_focus}**
 
 ---
 
-## Grade-Specific Standards Reference
-
-{grade_standards}
-
----
-
 ## Reference Materials
 
 {reference_materials}
@@ -318,8 +304,16 @@ def build_activity_plan_section(activity_plan: Optional[ActivityPlan]) -> str:
         )
 
     if activity_plan.get("standards"):
-        standards_str = ", ".join(activity_plan["standards"])
-        sections.append(f"### Standards\n\n{standards_str}")
+        try:
+            standards_text = STANDARDS_PATH.read_text()
+        except FileNotFoundError:
+            standards_text = ""
+
+        resolved = []
+        for code in activity_plan["standards"]:
+            desc = extract_standard(standards_text, code)
+            resolved.append(desc if desc else code)
+        sections.append("### Standards\n\n" + "\n".join(f"- {s}" for s in resolved))
 
     return "\n\n".join(sections)
 
@@ -357,14 +351,6 @@ def get_handwriting_generator_prompt(
         except FileNotFoundError:
             pass  # Form H missing is non-fatal
 
-    # Grade-specific standards via regex extraction
-    try:
-        standards_content = STANDARDS_PATH.read_text()
-    except FileNotFoundError:
-        standards_content = ""
-    header_key = GRADE_TO_STANDARDS_HEADER.get(grade, grade)
-    grade_standards = extract_grade_standards(standards_content, header_key)
-
     # Filtered verbal cues (target letter only)
     try:
         form_f_content = FORM_F_PATH.read_text()
@@ -392,7 +378,6 @@ def get_handwriting_generator_prompt(
         previously_learned=learned_str,
         skill_focus=skill_focus,
         reference_materials=reference_materials,
-        grade_standards=grade_standards,
         verbal_cues=verbal_cues,
         phoneme_gesture=phoneme_gesture,
         activity_plan_section=activity_plan_section,

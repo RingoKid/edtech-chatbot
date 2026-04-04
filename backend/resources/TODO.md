@@ -46,12 +46,23 @@
 
 - [ ] **Old lesson plan conversations not shown in queue** — "my old lesson plans 'conversations' are not being shown in the queue" (email #4, Mar 14)
 
+## Activity Planner (spec 023, 2026-04-03)
+
+- [ ] **Fix standards selection pipeline** — Standards don't follow the dispatcher pattern like activities do. Three parts:
+  1. **Planner has no standards reference** — The planner prompt tells it to "Select grade-appropriate K.F.* codes" but doesn't provide the actual standards file (`handwriting-spelling-standards.md`). It has no list of valid codes, so it may hallucinate. Fix: load grade-specific standards into the planner prompt (~300-500 tokens). Same pattern as activity index.
+  2. **No standards lookup function** — Activities use `extract_activity(framework, slug)` to resolve slugs to descriptions. Standards have no equivalent. The planner returns bare code strings (`["K.F.PA.6.a", ...]`) and `build_activity_plan_section()` just comma-joins them — no description lookup. Fix: add `extract_standard(standards_text, code)` that returns the code + description from the reference table. Inject resolved standards into the generator prompt like activities.
+  3. **Generator ignores planner's standards** — Rule 5 says "Select... Include at least 4 standards" which tells the LLM to pick its own. The generated fixture used fabricated codes (K.F.ASR.1, K.F.PGR.3, K.F.ENC.1, K.F.HWR.1 — none exist). Fix: change Rule 5 to "Use the pre-selected standards from the Activity Plan exactly. Do NOT select new ones."
+  4. **No standards validation** — `activity_planner_node` validates slugs, grades, levels but NOT standards codes. Fix: add `validate_plan_standards()` that checks each code exists in the reference for the given grade. Add to validation chain in the retry loop.
+- [ ] **Update activity_naming eval rubric** — The rubric at `tests/evals/rubrics/activity_naming.md` injects `{form_d}` (old Form D) as the reference list for valid activity names. The new system uses activity-framework.md names which differ (e.g., "SkyWrite" vs "Sky Writing", "Trace the Sound" vs "Trace the Sound You Hear"). Scored 69% — false negatives, not real failures. Fix: update rubric to reference activity-framework.md or activity-index.yaml names instead of Form D.
+- [ ] **Regenerate all fixtures** — Current fixtures (15 total in `tests/fixtures/handwriting_generator/`) were generated with old prompt. Need regeneration with new planner pipeline. One fixture (`k_letter_b_onlevel`) already regenerated — scored 100% on structure, 100% within/across/verbatim, but 69% activity naming (eval bug) and 50% grade standards (generator bug).
+- [ ] **Add eval for previously-learned-skills prompting** — New behavior from spec 023, needs validation that generator only uses sounds from `previously_learned` list in example words.
+
 ## Eval Maintenance
 
-- [ ] **Regenerate fixtures after Form D + prompt changes** — Current fixtures will be stale once generator behavior changes
-- [ ] **Update activity_naming rubric** — Activity names changed (renames, removals, additions in Form D)
+- [x] **Regenerate fixtures after Form D + prompt changes** — Moved to Activity Planner section above
+- [x] **Update activity_naming rubric** — Moved to Activity Planner section above
 - [ ] **1st grade marker formatting** — 53-62% structure score, uses `[Explanation:]` instead of emoji markers
-- [ ] **Add eval for previously-learned-skills prompting** — New behavior, needs validation
+- [x] **Add eval for previously-learned-skills prompting** — Moved to Activity Planner section above
 
 ## DevOps (2026-03-24)
 
@@ -59,4 +70,4 @@
 
 ## Existing TODO (from memory)
 
-- [ ] **Add skill focus intake question** — Dr. Farrow approved. Options: isolating sounds, blending, letter formation, spelling. Not yet implemented.
+- [x] **Add skill focus intake question** — Implemented in spec 023 (activity planner). Added to `HandwritingParams` and param agent.

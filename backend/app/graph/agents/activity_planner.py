@@ -14,6 +14,7 @@ from langchain_core.tools import tool
 from langchain.agents import create_agent
 
 from app.llm.client import get_chat_model
+from app.graph.utils.extractors import extract_grade_standards
 
 PLANNER_MODEL = "gpt-4o"
 
@@ -21,6 +22,18 @@ INDEX_PATH = (
     Path(__file__).parent.parent.parent.parent
     / "prompt" / "reference_materials" / "handwriting" / "activity-index.yaml"
 )
+
+STANDARDS_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "prompt" / "reference_materials" / "handwriting-spelling-standards.md"
+)
+
+# Map grade parameter to section header in standards doc
+GRADE_TO_STANDARDS_HEADER = {
+    "PreK": "PreK",
+    "K": "Kindergarten",
+    "1st": "1st Grade",
+}
 
 
 DEFAULT_ACTIVITY_PLANNER_PROMPT = """You are an expert activity planner for early childhood handwriting and spelling lessons.
@@ -60,10 +73,15 @@ Optionally, you may also select:
 
 ## Standards
 
-Select grade-appropriate standards codes:
-- **PreK**: GELDS codes (CLL prefix), 1-3 standards
-- **K**: Georgia K-12 ELA codes (K.F.* format), at least 4 — one each from Phonemic Awareness, Phonics, Encoding, Handwriting
-- **1st**: Georgia K-12 ELA codes (1.F.* format), at least 4 — same domains
+Select standards codes from the reference below. Use ONLY codes that appear in the reference — do NOT invent or guess codes.
+
+- **PreK**: Select 1–3 GELDS codes (CLL prefix) from the reference.
+- **K**: Select at least 4 codes (K.F.* format), one from EACH category: Phonemic Awareness (PA), Phoneme-Grapheme Correspondence (P.1), Encoding (P.3), Handwriting (H).
+- **1st**: Select at least 4 codes (1.F.* format), same 4 categories as K.
+
+### Standards Reference ({grade})
+
+{grade_standards}
 
 ## Activity Index
 
@@ -134,6 +152,18 @@ def load_activity_index() -> str:
         return "ERROR: Activity index not found."
 
 
+def load_grade_standards(grade: str) -> str:
+    """Load grade-filtered standards section for the planner prompt."""
+    try:
+        standards_text = STANDARDS_PATH.read_text()
+    except FileNotFoundError:
+        return "ERROR: Standards reference not found."
+
+    header = GRADE_TO_STANDARDS_HEADER.get(grade, grade)
+    section = extract_grade_standards(standards_text, header)
+    return section if section else f"No standards found for grade '{grade}'."
+
+
 def get_activity_planner_prompt(
     grade: str,
     letter: str,
@@ -141,8 +171,9 @@ def get_activity_planner_prompt(
     previously_learned: list[str],
     skill_focus: str,
 ) -> str:
-    """Compile the activity planner prompt with parameters and index."""
+    """Compile the activity planner prompt with parameters, index, and standards."""
     activity_index = load_activity_index()
+    grade_standards = load_grade_standards(grade)
     learned_str = ", ".join(previously_learned) if previously_learned else "(none — first lesson)"
 
     return DEFAULT_ACTIVITY_PLANNER_PROMPT.format(
@@ -152,6 +183,7 @@ def get_activity_planner_prompt(
         previously_learned=learned_str,
         skill_focus=skill_focus,
         activity_index=activity_index,
+        grade_standards=grade_standards,
     )
 
 

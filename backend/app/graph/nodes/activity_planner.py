@@ -18,10 +18,16 @@ from app.graph.agents.activity_planner import (
     create_activity_planner_agent,
     PLANNER_TOOL_NAME,
 )
+from app.graph.utils.extractors import extract_standard
 
 INDEX_PATH = (
     Path(__file__).parent.parent.parent.parent
     / "prompt" / "reference_materials" / "handwriting" / "activity-index.yaml"
+)
+
+STANDARDS_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "prompt" / "reference_materials" / "handwriting-spelling-standards.md"
 )
 
 SECTION_TO_INDEX_KEY = {
@@ -146,6 +152,79 @@ def validate_plan_level(
     return errors
 
 
+# Grade → expected code prefix
+GRADE_TO_CODE_PREFIX = {
+    "PreK": "CLL",
+    "K": "K.F.",
+    "1st": "1.F.",
+}
+
+# Required categories for K and 1st (prefix after grade prefix)
+REQUIRED_CATEGORIES = {
+    "Phonemic Awareness (PA)": "PA",
+    "Phoneme-Grapheme Correspondence (P.1)": "P.1",
+    "Encoding (P.3)": "P.3",
+    "Handwriting (H)": "H",
+}
+
+
+def validate_plan_standards(
+    plan: ActivityPlan, standards_text: str, grade: str,
+) -> list[str]:
+    """
+    Validate that the planner's selected standards are real and appropriate.
+
+    Checks:
+    1. Each code exists in the reference file
+    2. Each code uses the correct grade prefix
+    3. K and 1st must cover 4 required categories
+    4. Non-empty list required for all grades
+
+    Returns list of error messages (empty = valid).
+    """
+    errors = []
+    codes = plan.get("standards", [])
+
+    if not codes:
+        errors.append("standards: list is empty — at least 1 standard required")
+        return errors
+
+    expected_prefix = GRADE_TO_CODE_PREFIX.get(grade, "")
+
+    for code in codes:
+        # Check grade system
+        if not code.startswith(expected_prefix):
+            errors.append(
+                f"standards: '{code}' has wrong grade prefix for {grade} "
+                f"(expected '{expected_prefix}*')"
+            )
+            continue
+
+        # Check existence in reference
+        if not extract_standard(standards_text, code):
+            errors.append(f"standards: '{code}' not found in reference")
+
+    # Category coverage for K and 1st
+    if grade in ("K", "1st"):
+        grade_prefix = GRADE_TO_CODE_PREFIX[grade]
+        for category_name, category_suffix in REQUIRED_CATEGORIES.items():
+            # Build the expected pattern: e.g. "K.F.PA" or "K.F.H" or "1.F.P.1"
+            if category_suffix == "H":
+                cat_prefix = f"{grade_prefix}{category_suffix}"
+            elif category_suffix == "PA":
+                cat_prefix = f"{grade_prefix}{category_suffix}"
+            else:
+                # P.1 or P.3
+                cat_prefix = f"{grade_prefix}{category_suffix}"
+
+            if not any(c.startswith(cat_prefix) for c in codes):
+                errors.append(
+                    f"standards: missing required category {category_name}"
+                )
+
+    return errors
+
+
 def _extract_plan(messages: list) -> ActivityPlan | None:
     """Extract ActivityPlan from planner tool call in messages."""
     for msg in reversed(messages):
@@ -178,6 +257,13 @@ async def activity_planner_node(state: GraphState) -> dict:
 
     index = _load_index()
 
+    # Load standards reference for validation
+    try:
+        standards_text = STANDARDS_PATH.read_text()
+    except FileNotFoundError:
+        standards_text = ""
+        logger.warning("Standards reference file not found at %s", STANDARDS_PATH)
+
     agent = create_activity_planner_agent(
         grade=params["grade"],
         letter=params["letter"],
@@ -208,6 +294,7 @@ async def activity_planner_node(state: GraphState) -> dict:
             validate_plan_slugs(plan, index)
             + validate_plan_grade(plan, index, params["grade"])
             + validate_plan_level(plan, index, params["grade"], params["student_level"])
+            + validate_plan_standards(plan, standards_text, params["grade"])
         )
 
         if not errors:

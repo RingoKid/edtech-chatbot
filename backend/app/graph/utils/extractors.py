@@ -49,3 +49,17 @@ def extract_grade_standards(standards: str, grade_header: str) -> str:
     pattern = rf"^##\s+{re.escape(grade_header)}\b.*?\n(.*?)(?=^##\s|\Z)"
     match = re.search(pattern, standards, re.MULTILINE | re.DOTALL)
     return match.group(0).strip() if match else ""
+
+
+def extract_standard(standards_text: str, code: str) -> str:
+    """Extract a single standard code + description from the reference file.
+
+    Searches the whole file — codes are unique across grades
+    (CLL* for PreK, K.F.* for K, 1.F.* for 1st).
+
+    Returns "CODE — description" or "" if not found.
+    """
+    escaped = re.escape(code)
+    pattern = rf"^\|\s*{escaped}\s*\|([^|]+)\|"
+    match = re.search(pattern, standards_text, re.MULTILINE)
+    return f"{code} — {match.group(1).strip()}" if match else ""
