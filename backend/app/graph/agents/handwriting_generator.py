@@ -22,7 +22,7 @@ from app.graph.utils.extractors import (
     extract_standard,
 )
 
-GENERATOR_MODEL = "gpt-5.1"
+GENERATOR_MODEL = "gpt-5.4"
 
 # Path to reference materials
 REFERENCE_MATERIALS_DIR = Path(__file__).parent.parent.parent.parent / "prompt" / "reference_materials"

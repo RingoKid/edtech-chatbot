@@ -16,7 +16,7 @@ from langchain.agents import create_agent
 from app.llm.client import get_chat_model
 from app.graph.utils.extractors import extract_grade_standards
 
-PLANNER_MODEL = "gpt-4o"
+PLANNER_MODEL = "gpt-5.4-mini"
 
 INDEX_PATH = (
     Path(__file__).parent.parent.parent.parent

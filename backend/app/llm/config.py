@@ -65,6 +65,30 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         enabled=True,
         default=False,
     ),
+    "gpt-5.4": ModelConfig(
+        provider="openai",
+        model_name="gpt-5.4",
+        enabled=True,
+        default=False,
+    ),
+    "gpt-5.4-mini": ModelConfig(
+        provider="openai",
+        model_name="gpt-5.4-mini",
+        enabled=True,
+        default=False,
+    ),
+    "gpt-5.4-nano": ModelConfig(
+        provider="openai",
+        model_name="gpt-5.4-nano",
+        enabled=True,
+        default=False,
+    ),
+    "gpt-5.4-pro": ModelConfig(
+        provider="openai",
+        model_name="gpt-5.4-pro",
+        enabled=True,
+        default=False,
+    ),
     # Google GenAI models
     "gemini-1.5-pro": ModelConfig(
         provider="google_genai",

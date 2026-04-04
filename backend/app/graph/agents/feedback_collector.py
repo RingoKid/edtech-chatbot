@@ -85,7 +85,7 @@ def create_feedback_collector_agent(recursion_limit: int = 10):
     Returns:
         CompiledStateGraph: The compiled ReAct agent
     """
-    model = get_chat_model("gpt-4o-mini")
+    model = get_chat_model("gpt-5.4-nano")
 
     agent = create_agent(
         model=model,

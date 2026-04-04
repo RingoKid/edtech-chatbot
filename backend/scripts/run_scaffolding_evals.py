@@ -62,11 +62,15 @@ JUDGE_MAX_RETRIES = 1  # retry transient failures (network errors, rate limits)
 # Per-million-token pricing (USD) — update when models or pricing change
 # Source: https://openai.com/api/pricing/
 COST_PER_MILLION_TOKENS = {
-    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
-    "gpt-4o":      {"input": 2.50, "output": 10.00},
-    "gpt-5.1":     {"input": 1.25, "output": 10.00},
-    "gpt-5.2":     {"input": 1.75, "output": 14.00},
-    "gpt-5.2-pro": {"input": 1.75, "output": 14.00},
+    "gpt-4o-mini":  {"input": 0.15, "output": 0.60},
+    "gpt-4o":       {"input": 2.50, "output": 10.00},
+    "gpt-5.1":      {"input": 1.25, "output": 10.00},
+    "gpt-5.2":      {"input": 1.75, "output": 14.00},
+    "gpt-5.2-pro":  {"input": 1.75, "output": 14.00},
+    "gpt-5.4":      {"input": 2.50, "output": 15.00},
+    "gpt-5.4-mini": {"input": 0.75, "output": 4.50},
+    "gpt-5.4-nano": {"input": 0.20, "output": 1.25},
+    "gpt-5.4-pro":  {"input": 5.00, "output": 30.00},
 }
 
 
