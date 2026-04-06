@@ -36,6 +36,7 @@ class ActivityPlan(TypedDict):
     Structured output from the activity planner.
 
     Each field holds a slug (id) from the activity index.
+    Directive fields carry pre-determined pedagogical decisions.
     """
     review: str
     sound_target: str
@@ -43,6 +44,13 @@ class ActivityPlan(TypedDict):
     handwriting_chain: Optional[str]
     spelling: str
     standards: list[str]
+    # Lesson directives (Phase 2)
+    spelling_pattern: str              # single_sound, VC, CVC, CVCe, CCVC, CVCC
+    include_directionality: bool       # whether to teach left-to-right / line placement
+    include_articulation: bool         # whether to include mouth/lip/tongue instruction
+    guided_practice_techniques: list[str]  # ordered techniques for Section 3
+    scaffolding_intensity: str         # heavy, moderate, or light
+    content_scope: str                 # 2-3 sentence pedagogical focus description
 
 
 # Writing type literals for vocabulary lessons

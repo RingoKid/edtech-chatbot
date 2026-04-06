@@ -203,13 +203,12 @@ def submit_handwriting_params(
     This signals that parameter collection is complete and the lesson
     can be generated.
     """
-    # Normalize letter to uppercase
-    letter_upper = letter.upper().strip()
+    letter_clean = letter.strip()
     # Normalize previously_learned
     learned = [s.lower().strip() for s in (previously_learned or [])]
 
     return (
-        f"Parameters submitted: grade={grade}, letter={letter_upper}, "
+        f"Parameters submitted: grade={grade}, letter={letter_clean}, "
         f"student_level={student_level}, previously_learned={learned}, "
         f"skill_focus={skill_focus}. Proceeding to activity planning."
     )

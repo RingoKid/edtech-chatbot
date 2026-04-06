@@ -174,8 +174,7 @@ def extract_handwriting_params(messages: list) -> HandwritingParams | None:
             for tool_call in msg.tool_calls:
                 if tool_call.get('name') == HANDWRITING_TOOL_NAME:
                     args = tool_call.get('args', {})
-                    # Normalize letter to uppercase
-                    letter = args.get('letter', '').upper().strip()
+                    letter = args.get('letter', '').strip()
                     previously_learned = [
                         s.lower().strip()
                         for s in args.get('previously_learned', [])

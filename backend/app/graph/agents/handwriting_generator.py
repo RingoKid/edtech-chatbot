@@ -62,7 +62,7 @@ You follow the L4C (Literacy for Children) methodology and the Science of Readin
 
 ## Your Role
 
-Generate complete, scripted handwriting and spelling lessons that teachers can use directly in their classrooms. Your lessons must be structured, detailed, and follow specific formatting conventions.
+Generate complete, scripted handwriting and spelling lessons that teachers can use directly in their classrooms. Your lessons must be structured, detailed, and follow specific formatting conventions. All pedagogical decisions have been pre-determined by the Activity Planner. Your job is to execute the plan.
 
 ## Your Task
 
@@ -132,7 +132,7 @@ Generate a complete handwriting and spelling lesson following the structure in t
    💬 **Child Response:** Children should say /b/.
    🗣️ **Teacher:** Yes. I am pushing out air and using my vocal box /b/, so I am going to hold up my ball sound card for the /b/ sound.
 
-10. **Sound/Letter Comparison with Confusable Partner**: In Section 2 (Model, Explain & Engage), include a compare/contrast between the target sound/letter and its most commonly confused partner. You MUST: state what is similar, state what is different, include articulatory detail (mouth, lips, tongue, voicing), and have students produce both sounds. Example pattern:
+10. **Sound/Letter Comparison with Confusable Partner**: Skip this rule if `include_articulation` is false in the Lesson Directives. Otherwise, in Section 2 (Model, Explain & Engage), include a compare/contrast between the target sound/letter and its most commonly confused partner. You MUST: state what is similar, state what is different, include articulatory detail (mouth, lips, tongue, voicing), and have students produce both sounds. Example pattern:
    🗣️ **Teacher:** Remember that we said that the /{letter}/ sound is a lot like the [confusable] sound.
    🗣️ **Teacher:** Look at my mouth and listen to the sound of each one.
    🗣️ **Teacher:** Ready. /{letter}/
@@ -154,41 +154,13 @@ Generate a complete handwriting and spelling lesson following the structure in t
 
 12. **Prior Practice Awareness**: The student has learned these sounds: {previously_learned}. Use ONLY these sounds plus the target sound when selecting example words. Do not use words that contain sounds not in this list. If the list is empty, this is the student's first lesson — use only the target sound.
 
-## GRADE-LEVEL DELIVERY RULES
+## LESSON DIRECTIVES FROM ACTIVITY PLAN
 
-These rules override general instructions when they conflict. Always check the current grade level ("{grade}") before writing each section.
+The Activity Planner has pre-determined these pedagogical decisions. Follow them exactly — do NOT override or re-derive.
 
-13. **Letter Case**:
-   - PreK: Teach LOWERCASE only by default. Uppercase is an optional extension a teacher can request.
-   - K: Teach lowercase first, then uppercase. Both cases are taught.
-   - 1st: Both cases, but no explicit formation teaching needed — focus on fluency.
+{directives_section}
 
-14. **Directionality Instruction** (left-to-right, top/middle/bottom lines):
-   - PreK: ALWAYS explicitly teach — left-to-right movement, name the top/middle/bottom lines before modeling the letter.
-   - K: Brief reminders only, not full instruction (unless student is struggling).
-   - 1st: Do NOT include directionality instruction.
-
-15. **Mouth Placement / Articulation**:
-   - PreK: ALWAYS include explicit mouth/lip/tongue/vocal box instruction for the target sound in Section 2.
-   - K: Include if the sound is new or commonly confused.
-   - 1st: Do NOT include — students learned this in PreK/K. Jump straight to the sound activity.
-
-16. **Guided Practice Techniques**:
-   - PreK: Use finger tracing (Magic Finger Write) BEFORE pencil. Then dotted-line tracing (Trace & Say). Sequence: finger → trace → write.
-   - K: Magic Finger Write appropriate. Tracing for struggling/on-level. Advanced can skip to Say and Write.
-   - 1st: Do NOT use Magic Finger Write or dotted-line tracing. Use memory-based practice (Disappearing Letter, Cover & Try) or Say and Write. Count strokes or say sequence instead of finger tracing.
-
-17. **Content Scope**:
-   - PreK: Individual sound/letter focus. Sound isolation = beginning sounds only. Application = write single letters.
-   - K: Letter within CVC word context. Sound isolation = beginning AND ending sounds. Application = spell CVC words.
-   - 1st: Spelling patterns (CVCe, digraphs, etc.). Sound isolation = medial vowels. Application = spell full words, distinguish patterns.
-
-18. **Prior Knowledge & Scaffolding Intensity**:
-   - PreK: Teach from scratch. Heavy scaffolding. "My turn first" before every new step. Multiple repetitions.
-   - K: Some sound knowledge assumed. Moderate scaffolding.
-   - 1st: All consonant/vowel sounds and graphemes already known. Light scaffolding. Students can do more independently.
-
-19. **Image Placeholders**: Place EXACTLY 3 image placeholders in your lesson using this syntax:
+13. **Image Placeholders**: Place EXACTLY 3 image placeholders in your lesson using this syntax:
    `![2-3 sentence description of the image focused on pedagogical content](IMAGE_N)`
    where N is 1, 2, or 3. Placement guidance:
    - `IMAGE_1` → in Section 2 (Model, Explain & Engage)
@@ -318,6 +290,65 @@ def build_activity_plan_section(activity_plan: Optional[ActivityPlan]) -> str:
     return "\n\n".join(sections)
 
 
+def build_directives_section(activity_plan: Optional[ActivityPlan]) -> str:
+    """Build the lesson directives section from the activity plan."""
+    if not activity_plan:
+        return "(No directives — use grade-level defaults.)"
+
+    techniques = activity_plan.get("guided_practice_techniques", [])
+    technique_str = " → ".join(techniques) if techniques else "(none)"
+
+    lines = []
+
+    # Spelling pattern
+    sp = activity_plan.get("spelling_pattern", "CVC")
+    lines.append(f"- **Spelling Pattern**: `{sp}`")
+    if sp == "CVCe":
+        lines.append("  - MUST contrast CVC vs CVCe pairs (e.g., bit→bite, cap→cape). Use 10+ real word pairs.")
+    elif sp == "single_sound":
+        lines.append("  - Focus on the single sound/letter in isolation. Application = write single letters.")
+    elif sp == "CVC":
+        lines.append("  - Use CVC words for sound isolation and application.")
+    elif sp == "VC":
+        lines.append("  - Use simple vowel-consonant words (at, in, up). Minimal spelling in application.")
+    elif sp == "CCVC":
+        lines.append("  - Use initial blend words (trip, clap, frog). Blends must use previously learned sounds.")
+    elif sp == "CVCC":
+        lines.append("  - Use final blend words (jump, best, milk). Blends must use previously learned sounds.")
+
+    # Directionality
+    if activity_plan.get("include_directionality", False):
+        lines.append("- **Directionality**: YES — explicitly teach left-to-right movement, name top/middle/bottom lines before modeling.")
+    else:
+        lines.append("- **Directionality**: NO — do not include directionality instruction.")
+
+    # Articulation
+    if activity_plan.get("include_articulation", True):
+        lines.append("- **Articulation**: YES — include mouth/lip/tongue/vocal box instruction for the target sound in Section 2.")
+    else:
+        lines.append("- **Articulation**: NO — skip mouth placement instruction. Students already know this.")
+
+    # Guided practice techniques
+    lines.append(f"- **Guided Practice Techniques** (in order): {technique_str}")
+    lines.append(f"  - Section 3 MUST use exactly these {len(techniques)} techniques in this sequence.")
+
+    # Scaffolding intensity
+    intensity = activity_plan.get("scaffolding_intensity", "moderate")
+    if intensity == "heavy":
+        lines.append('- **Scaffolding**: HEAVY — "My turn first" before every new step. Multiple repetitions. Teach from scratch.')
+    elif intensity == "moderate":
+        lines.append("- **Scaffolding**: MODERATE — some knowledge assumed. Guide but allow independence on familiar steps.")
+    else:
+        lines.append("- **Scaffolding**: LIGHT — students can do more independently. Minimal modeling needed.")
+
+    # Content scope
+    scope = activity_plan.get("content_scope", "")
+    if scope:
+        lines.append(f"- **Content Scope**: {scope}")
+
+    return "\n".join(lines)
+
+
 def get_handwriting_generator_prompt(
     grade: str,
     letter: str,
@@ -368,12 +399,15 @@ def get_handwriting_generator_prompt(
     # Activity plan with descriptions
     activity_plan_section = build_activity_plan_section(activity_plan)
 
+    # Lesson directives from planner
+    directives_section = build_directives_section(activity_plan)
+
     # Previously learned sounds
     learned_str = ", ".join(previously_learned) if previously_learned else "(none — first lesson)"
 
     return DEFAULT_HANDWRITING_GENERATOR_PROMPT.format(
         grade=grade,
-        letter=letter.upper(),
+        letter=letter,
         student_level=student_level,
         previously_learned=learned_str,
         skill_focus=skill_focus,
@@ -381,6 +415,7 @@ def get_handwriting_generator_prompt(
         verbal_cues=verbal_cues,
         phoneme_gesture=phoneme_gesture,
         activity_plan_section=activity_plan_section,
+        directives_section=directives_section,
     )
 
 
@@ -440,7 +475,7 @@ def create_handwriting_generator_agent(
     # Get prompt with parameters and filtered reference materials
     system_prompt = get_handwriting_generator_prompt(
         grade=grade,
-        letter=letter.upper(),
+        letter=letter,
         student_level=student_level,
         previously_learned=previously_learned,
         skill_focus=skill_focus,

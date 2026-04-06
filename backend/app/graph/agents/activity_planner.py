@@ -87,9 +87,68 @@ Select standards codes from the reference below. Use ONLY codes that appear in t
 
 {activity_index}
 
+## Lesson Directives
+
+In addition to selecting activities and standards, you must determine 6 lesson directives. These are pedagogical decisions that the generator will execute directly — it will NOT re-derive them.
+
+### spelling_pattern
+What word pattern should the lesson target?
+- PreK → `single_sound`
+- K → `CVC`
+- 1st + vowel letter + on-level/advanced → `CVCe`
+- 1st + vowel letter + struggling → `CVC`
+- 1st + consonant letter → `CVC` or `CCVC`/`CVCC` depending on letter position patterns
+
+Valid values: `single_sound`, `VC`, `CVC`, `CVCe`, `CCVC`, `CVCC`
+
+### include_directionality
+Should the lesson teach left-to-right movement and line placement (top/middle/bottom)?
+- PreK → true
+- K + struggling → true
+- K + on-level/advanced → false
+- 1st → false
+
+### include_articulation
+Should the lesson include mouth/lip/tongue/vocal box instruction for the target sound?
+- PreK → true
+- K → true
+- 1st → false (students learned this in PreK/K)
+
+### guided_practice_techniques
+Ordered list of techniques for Section 3 (Guided Practice). Select from these slugs:
+`magic_finger_write`, `trace_and_say`, `write_and_say`, `say_and_write`, `write_and_sound`, `disappearing_letter`, `cover_and_try`
+
+Grade + level guidance:
+- PreK → `[magic_finger_write, trace_and_say, write_and_say]`
+- K + struggling → `[magic_finger_write, trace_and_say, write_and_say]`
+- K + on-level → `[trace_and_say, say_and_write, write_and_say]`
+- K + advanced → `[say_and_write, write_and_say, write_and_sound]`
+- 1st + struggling → `[say_and_write, write_and_say, write_and_sound]`
+- 1st + on-level → `[cover_and_try, say_and_write, write_and_sound]`
+- 1st + advanced → `[cover_and_try, disappearing_letter, write_and_sound]`
+
+### scaffolding_intensity
+How much support does the student need?
+- PreK → `heavy`
+- K + struggling → `heavy`
+- K + on-level/advanced → `moderate`
+- 1st + struggling → `moderate`
+- 1st + on-level/advanced → `light`
+
+### content_scope
+Write 2-3 sentences describing the lesson's pedagogical focus. Include:
+- What sound positions to target (beginning, ending, medial)
+- What the application task should require
+- Specific pattern contrasts if applicable
+
+Examples:
+- PreK: "This lesson introduces the /m/ sound in isolation. Students will identify the /m/ sound at the beginning of words and practice writing the lowercase letter m. Application focuses on writing the single letter from memory."
+- K: "This lesson teaches the letter B within CVC word context. Students identify /b/ at the beginning and ending of words like 'bat' and 'cab'. Application requires spelling complete CVC words containing the /b/ sound."
+- 1st (vowel, on-level): "This lesson focuses on the long /ā/ sound through CVCe spelling patterns. Students MUST contrast CVC vs CVCe pairs (e.g., cap→cape, tap→tape, mat→mate) to understand how silent e changes the vowel sound. Application requires spelling CVCe words and explaining the pattern."
+
 ## Instructions
 
-Analyze the index above, then call `submit_activity_plan` with your selections. Use the `id` field (slug) for each activity, NOT the display name.
+Analyze the index above, then call `submit_activity_plan` with your selections and directives. Use the `id` field (slug) for each activity, NOT the display name.
 """
 
 
@@ -114,6 +173,25 @@ class SubmitActivityPlan(BaseModel):
     standards: list[str] = Field(
         description="Grade-appropriate standards codes"
     )
+    # Lesson directives
+    spelling_pattern: str = Field(
+        description="Word pattern: single_sound, VC, CVC, CVCe, CCVC, or CVCC"
+    )
+    include_directionality: bool = Field(
+        description="Whether to teach left-to-right and line placement"
+    )
+    include_articulation: bool = Field(
+        description="Whether to include mouth/lip/tongue instruction"
+    )
+    guided_practice_techniques: list[str] = Field(
+        description="Ordered technique slugs for Section 3 Guided Practice"
+    )
+    scaffolding_intensity: str = Field(
+        description="heavy, moderate, or light"
+    )
+    content_scope: str = Field(
+        description="2-3 sentence description of the lesson's pedagogical focus"
+    )
 
 
 @tool(args_schema=SubmitActivityPlan)
@@ -123,10 +201,16 @@ def submit_activity_plan(
     handwriting: str,
     spelling: str,
     standards: list[str],
+    spelling_pattern: str,
+    include_directionality: bool,
+    include_articulation: bool,
+    guided_practice_techniques: list[str],
+    scaffolding_intensity: str,
+    content_scope: str,
     handwriting_chain: Optional[str] = None,
 ) -> str:
     """
-    Submit the selected activity plan.
+    Submit the selected activity plan with lesson directives.
 
     Call this tool after analyzing the activity index and selecting
     one activity per section that fits the student parameters.
@@ -135,7 +219,8 @@ def submit_activity_plan(
     return (
         f"Activity plan submitted: review={review}, sound_target={sound_target}, "
         f"handwriting={handwriting}, handwriting_chain={handwriting_chain}, "
-        f"spelling={spelling}, standards={standards}. "
+        f"spelling={spelling}, standards={standards}, "
+        f"spelling_pattern={spelling_pattern}, scaffolding={scaffolding_intensity}. "
         f"Proceeding to lesson generation."
     )
 
@@ -178,7 +263,7 @@ def get_activity_planner_prompt(
 
     return DEFAULT_ACTIVITY_PLANNER_PROMPT.format(
         grade=grade,
-        letter=letter.upper(),
+        letter=letter,
         student_level=student_level,
         previously_learned=learned_str,
         skill_focus=skill_focus,
