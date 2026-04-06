@@ -174,6 +174,11 @@ def extract_handwriting_params(messages: list) -> HandwritingParams | None:
             for tool_call in msg.tool_calls:
                 if tool_call.get('name') == HANDWRITING_TOOL_NAME:
                     args = tool_call.get('args', {})
+                    # Reject if required fields are missing
+                    if 'previously_learned' not in args:
+                        return None
+                    if 'skill_focus' not in args:
+                        return None
                     letter = args.get('letter', '').strip()
                     previously_learned = [
                         s.lower().strip()
@@ -182,9 +187,9 @@ def extract_handwriting_params(messages: list) -> HandwritingParams | None:
                     return HandwritingParams(
                         grade=args.get('grade'),
                         letter=letter,
-                        student_level=args.get('student_level', 'on-level'),
+                        student_level=args.get('student_level', 'on-level'),  # keep: student_level IS optional
                         previously_learned=previously_learned,
-                        skill_focus=args.get('skill_focus', 'isolating_sounds'),
+                        skill_focus=args.get('skill_focus'),
                     )
     return None
 
