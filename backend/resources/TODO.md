@@ -86,7 +86,7 @@ Post-directive changes: Structure 100% (all 5 fixtures). Expert comparison score
 ## DevOps (2026-03-24)
 
 - [ ] **Get OpenAI Admin API key for billing checks** — Need to contact Dr. Farrow. Current `/dev health` only validates the key works; with an Admin key we can check account balance/spend via `/v1/organization/costs`. Add to `/dev health` once obtained.
-- [ ] **Fix broken CI/CD pipeline** — CodeBuild project is gone. Push to `develop` no longer triggers Docker build → ECR push → App Runner deploy. Last successful deploy was 2026-03-17. Need to recreate the CodeBuild project or set up a new pipeline.
+- [x] **Fix broken CI/CD pipeline** — CodePipeline `edtech-chatbot-develop` was deleted. Recreated with existing CodeBuild project + CodeStar GitHub connection. First deploy succeeded 2026-04-06.
 
 ## Existing TODO (from memory)
 
