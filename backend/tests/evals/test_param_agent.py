@@ -51,12 +51,25 @@ def extract_full_params(params: HandwritingParams | None) -> dict | None:
     }
 
 
+async def _noop_node(state, *args, **kwargs):
+    """No-op replacement for downstream nodes we don't need in param evals."""
+    return {}
+
+
 @pytest.fixture(autouse=True)
-def use_default_prompt():
-    """Force DEFAULT_PARAM_PROMPT (bypass Langfuse) so we test code changes."""
-    with patch(
-        "app.graph.agents.param.get_param_prompt",
-        return_value=DEFAULT_PARAM_PROMPT,
+def isolate_param_agent():
+    """
+    Isolate routing + param agent from everything downstream.
+
+    - Forces DEFAULT_PARAM_PROMPT (bypasses stale Langfuse prompt)
+    - Mocks activity planner, generator, and image nodes as no-ops
+    """
+    with (
+        patch("app.graph.agents.param.get_param_prompt", return_value=DEFAULT_PARAM_PROMPT),
+        patch("app.graph.graph.activity_planner_node", _noop_node),
+        patch("app.graph.graph.handwriting_generator_node", _noop_node),
+        patch("app.graph.graph.image_assembly_node", _noop_node),
+        patch("app.graph.graph.image_director_node", _noop_node),
     ):
         yield
 
