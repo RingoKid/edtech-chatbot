@@ -91,49 +91,63 @@ Select standards codes from the reference below. Use ONLY codes that appear in t
 
 In addition to selecting activities and standards, you must determine 6 lesson directives. These are pedagogical decisions that the generator will execute directly — it will NOT re-derive them.
 
+**CRITICAL: The tables below are EXACT lookup rules, not suggestions. Find the row that matches the student's grade + level, then use EXACTLY the value shown. Do NOT override based on your own reasoning.**
+
 ### spelling_pattern
-What word pattern should the lesson target?
-- PreK → `single_sound`
-- K → `CVC`
-- 1st + vowel letter + on-level/advanced → `CVCe`
-- 1st + vowel letter + struggling → `CVC`
-- 1st + consonant letter → `CVC` or `CCVC`/`CVCC` depending on letter position patterns
+Look up the EXACT value from this table:
+
+| Condition | Value |
+|-----------|-------|
+| PreK (any level) | `single_sound` |
+| K (any level) | `CVC` |
+| 1st + vowel letter (a,e,i,o,u ONLY) + on-level or advanced | `CVCe` |
+| 1st + vowel letter (a,e,i,o,u ONLY) + struggling | `CVC` |
+| 1st + consonant letter (b,c,d,f,g,h,j,k,l,m,n,p,q,r,s,t,v,w,x,y,z) | `CVC`, `CCVC`, or `CVCC` — NEVER `CVCe` |
 
 Valid values: `single_sound`, `VC`, `CVC`, `CVCe`, `CCVC`, `CVCC`
 
 ### include_directionality
-Should the lesson teach left-to-right movement and line placement (top/middle/bottom)?
-- PreK → true
-- K + struggling → true
-- K + on-level/advanced → false
-- 1st → false
+
+| Condition | Value |
+|-----------|-------|
+| PreK (any level) | `true` |
+| K + struggling | `true` |
+| K + on-level or advanced | `false` |
+| 1st (any level) | `false` |
 
 ### include_articulation
-Should the lesson include mouth/lip/tongue/vocal box instruction for the target sound?
-- PreK → true
-- K → true
-- 1st → false (students learned this in PreK/K)
+
+| Condition | Value |
+|-----------|-------|
+| PreK (any level) | `true` |
+| K (any level) | `true` |
+| 1st (any level) | `false` |
 
 ### guided_practice_techniques
-Ordered list of techniques for Section 3 (Guided Practice). Select from these slugs:
-`magic_finger_write`, `trace_and_say`, `write_and_say`, `say_and_write`, `write_and_sound`, `disappearing_letter`, `cover_and_try`
+Ordered list of technique slugs for Section 3. Use EXACTLY the list shown for the matching row:
 
-Grade + level guidance:
-- PreK → `[magic_finger_write, trace_and_say, write_and_say]`
-- K + struggling → `[magic_finger_write, trace_and_say, write_and_say]`
-- K + on-level → `[trace_and_say, say_and_write, write_and_say]`
-- K + advanced → `[say_and_write, write_and_say, write_and_sound]`
-- 1st + struggling → `[say_and_write, write_and_say, write_and_sound]`
-- 1st + on-level → `[cover_and_try, say_and_write, write_and_sound]`
-- 1st + advanced → `[cover_and_try, disappearing_letter, write_and_sound]`
+| Condition | Techniques |
+|-----------|-----------|
+| PreK (any level) | `[magic_finger_write, trace_and_say, write_and_say]` |
+| K + struggling | `[magic_finger_write, trace_and_say, write_and_say]` |
+| K + on-level | `[trace_and_say, say_and_write, write_and_say]` |
+| K + advanced | `[say_and_write, write_and_say, write_and_sound]` |
+| 1st + struggling | `[say_and_write, write_and_say, write_and_sound]` |
+| 1st + on-level | `[cover_and_try, say_and_write, write_and_sound]` |
+| 1st + advanced | `[cover_and_try, disappearing_letter, write_and_sound]` |
+
+Valid slugs: `magic_finger_write`, `trace_and_say`, `write_and_say`, `say_and_write`, `write_and_sound`, `disappearing_letter`, `cover_and_try`
 
 ### scaffolding_intensity
-How much support does the student need?
-- PreK → `heavy`
-- K + struggling → `heavy`
-- K + on-level/advanced → `moderate`
-- 1st + struggling → `moderate`
-- 1st + on-level/advanced → `light`
+Look up the EXACT value — do NOT adjust based on your own assessment of the student:
+
+| Condition | Value |
+|-----------|-------|
+| PreK (any level) | `heavy` |
+| K + struggling | `heavy` |
+| K + on-level or advanced | `moderate` |
+| 1st + struggling | `moderate` |
+| 1st + on-level or advanced | `light` |
 
 ### content_scope
 Write 2-3 sentences describing the lesson's pedagogical focus. Include:
