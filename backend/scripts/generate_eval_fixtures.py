@@ -83,21 +83,21 @@ FIXTURE_PARAMS = [
     {"id": "k_letter_b_advanced", "grade": "K", "letter": "B", "student_level": "advanced"},
     {"id": "k_letter_b_onlevel", "grade": "K", "letter": "B", "student_level": "on-level"},
     {"id": "k_letter_b_struggling", "grade": "K", "letter": "B", "student_level": "struggling"},
-    # Expert-mirror fixtures — matched to expert fixture params + inferred prior sounds
+    # Expert-mirror fixtures — params extracted from expert lesson content
     {"id": "k_letter_b_onlevel_mid", "grade": "K", "letter": "B", "student_level": "on-level",
-     "previously_learned": ["m", "a", "c", "d", "g", "i"],
-     "skill_focus": "spelling"},
+     "previously_learned": ["m", "a", "p", "d", "t", "c", "l", "g", "n", "j"],
+     "skill_focus": "blending"},
     {"id": "k_letter_b_struggling_mid", "grade": "K", "letter": "B", "student_level": "struggling",
-     "previously_learned": ["m", "a", "p"],
+     "previously_learned": ["m", "a", "c", "p", "d", "t", "l", "g", "n", "j"],
      "skill_focus": "isolating_sounds"},
     {"id": "k_letter_b_onlevel_scaffolded", "grade": "K", "letter": "B", "student_level": "on-level",
-     "previously_learned": ["m", "a", "c", "d", "e", "g", "i", "w"],
+     "previously_learned": ["m", "a", "c", "p", "d", "t", "l", "g", "n", "j"],
      "skill_focus": "spelling"},
     {"id": "prek_letter_z_onlevel_mid", "grade": "PreK", "letter": "Z", "student_level": "on-level",
      "previously_learned": ["m", "a"],
      "skill_focus": "isolating_sounds"},
     {"id": "first_letter_i_onlevel_mid", "grade": "1st", "letter": "I", "student_level": "on-level",
-     "previously_learned": ["a", "c", "p"],
+     "previously_learned": ["a", "e", "i", "c", "f", "l"],
      "skill_focus": "spelling"},
     # 1st
     {"id": "first_letter_p_onlevel", "grade": "1st", "letter": "P", "student_level": "on-level"},
@@ -168,18 +168,25 @@ async def run_handwriting_generator(graph, params: dict, thread_id: str, callbac
     previously_learned = params.get("previously_learned", [])
     skill_focus = params.get("skill_focus", "")
 
-    param_input = f"{grade} letter {letter}"
-    if student_level != "on-level":
-        param_input += f" for {student_level} students"
+    param_input = f"{grade} letter {letter}, {student_level} students"
     if previously_learned:
-        param_input += f". Students have already learned: {', '.join(previously_learned)}"
+        param_input += f". Previously learned: {', '.join(previously_learned)}"
+    else:
+        param_input += ". This is their first lesson, no previously learned sounds"
     if skill_focus:
-        param_input += f". Focus on {skill_focus}"
+        param_input += f". Skill focus: {skill_focus}"
 
     param_result = await graph.ainvoke(
         {"messages": [HumanMessage(content=param_input)]},
         config=config,
     )
+
+    # If agent asked follow-up instead of submitting, confirm
+    if param_result.get("handwriting_params") is None:
+        param_result = await graph.ainvoke(
+            {"messages": [HumanMessage(content="Yes, that's correct. Please proceed.")]},
+            config=config,
+        )
 
     if param_result.get("handwriting_params") is None:
         print(f"    Param extraction failed")
@@ -231,6 +238,8 @@ async def generate_fixture(params: dict, force: bool = False) -> bool:
             "grade": params["grade"],
             "letter": params["letter"],
             "student_level": params["student_level"],
+            "previously_learned": params.get("previously_learned", []),
+            "skill_focus": params.get("skill_focus", ""),
         },
         "lesson_output": lesson_output,
         "generated_at": datetime.now(timezone.utc).isoformat(),

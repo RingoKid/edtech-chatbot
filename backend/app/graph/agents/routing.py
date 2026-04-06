@@ -9,7 +9,6 @@ from langchain_core.tools import tool
 from langchain.agents import create_agent
 
 from app.llm.client import get_chat_model
-from app.langfuse.client import get_langfuse_client
 from app.graph.state import GraphState
 
 
@@ -48,35 +47,6 @@ Example routing decisions:
 """
 
 
-# Langfuse configuration for prompt management
-LANGFUSE_PROMPT_NAME = "routing-agent"
-LANGFUSE_PROMPT_LABEL = "production"
-
-
-def get_routing_prompt() -> str:
-    """
-    Fetch the routing agent prompt from Langfuse.
-
-    Falls back to DEFAULT_ROUTING_PROMPT if:
-    - Langfuse is not configured
-    - Prompt doesn't exist in Langfuse
-    - Any error occurs during fetch
-
-    Returns:
-        str: The system prompt for the routing agent
-    """
-    client = get_langfuse_client()
-
-    if client is None:
-        return DEFAULT_ROUTING_PROMPT
-
-    try:
-        prompt = client.get_prompt(LANGFUSE_PROMPT_NAME, label=LANGFUSE_PROMPT_LABEL)
-        # For text prompts, compile() returns the prompt string
-        return prompt.compile()
-    except Exception:
-        # Prompt not found or other error - use default
-        return DEFAULT_ROUTING_PROMPT
 
 
 # --- Routing Tools ---
@@ -151,7 +121,7 @@ def create_routing_agent(recursion_limit: int = 10):
     model = get_chat_model("gpt-5.4-mini")
 
     # Get prompt from Langfuse (or default)
-    system_prompt = get_routing_prompt()
+    system_prompt = DEFAULT_ROUTING_PROMPT
 
     # Create ReAct agent with tools
     # Note: create_agent handles the ReAct loop internally

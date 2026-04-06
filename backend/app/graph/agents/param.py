@@ -11,7 +11,6 @@ from langchain_core.tools import tool
 from langchain.agents import create_agent
 
 from app.llm.client import get_chat_model
-from app.langfuse.client import get_langfuse_client
 from app.graph.state import (
     GraphState,
     GradeLevel,
@@ -78,35 +77,6 @@ COLLECTION TIPS:
 """
 
 
-# Langfuse configuration for prompt management
-LANGFUSE_PROMPT_NAME = "param-agent"
-LANGFUSE_PROMPT_LABEL = "production"
-
-
-def get_param_prompt() -> str:
-    """
-    Fetch the param agent prompt from Langfuse.
-
-    Falls back to DEFAULT_PARAM_PROMPT if:
-    - Langfuse is not configured
-    - Prompt doesn't exist in Langfuse
-    - Any error occurs during fetch
-
-    Returns:
-        str: The system prompt for the param agent
-    """
-    client = get_langfuse_client()
-
-    if client is None:
-        return DEFAULT_PARAM_PROMPT
-
-    try:
-        prompt = client.get_prompt(LANGFUSE_PROMPT_NAME, label=LANGFUSE_PROMPT_LABEL)
-        # For text prompts, compile() returns the prompt string
-        return prompt.compile()
-    except Exception:
-        # Prompt not found or other error - use default
-        return DEFAULT_PARAM_PROMPT
 
 
 # --- Pydantic model for tool input validation ---
@@ -296,8 +266,7 @@ def create_param_agent(recursion_limit: int = 10):
     # Get model from registry
     model = get_chat_model("gpt-5.4-mini")
 
-    # Get prompt from Langfuse (or default)
-    system_prompt = get_param_prompt()
+    system_prompt = DEFAULT_PARAM_PROMPT
 
     # Create ReAct agent with tools
     agent = create_agent(

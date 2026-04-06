@@ -20,7 +20,6 @@ from langgraph.checkpoint.memory import MemorySaver
 
 from app.graph.graph import create_graph
 from app.graph.state import HandwritingParams
-from app.graph.agents.param import DEFAULT_PARAM_PROMPT
 from tests.datasets.param_agent import (
     ParamTestCase,
     get_complete_cases,
@@ -61,11 +60,10 @@ def isolate_param_agent():
     """
     Isolate routing + param agent from everything downstream.
 
-    - Forces DEFAULT_PARAM_PROMPT (bypasses stale Langfuse prompt)
-    - Mocks activity planner, generator, and image nodes as no-ops
+    Mocks activity planner, generator, and image nodes as no-ops
+    so extraction tests only exercise routing + param collection.
     """
     with (
-        patch("app.graph.agents.param.get_param_prompt", return_value=DEFAULT_PARAM_PROMPT),
         patch("app.graph.graph.activity_planner_node", _noop_node),
         patch("app.graph.graph.handwriting_generator_node", _noop_node),
         patch("app.graph.graph.image_assembly_node", _noop_node),
