@@ -78,9 +78,15 @@ Post-directive changes: Structure 100% (all 5 fixtures). Expert comparison score
 - [ ] **1st grade marker formatting** — 53-62% structure score, uses `[Explanation:]` instead of emoji markers
 - [ ] **Update scaffolding eval Pydantic models** — `Activity.difficulty_level` still uses `Literal["low", "middle", "high"]` from old Form D system. Framework uses rank (1-7). Judge maps rank→labels naturally for now but schema should align with rank system eventually.
 
+## Pending: Dr. Farrow Review (sent 2026-04-06)
+
+- [ ] **Process lesson plan comments** — 5 lesson plans sent for review in Dropbox `AI Lesson Review - April 2026`. When Dr. Farrow comments, pull feedback with `/dev docs` and add to TODO as generator prompt fixes.
+- [ ] **Update expert examples with new questions** — Asked Dr. Farrow to add `previously_learned` and `skill_focus` answers to 3 expert files in `Expert Examples (Please Update)` subfolder. Once updated, regenerate expert fixtures in `tests/fixtures/handwriting_expert/`.
+
 ## DevOps (2026-03-24)
 
 - [ ] **Get OpenAI Admin API key for billing checks** — Need to contact Dr. Farrow. Current `/dev health` only validates the key works; with an Admin key we can check account balance/spend via `/v1/organization/costs`. Add to `/dev health` once obtained.
+- [ ] **Fix broken CI/CD pipeline** — CodeBuild project is gone. Push to `develop` no longer triggers Docker build → ECR push → App Runner deploy. Last successful deploy was 2026-03-17. Need to recreate the CodeBuild project or set up a new pipeline.
 
 ## Existing TODO (from memory)
 
