@@ -26,7 +26,7 @@
 - [x] **Activity name confusion** — Fixed by planner pipeline. Activities selected by slug, descriptions extracted by regex, names displayed from framework headings. Activity naming eval now scores 100%.
 - [ ] **Review section incorrect** — Generator confuses what Review is. Review = going through previously learned letter-sounds with a focus on sounds. Generator was introducing the new letter in Review instead. (comments #3, #4)
 - [ ] **Form B explanations not verbatim** — Generator writes "(Use the exact Form B explanation for Section X here)" placeholder instead of the actual text. (comments #2, #8, #14, #18)
-- [ ] **Lowercase only by default for K** — "should just focus on lowercase unless teacher specifies they want uppercase as well" (comment #10)
+- [x] **Lowercase only by default for K** — Resolved: letter case determined by teacher input (lowercase `b` → lowercase lesson, uppercase `B` → uppercase). Removed `.upper()` calls in generator. (spec 023 phase 2)
 - [ ] **Verbal cues not populated** — Generator writes placeholder instead of actual cues from Form F. "The generator should either use the verbal cue or create its own" (comments #11, #12)
 - [ ] **Guided practice sequencing wrong for K** — "by kindergarten they should be able to first trace then try their own on level — if children are struggling learners then air writing is more appropriate to begin" — Magic Finger Write not appropriate for on-level K. (comment #13)
 - [ ] **Trace & Say confusion** — "trace and say means kids are actually writing, pencil in hand" — generator showed finger-on-picture instead. (comment #15)
@@ -52,34 +52,31 @@
 - [x] **Update activity_naming eval rubric** — All 5 eval rubrics updated from Form D to activity-framework.md. Eval runner loads `activity-framework.md` instead of `form-d-scaffolded-activities.md`. Activity naming now scores 100%. (commit `3572ca1`)
 - [x] **Update eval Pydantic models** — `tests/evals/models.py` field descriptions updated from "Form D" to "activity framework". (commit `98b99d1`)
 - [x] **Upgrade models to GPT-5.4 family** — All nodes upgraded: routing/param/planner/feedback → gpt-5.4-mini, generator → gpt-5.4. Model registry updated with pricing. (commits `e32dd48`, `98b99d1`)
-- [ ] **Regenerate all fixtures** — 8 of 20 fixtures regenerated with new pipeline. 12 stale fixtures remain from Feb-Mar (old prompt, old models). `k_letter_b_struggling_mid` fails on param extraction — needs debugging.
+- [x] **Regenerate all fixtures** — Stale fixtures removed. 5 expert-mirror fixtures regenerated with directive pipeline (2026-04-06). `k_letter_b_struggling_mid` now works.
 - [ ] **Add eval for previously-learned-skills prompting** — New behavior from spec 023, needs validation that generator only uses sounds from `previously_learned` list in example words.
 
-## Generator Quality Issues (expert comparison, 2026-04-04)
+## Generator Quality Issues (expert comparison, 2026-04-06)
 
-Eval scores with new pipeline: Structure 100%, Within 97.2%, Across 100%, Verbatim 100%, ActName 100%, GradeStd 100%, Release 82.5%, Decomp 87-97%. Quality comparison against Dr. Farrow's expert fixtures revealed these gaps:
+Post-directive changes: Structure 100% (all 5 fixtures). Expert comparison scores: PreK/Z 8/10, K/B on-level 7.5/10, K/B struggling 7/10, K/B scaffolded 7.5/10, **1st/I 8/10** (was 4/10). Remaining gaps:
 
-- [ ] **1st grade produces intro lesson instead of CVCe** — AI scored 4/10 vs expert 9/10. `previously_learned: ["a", "c", "p"]` doesn't convey that 1st graders should be doing CVCe patterns (cap→cape, kit→kite). Generator produces a K-level CVC intro lesson with nonsense words (pac, pap, cip). Needs either a `spelling_pattern` intake param or planner inference from grade + letter context. Most impactful fix.
+- [x] **1st grade produces intro lesson instead of CVCe** — Fixed by lesson directives (spec 023 phase 2). Planner now outputs `spelling_pattern: CVCe` for 1st + vowel + on-level. Generator contrasts CVC vs CVCe pairs (pip/pipe, kit/kite). Score: 4/10 → 8/10.
+- [x] **Guided Practice density** — Fixed by `guided_practice_techniques` directive. Planner specifies ordered technique list (e.g., `[cover_and_try, say_and_write, write_and_sound]`). Generator now produces 3 sub-activities matching expert.
 - [ ] **No lesson variant awareness** — Expert "scaffolded" variant uses pre-filled vowels in Application (only write consonants, vowel pre-populated in Elkonin box). Generator has no concept of this — produces standard CVC encoding. May need a `lesson_variant` or `scaffolding_level` parameter.
-- [ ] **Word list poverty** — AI uses 4-7 words per lesson; expert uses 11-13. AI sometimes includes nonsense words (dib, pac, cip). Generator should produce 10+ real CVC words using only `previously_learned` sounds.
-- [ ] **Uppercase handling inconsistent** — PreK: AI skips uppercase Z when expert teaches both cases. K: AI includes uppercase B when expert deprioritizes it. Rule 13 says "PreK: lowercase only" but expert contradicts this for some letters. Needs clarification with Dr. Farrow.
-- [ ] **Guided Practice density** — Expert consistently has 3 graduated sub-activities (e.g., Magic Finger Write → Say and Write → Write and Sound). AI has 2. Missing the "Write and Sound" step that decouples verbal cues from phoneme production.
-- [ ] **Teacher voice too clinical** — AI says "That is correct because a spells the /a/ sound." Expert says "Kiss your brains", "put your listening ears on", uses student names. Classroom management language and warmth markers missing.
+- [ ] **Word list poverty** — AI uses 3-7 words per lesson; expert uses 11-14. K/B struggling: AI 3 words vs expert 14 minimal pairs. Generator should produce 10+ real words using only `previously_learned` sounds.
+- [ ] **Teacher voice too clinical** — AI says "That is correct because..." Expert says "Kiss your brains", "put your listening ears on." Consistent across all grades. Classroom warmth markers missing.
+- [ ] **Planner `first_r_advanced` spelling_pattern bug** — Planner returns `CVCe` for 1st + consonant R + advanced. Should be `CVC`/`CCVC`/`CVCC`. Prompt over-applies vowel rule to consonants. (planner directives eval, 3/3 runs failed)
+
+## Param Agent (2026-04-06)
+
+- [ ] **Param agent skips previously_learned and skill_focus** — Agent submits tool call after collecting just grade + letter, skipping optional fields. Root cause: Pydantic schema had `default=[]` and `default="isolating_sounds"`. Defaults removed — agent now must provide all fields. But no multi-turn eval exists to catch this regression.
+- [ ] **Update param eval to check all 5 fields** — `params_to_dict()` in `test_param_agent.py` only checks grade/letter/student_level. Must add `previously_learned` and `skill_focus`.
+- [ ] **Add multi-turn param eval** — Test that agent asks all questions before submitting. Flow: send grade → assert no submission → send letter → assert no submission → send previously_learned → assert no submission → send skill_focus → assert extraction with all 5 fields. Current eval only tests single-message extraction.
+- [ ] **Add "partial info should not submit" test cases** — Cases like "PreK letter m" (has grade + letter but missing previously_learned/skill_focus) should assert `handwriting_params is None` — agent should ask follow-ups, not submit.
 
 ## Eval Maintenance
 
-- [x] **Regenerate fixtures after Form D + prompt changes** — Moved to Activity Planner section above
-- [x] **Update activity_naming rubric** — Done (commit `3572ca1`)
 - [ ] **1st grade marker formatting** — 53-62% structure score, uses `[Explanation:]` instead of emoji markers
-- [x] **Add eval for previously-learned-skills prompting** — Moved to Activity Planner section above
 - [ ] **Update scaffolding eval Pydantic models** — `Activity.difficulty_level` still uses `Literal["low", "middle", "high"]` from old Form D system. Framework uses rank (1-7). Judge maps rank→labels naturally for now but schema should align with rank system eventually.
-
-## Eval Maintenance
-
-- [x] **Regenerate fixtures after Form D + prompt changes** — Moved to Activity Planner section above
-- [x] **Update activity_naming rubric** — Moved to Activity Planner section above
-- [ ] **1st grade marker formatting** — 53-62% structure score, uses `[Explanation:]` instead of emoji markers
-- [x] **Add eval for previously-learned-skills prompting** — Moved to Activity Planner section above
 
 ## DevOps (2026-03-24)
 

@@ -127,12 +127,10 @@ class SubmitHandwritingParams(BaseModel):
         description="Student ability level for differentiation"
     )
     previously_learned: list[str] = Field(
-        default=[],
-        description="Sounds/letters already taught (e.g., ['m', 'a', 's', 't']). Empty = first lesson."
+        description="Sounds/letters already taught (e.g., ['m', 'a', 's', 't']). Empty list [] if first lesson."
     )
     skill_focus: Literal["isolating_sounds", "blending", "letter_formation", "spelling"] = Field(
-        default="isolating_sounds",
-        description="Primary skill to target: isolating_sounds, blending, letter_formation, or spelling"
+        description="Primary skill to target: isolating_sounds, blending, letter_formation, or spelling. Use isolating_sounds if teacher has no preference."
     )
 
 
