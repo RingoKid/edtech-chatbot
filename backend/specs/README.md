@@ -299,6 +299,17 @@ specs/
 - `prompt/reference_materials/handwriting/` - New directory with 11 individual form files
 - `scripts/run_scaffolding_evals.py` - Update form file paths
 
+### 024 - Param Agent — Fix Question Skipping & Multi-Turn Evals
+**Status:** Planned
+**Spec:** [024-param-agent-evals/spec.md](./024-param-agent-evals/spec.md)
+**Description:** Fix param agent skipping `previously_learned` and `skill_focus` questions. Remove default hints from Pydantic field descriptions, remove extraction fallbacks, strengthen prompt rules. Rewrite eval suite from scratch with multi-turn flow support.
+
+**Related Files:**
+- `app/graph/agents/param.py` - Field descriptions, prompt rules
+- `app/graph/graph.py` - Extraction fallback removal
+- `tests/evals/test_param_agent.py` - Full rewrite with multi-turn
+- `tests/datasets/param_agent.py` - Full rewrite with multi-turn cases
+
 ---
 
 ## How to Use This Structure
