@@ -20,14 +20,7 @@ def _create_dynamodb_resource():
             aws_access_key_id=settings.aws_access_key_id or "dummy",
             aws_secret_access_key=settings.aws_secret_access_key or "dummy"
         )
-    elif settings.app_env == AppEnv.SANDBOX:
-        return boto3.resource(
-            'dynamodb',
-            region_name=settings.aws_region,
-            aws_access_key_id=settings.aws_access_key_id,
-            aws_secret_access_key=settings.aws_secret_access_key
-        )
-    else:  # PRODUCTION
+    else:  # SANDBOX and PRODUCTION — use default credential chain (instance role)
         return boto3.resource(
             'dynamodb',
             region_name=settings.aws_region

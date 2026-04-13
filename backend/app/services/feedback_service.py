@@ -8,10 +8,9 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
 
-import boto3
 from boto3.dynamodb.conditions import Key
 
-from app.config import settings
+from app.database import get_db
 
 
 class FeedbackService:
@@ -28,14 +27,7 @@ class FeedbackService:
         if table is not None:
             self.table = table
         else:
-            dynamodb = boto3.resource(
-                'dynamodb',
-                endpoint_url=settings.dynamodb_endpoint_url,
-                region_name=settings.aws_region,
-                aws_access_key_id=settings.aws_access_key_id or 'dummy',
-                aws_secret_access_key=settings.aws_secret_access_key or 'dummy'
-            )
-            self.table = dynamodb.Table(settings.table_name)
+            self.table = get_db()
 
     def _now_iso(self) -> str:
         """Get current timestamp in ISO format."""
