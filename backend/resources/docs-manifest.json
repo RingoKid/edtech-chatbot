@@ -1,1 +1,56 @@
-{}
+{
+  "language_construction/training-codes": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/2AI Trainng Codes_ Vocabulary and Syntax.docx",
+    "destination": "backend/prompt/reference_materials/language_construction/training-codes.md",
+    "last_converted": "2026-04-17T22:02:19Z",
+    "comment_count": 0
+  },
+  "language_construction/form-e-best-practices": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/FORM E Laguage Construction Best Practices.docx",
+    "destination": "backend/prompt/reference_materials/language_construction/form-e-best-practices.md",
+    "last_converted": "2026-04-17T22:02:19Z",
+    "comment_count": 0
+  },
+  "language_construction/form-i-lesson-structure": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/FORM I-Codes for Sentence Structure Lesson Parts .docx",
+    "destination": "backend/prompt/reference_materials/language_construction/form-i-lesson-structure.md",
+    "last_converted": "2026-04-17T22:02:19Z",
+    "comment_count": 0
+  },
+  "language_construction/form-j-example-lesson": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/FORM J_ Example Sentence Structure Lesson.docx",
+    "destination": "backend/prompt/reference_materials/language_construction/form-j-example-lesson.md",
+    "last_converted": "2026-04-17T22:02:19Z",
+    "comment_count": 10
+  },
+  "language_construction/form-k-scaffolded-activities": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/FORM K_ Scaffolded Activities for Vocabulary & Sentence Structure .docx",
+    "destination": "backend/prompt/reference_materials/language_construction/form-k-scaffolded-activities.md",
+    "last_converted": "2026-04-17T22:02:19Z",
+    "comment_count": 0
+  },
+  "language_construction/form-l-modifications": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/Form L_ Modification Examples For Sentence Structure.docx",
+    "destination": "backend/prompt/reference_materials/language_construction/form-l-modifications.md",
+    "last_converted": "2026-04-17T22:02:19Z",
+    "comment_count": 1
+  },
+  "language_construction/form-m-genre-elements": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/FORM M_ Elements of the Genre .docx",
+    "destination": "backend/prompt/reference_materials/language_construction/form-m-genre-elements.md",
+    "last_converted": "2026-04-17T22:02:19Z",
+    "comment_count": 0
+  },
+  "language_construction/form-r-sentence-structure-guide": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/FORM R Guide for Sentence Structure in Early Childhood.docx",
+    "destination": "backend/prompt/reference_materials/language_construction/form-r-sentence-structure-guide.md",
+    "last_converted": "2026-04-17T22:02:19Z",
+    "comment_count": 0
+  },
+  "language_construction/lesson-plan-k-example": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/Lesson Plan K sentence structure.docx",
+    "destination": "backend/prompt/reference_materials/language_construction/lesson-plan-k-example.md",
+    "last_converted": "2026-04-17T22:02:19Z",
+    "comment_count": 2
+  }
+}

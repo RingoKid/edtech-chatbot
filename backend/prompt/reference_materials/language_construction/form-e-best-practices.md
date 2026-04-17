@@ -1,0 +1,19 @@
+# FORM E Laguage Construction Best Practices.docx
+_(0 comments extracted)_
+
+THIS IS FORM E
+
+MAJOR PART 2 Vocabulary and Sentence Structure Evidence-Based Practices for best practices to model the lesson after.
+
+Evidence-Based Practice
+
+Have children retrieve and use words from a unit theme within sentences related to the writing topic.
+
+Encourage children to play with words by making connections, grouping them into categories, and exploring how they relate to the writing topic or unit theme.
+
+Teach children connecting or “mortar” words like "because" for cause and effect and "also" to add ideas, helping them organize and link their thoughts clearly in writing.
+
+Explicitly and systematically focus on one language structure at a time—like subject-verb clauses or prepositional phrases–to build sentence awareness
+
+Support children’s sentence development by having them build, rearrange, combine, and expand sentences related to the writing topic or unit theme.
+

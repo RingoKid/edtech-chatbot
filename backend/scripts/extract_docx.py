@@ -53,11 +53,13 @@ def extract_body(zip_file: zipfile.ZipFile, comments: dict) -> list:
     if body is None:
         return []
 
-    # First pass: find which comment IDs are anchored in which paragraphs
-    # commentRangeStart has w:id attribute matching comment ID
+    # Track emitted comment IDs across all paragraphs so each comment renders
+    # exactly once. Word anchors a comment at both commentRangeStart (first
+    # paragraph of the range) and commentReference (last), which would
+    # otherwise duplicate multi-paragraph comments in the output.
+    emitted_cids: set = set()
     paragraphs = []
     for p in body.iter(f'{{{NS["w"]}}}p'):
-        # Extract text
         text_parts = []
         for r in p.iter(f'{{{NS["w"]}}}r'):
             for t in r.iter(f'{{{NS["w"]}}}t'):
@@ -65,17 +67,17 @@ def extract_body(zip_file: zipfile.ZipFile, comments: dict) -> list:
                     text_parts.append(t.text)
         text = "".join(text_parts)
 
-        # Find comment references in this paragraph
         para_comments = []
         for ref in p.iter(f'{{{NS["w"]}}}commentRangeStart'):
             cid = ref.get(f'{{{NS["w"]}}}id')
-            if cid in comments:
+            if cid in comments and cid not in emitted_cids:
                 para_comments.append(comments[cid])
-        # Also check for commentReference (sometimes used instead of range)
+                emitted_cids.add(cid)
         for ref in p.iter(f'{{{NS["w"]}}}commentReference'):
             cid = ref.get(f'{{{NS["w"]}}}id')
-            if cid in comments and comments[cid] not in para_comments:
+            if cid in comments and cid not in emitted_cids:
                 para_comments.append(comments[cid])
+                emitted_cids.add(cid)
 
         if text.strip() or para_comments:
             paragraphs.append({"text": text, "comments": para_comments})
@@ -106,6 +108,90 @@ def extract_tables(zip_file: zipfile.ZipFile) -> list:
         if rows:
             tables.append(rows)
     return tables
+
+
+def count_source_words(zip_file: zipfile.ZipFile) -> int:
+    """Count words in all w:t elements across document.xml (body only)."""
+    try:
+        xml = zip_file.read("word/document.xml")
+    except KeyError:
+        return 0
+    root = ET.fromstring(xml)
+    body = root.find("w:body", NS)
+    if body is None:
+        return 0
+    words = 0
+    for t in body.iter(f'{{{NS["w"]}}}t'):
+        if t.text:
+            words += len(t.text.split())
+    return words
+
+
+def has_text_boxes(zip_file: zipfile.ZipFile) -> int:
+    """Return count of text boxes (w:txbxContent) in document body."""
+    try:
+        xml = zip_file.read("word/document.xml")
+    except KeyError:
+        return 0
+    root = ET.fromstring(xml)
+    return sum(1 for _ in root.iter(f'{{{NS["w"]}}}txbxContent'))
+
+
+def has_notes(zip_file: zipfile.ZipFile) -> tuple[bool, bool]:
+    """Return (has_footnotes, has_endnotes) by checking zip contents."""
+    names = set(zip_file.namelist())
+    return ("word/footnotes.xml" in names, "word/endnotes.xml" in names)
+
+
+def count_output_words(md_text: str) -> int:
+    """Count words in markdown output, stripping markdown syntax characters."""
+    # Strip common markdown syntax so we compare prose-to-prose
+    import re
+    stripped = re.sub(r"[#>|*_`\-]", " ", md_text)
+    return len(stripped.split())
+
+
+def build_report(
+    source_path: Path,
+    data: dict,
+    md_output: str,
+    source_words: int,
+    text_box_count: int,
+    has_footnotes: bool,
+    has_endnotes: bool,
+) -> tuple[str, bool]:
+    """Build a human-readable conversion report. Returns (report, passed)."""
+    output_words = count_output_words(md_output)
+    word_coverage = (output_words / source_words * 100) if source_words > 0 else 100.0
+
+    md_comment_count = md_output.count("> **[")
+    md_table_count = md_output.count("### Table ")
+
+    source_comment_count = data["comment_count"]
+    source_table_count = len(data["tables"])
+
+    # Pass criteria
+    word_pass = word_coverage >= 95.0
+    comment_pass = md_comment_count == source_comment_count
+    table_pass = md_table_count == source_table_count
+
+    passed = word_pass and comment_pass and table_pass
+
+    def mark(b: bool) -> str:
+        return "✅" if b else "❌"
+
+    lines = [
+        f"== Conversion Report: {source_path.name} ==",
+        f"  Words:     {source_words:,} → {output_words:,}    ({word_coverage:.1f}%)   {mark(word_pass)}",
+        f"  Comments:  {source_comment_count} → {md_comment_count}               {mark(comment_pass)}",
+        f"  Tables:    {source_table_count} → {md_table_count}               {mark(table_pass)}",
+        f"  Text boxes: {text_box_count} in source    {'⚠️  (skipped by converter)' if text_box_count else '✅'}",
+        f"  Footnotes:  {'present' if has_footnotes else 'none'} in source    {'⚠️  (skipped)' if has_footnotes else '✅'}",
+        f"  Endnotes:   {'present' if has_endnotes else 'none'} in source    {'⚠️  (skipped)' if has_endnotes else '✅'}",
+        "",
+        f"  Result: {'PASS' if passed else 'FAIL'}",
+    ]
+    return "\n".join(lines), passed
 
 
 def to_json(path: Path) -> dict:
@@ -165,7 +251,29 @@ if __name__ == "__main__":
         sys.exit(1)
 
     data = to_json(path)
+    md_output = to_markdown(data)
+
+    # Gather source-side metrics for the conversion report
+    with zipfile.ZipFile(path) as zf:
+        source_words = count_source_words(zf)
+        text_box_count = has_text_boxes(zf)
+        footnotes_present, endnotes_present = has_notes(zf)
+
+    report, passed = build_report(
+        source_path=path,
+        data=data,
+        md_output=md_output,
+        source_words=source_words,
+        text_box_count=text_box_count,
+        has_footnotes=footnotes_present,
+        has_endnotes=endnotes_present,
+    )
+    print(report, file=sys.stderr)
+
     if "--markdown" in sys.argv:
-        print(to_markdown(data))
+        print(md_output)
     else:
         print(json.dumps(data, indent=2))
+
+    if not passed:
+        sys.exit(2)

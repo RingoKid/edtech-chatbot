@@ -1,0 +1,55 @@
+# FORM I-Codes for Sentence Structure Lesson Parts .docx
+_(0 comments extracted)_
+
+FORM I
+
+SECTIONS  Vocabulary & Sentence Structure Lesson
+
+SUBSections of the Vocabulary & Sentence Structure Scripted Lesson
+
+COMPONENTS for Vocabulary & Sentence Structure Scripted Lesson
+
+This is FORM I
+
+SECTIONS of Vocabulary & Sentence Structure Lesson:
+
+A STANDARDS
+
+B. OBJECTIVES
+
+C. MATERIALS
+
+D. DETAILED SCRIPTED VOCABULARY & SENTENCE STRUCTURE LESSON:
+
+SUBSECTIONS of Vocabulary & Sentence Structure Scripted Lesson:
+
+Review & Connect: The purpose of this part of the lesson is to quickly review vocabulary from a unit of study and specific sentence structures children have used to express those concepts and vocabulary. Do not introduce new vocabulary or concepts. The goal is to have children apply vocabulary that they have been directly taught using sentence structures.
+
+Model, Explain & Engage: The purpose of this part is to introduce and reinforce a targeted sentence structure through defining, providing clear examples and non-examples, and modeling, while connecting to genre purpose and incorporating children’s vocabulary associated with what they are reading and writing about in their unit of study.
+
+Guided Practice: The purpose of this part of the lesson is to guide children in applying the targeted sentence structure to express an idea that relates to topic and genre, incorporating their vocabulary words during a task that is broken down into component steps so that children can practice step by step and have teacher feedback for improvement
+
+Application: The purpose of this part of the lesson is to provide children practice using the new sentence structure to express their ideas and incorporate vocabulary from a unit of study.
+
+Wrap-Up: The purpose of this part of the lesson is to remind children about the target structure, how it’s different from previously learned structures and why they are important to the type of genre you are reading and writing in class
+
+COMPONENTS of the Vocabulary & Sentence Structure Scripted Lesson
+
+Explanation = AI explains the sections of the lesson. Set apart in brackets [ ].
+
+Teacher Script = Detailed example of what the teacher actually says as a rehearsal of the lesson.
+
+Set apart with #.
+
+Child Response = (  ) = Expected child response within the script will be set off in parentheses.
+
+Teacher Does = {  } = What the teacher is doing within the script will be set off in curly brackets, also called braces.
+
+Modification = AI prompts teacher request for any modifications
+
+Set apart with *
+
+Modification = AI provides a modified teacher script # in response to teacher request
+
+Set apart with ^.
+
