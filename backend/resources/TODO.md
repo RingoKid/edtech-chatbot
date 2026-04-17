@@ -83,6 +83,14 @@ Post-directive changes: Structure 100% (all 5 fixtures). Expert comparison score
 - [ ] **Process lesson plan comments** — 5 lesson plans sent for review in Dropbox `AI Lesson Review - April 2026`. When Dr. Farrow comments, pull feedback with `/dev docs` and add to TODO as generator prompt fixes.
 - [ ] **Update expert examples with new questions** — Asked Dr. Farrow to add `previously_learned` and `skill_focus` answers to 3 expert files in `Expert Examples (Please Update)` subfolder. Once updated, regenerate expert fixtures in `tests/fixtures/handwriting_expert/`.
 
+## Language Construction Rollout (Dr. Farrow, 2026-04-15)
+
+- [ ] **Ship language construction lesson generator by 2026-04-17 EOD** — Committed to Dr. Farrow. She'll notify teachers Friday to begin using it. Reload updated FORM K activities + new Lesson Plan K sample first. (email thread, 2026-04-15)
+- [ ] **Clarify "FORM J codes" question with Dr. Farrow** — She read "codes in old format" as document formatting and was confused. Re-ask if you meant pedagogical/activity codes; otherwise proceed with old-format sample as-is for AI training. (email reply, 2026-04-15)
+- [ ] **Draft additional FORM K activities via ChatGPT** — FORM K alone may not cover the activity range needed. Scope strictly to the 5 sentence-structure verbs: identify, build, imitate, expand, combine. NO mixing with handwriting activities (Dr. Farrow emphatic). Send drafts for her revision. (email reply, 2026-04-15)
+- [ ] **Draft 3+ language construction sample lesson plans via ChatGPT** — Currently only 2 examples vs. 5 used for handwriting. Quality will suffer without more. Dr. Farrow approved AI drafting; she'll revise. (email reply, 2026-04-15)
+- [ ] **Draft idea generation sample lesson plans via ChatGPT** — Same approach: AI drafts, Dr. Farrow revises. Unblocks the idea generation generator next. (email reply, 2026-04-15)
+
 ## DevOps (2026-03-24)
 
 - [ ] **Get OpenAI Admin API key for billing checks** — Need to contact Dr. Farrow. Current `/dev health` only validates the key works; with an Admin key we can check account balance/spend via `/v1/organization/costs`. Add to `/dev health` once obtained.
