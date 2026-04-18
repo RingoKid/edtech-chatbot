@@ -7,7 +7,7 @@ Language Construction Sample Lesson Grade K
 
 A. STANDARDS
 
-K.P.ST.2.c Make decisions about sentence structure and syntax in order to accommodate and influence the audience and achieve a specific purpose
+K.P.AC.2.c Make decisions about sentence structure and syntax in order to accommodate and influence the audience and achieve a specific purpose
 
 K.L.GC.2.a Recognize that conventional sentences always include a subject and a predicate
 
