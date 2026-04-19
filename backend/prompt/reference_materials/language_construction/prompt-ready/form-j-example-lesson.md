@@ -7,13 +7,13 @@ Vocabulary & Sentence Structure Sample Lesson Grade K
 
 ### A. Standards
 
-ELAGSEKL1 — Demonstrate command of the conventions of standard English grammar and usage when writing or speaking.
-f. Produce and expand complete sentences in shared language activities.
+K.P.AC.2.c — Make decisions about sentence structure and syntax in order to accommodate and influence the audience and achieve a specific purpose.
 
-ELAGSEKL5 — With guidance and support from adults, explore word relationships and nuances in word meanings.
-a. Sort common objects into categories to gain a sense of the concepts the categories represent.
+K.L.GC.2.a — Recognize that conventional sentences always include a subject and a predicate.
 
-ELAGSEKL6 — Use words and phrases acquired through conversations, reading and being read to, and responding to texts.
+K.L.GC.2.c — With adult support, use singular and plural subjects with matching verbs.
+
+K.L.V.3.e — Use knowledge of word relationships and learned vocabulary words and phrases when making word choices in speaking and writing.
 
 ### B. Objectives
 
