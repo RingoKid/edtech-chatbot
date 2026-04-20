@@ -11,7 +11,7 @@ K.P.AC.2.c Make decisions about sentence structure and syntax in order to accomm
 
 K.L.GC.2.a Recognize that conventional sentences always include a subject and a predicate
 
-K.L.GC.2.c Use simple sentences to express complete thoughts in written texts
+K.L.GC.2.b With adult support, use simple sentences to express complete thoughts in written texts
 
 B. OBJECTIVES
 

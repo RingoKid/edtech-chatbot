@@ -54,17 +54,18 @@ REFERENCE_FILES = [
 ]
 
 # -----------------------------------------------------------------------------
-# Cycle 2 inputs — mirrors form-j-example-lesson (held out) with one extra
-# vocab word ("stealthy") as a regurgitation canary.
+# Cycle 3 inputs — exact match for lesson-plan-k-example.md. Goal: check whether
+# the prompt reproduces the reference lesson when given identical inputs (the
+# reference is in context via REFERENCE_FILES).
 # -----------------------------------------------------------------------------
 INPUTS = {
     "grade": "K",
     "genre": "Informational",
-    "unit_focus": "Ocean habitats — predators and prey",
-    "vocabulary": ["predator", "prey", "fierce", "nimble", "stealthy"],
-    "sentence_structure_focus": "Be-verbs (is, are) + Predicate Noun (with optional adjective)",
+    "unit_focus": "Weather and temperature",
+    "vocabulary": ["weather", "temperature", "thermometer", "chilly", "freezing"],
+    "sentence_structure_focus": "Be-verbs",
     "previously_learned_structure": (
-        "Subject + Action verb (e.g., 'Sharks chase fish')"
+        "Action verbs; putting a 'y' at the end of a noun to turn it into an adjective (describing word)"
     ),
     "ability_level": "on target",
 }
