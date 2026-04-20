@@ -65,6 +65,8 @@ Post-directive changes: Structure 100% (all 5 fixtures). Expert comparison score
 - [ ] **Word list poverty** — AI uses 3-7 words per lesson; expert uses 11-14. K/B struggling: AI 3 words vs expert 14 minimal pairs. Generator should produce 10+ real words using only `previously_learned` sounds.
 - [ ] **Teacher voice too clinical** — AI says "That is correct because..." Expert says "Kiss your brains", "put your listening ears on." Consistent across all grades. Classroom warmth markers missing.
 - [ ] **Planner `first_r_advanced` spelling_pattern bug** — Planner returns `CVCe` for 1st + consonant R + advanced. Should be `CVC`/`CCVC`/`CVCC`. Prompt over-applies vowel rule to consonants. (planner directives eval, 3/3 runs failed)
+- [ ] **Enforce lesson structure via Pydantic schema, not prompt rules** — Generator relies entirely on prompt Rule 5 (sections A-D) and Rule 13 (3× `IMAGE_N` placeholders) in `handwriting_generator.py:98,163`; `lesson_markdown` is just `Optional[str]` in state. Model can silently drop sections or image placeholders. Fix: define `LessonPlan` Pydantic model, pass via `create_agent(response_format=...)`, then re-serialize to markdown for teacher output + image pipeline. (codebase audit, 2026-04-20)
+  - **Reminder:** discuss whether to also inject section headers + Form B verbatim explanations via Pydantic `computed_field` (vs. plain template injection). Decide during implementation.
 
 ## Param Agent (2026-04-06)
 
