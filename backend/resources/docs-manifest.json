@@ -52,5 +52,11 @@
     "destination": "backend/prompt/reference_materials/language_construction/lesson-plan-k-example.md",
     "last_converted": "2026-04-17T22:02:19Z",
     "comment_count": 2
+  },
+  "expert-feedback/dr-farrow-feedback-lc-plants-k-adverbs": {
+    "source": "~/Library/CloudStorage/Dropbox/Vocabulary & Syntax (language construction) AI codes/AI Generated Lesson Samples/AI Sample - K Informational - Plants (One-Word Adverbs, More Support).docx",
+    "destination": "backend/resources/expert-feedback/dr-farrow-feedback-lc-plants-k-adverbs.md",
+    "last_converted": "2026-04-23T21:18:00Z",
+    "comment_count": 19
   }
 }
