@@ -24,18 +24,18 @@
 
 - [x] **AI does not prompt for previously learned skills** — Fixed in spec 023. Added `previously_learned` intake question + Rule 12 constrains word choices to taught sounds only.
 - [x] **Activity name confusion** — Fixed by planner pipeline. Activities selected by slug, descriptions extracted by regex, names displayed from framework headings. Activity naming eval now scores 100%.
-- [ ] **Review section incorrect** — Generator confuses what Review is. Review = going through previously learned letter-sounds with a focus on sounds. Generator was introducing the new letter in Review instead. (comments #3, #4)
-- [ ] **Form B explanations not verbatim** — Generator writes "(Use the exact Form B explanation for Section X here)" placeholder instead of the actual text. (comments #2, #8, #14, #18)
+- [x] **Review section incorrect** — Fixed by Rule 12 clause: Section 1 must use only `previously_learned` sounds; target letter MUST NOT appear until Section 2. Validated on k_letter_b_onlevel_mid 2026-04-23 — Section 1 drills `map, cat, jam`, no /b/ until Section 2.
+- [x] **Form B explanations not verbatim** — Fixed by Rule 1 anti-placeholder clause (forbids `(Use Form B explanation here)`, etc.). Validated 2026-04-23 — all 5 sections open with literal "The purpose of this part of the lesson is to…".
 - [x] **Lowercase only by default for K** — Resolved: letter case determined by teacher input (lowercase `b` → lowercase lesson, uppercase `B` → uppercase). Removed `.upper()` calls in generator. (spec 023 phase 2)
-- [ ] **Verbal cues not populated** — Generator writes placeholder instead of actual cues from Form F. "The generator should either use the verbal cue or create its own" (comments #11, #12)
+- [x] **Verbal cues not populated** — Fixed by Rule 2 anti-placeholder clause (forbids `(Insert verbal cues)`, `[verbal cues from Form F]`, etc.). Validated 2026-04-23 — ✏️ markers contain literal stroke cues.
 - [ ] **Guided practice sequencing wrong for K** — "by kindergarten they should be able to first trace then try their own on level — if children are struggling learners then air writing is more appropriate to begin" — Magic Finger Write not appropriate for on-level K. (comment #13)
 - [ ] **Trace & Say confusion** — "trace and say means kids are actually writing, pencil in hand" — generator showed finger-on-picture instead. (comment #15)
-- [ ] **Say sound while writing, not letter name** — "say the sound /b/ while writing the letter — you don't want to overwhelm kids switching between saying letter/sound" (comment #17)
+- [x] **Say sound while writing, not letter name** — Fixed by Rule 11 bullet: when children write the target letter they say /{letter}/, not the name. Validated 2026-04-23 — script explicitly says "as you write, just say the sound /b/. Not the letter name."
 - [ ] **Application section had no priming** — "there was no priming for this — illogical sequence — teacher did not say children were at the point of CVC words" (comment #19)
 - [ ] **Need to prompt for previously learned skills** — Required so AI can select logical activity sequences and appropriate word examples. (comments #19, #21)
-- [ ] **Teacher giving away answers** — "teacher is already telling them the answer — we want kids to match the sound to the letter" (comment #22)
-- [ ] **Word choice issues** — "on is not a good word choice because it doesn't follow regular decoding rules" (rubric comment #3)
-- [ ] **Sound/letter comparison inappropriate without prior teaching** — "this would not be appropriate if the teacher did not indicate that this sound was already learned" (comment #9)
+- [x] **Teacher giving away answers** — Fixed by Rule 9 "Elicit BEFORE Tell" pre-response clause: question + 💬 Child Response must appear before teacher confirms. Phrased as pre-response to avoid conflicting with Rule 9's post-response explanation. Validated 2026-04-23.
+- [x] **Word choice issues** — Fixed by Rule 12 exclusion list (`on, the, was, said, of, is, has, his, to, you, I, a, my, be, are`). Validated 2026-04-23 — example words are all decodable CVC.
+- [x] **Sound/letter comparison inappropriate without prior teaching** — Fixed by Rule 10 clause: `[confusable]` partner must be in `previously_learned`, or skip the comparison. Validated 2026-04-23 — b/p comparison used /p/ which is in previously_learned.
 
 ## Layout/UX Changes (Dr. Farrow feedback, 2026-03-09)
 

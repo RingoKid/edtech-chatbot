@@ -78,8 +78,10 @@ Generate a complete handwriting and spelling lesson following the structure in t
 ## CRITICAL RULES
 
 1. **Verbatim Explanations**: Each section's 💡 **Explanation:** text MUST be copied EXACTLY from Form B in the reference materials. Do not paraphrase or modify these explanations.
+   - NEVER emit parenthetical substitutes such as `(Use the exact Form B explanation for Section X here)`, `(Insert Form B text)`, `(Form B explanation goes here)`, or any similar placeholder. If you would write a placeholder, STOP and paste the literal Form B quote from the Reference Materials block below. Form B text is already in your context — use it.
 
 2. **Verbal Cues**: The ✏️ **Verbal Cues:** for the target letter are provided below. Use them EXACTLY as shown — do not look them up elsewhere.
+   - NEVER emit parenthetical substitutes such as `(Insert verbal cues here)`, `(Use Form F cues)`, or `(verbal cues from Form F)`. Quote the Verbal Cues block verbatim inside every ✏️ **Verbal Cues:** marker. The cues are already in your context under "Verbal Cues (Letter {letter})" — paste them literally.
 
 3. **Activity Selection**: Follow the Activity Plan below. Each lesson section has a pre-selected activity.
    - **Name every activity exactly as shown** in the teacher script (e.g., "Let's play Sound Spark", "Time for Magic Finger Write"). Do NOT describe activities generically.
@@ -94,6 +96,7 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - 🤚 **Gesture:** → Phoneme gesture
    - ✏️ **Verbal Cues:** → Letter formation verbal cues
    - 🔄 **Adaptation:** → End-of-lesson modification prompt
+   - These emoji markers are non-negotiable at ALL grades, including 1st. Do NOT switch to bracketed notation like `[Explanation:]`, `[Teacher:]`, or `[Child Response:]` — not in longer lessons, not under any circumstance. Every labeled line uses the emoji + bold marker format shown above.
 
 5. **Complete Structure**: Your output MUST include ALL of these sections:
    - A. Standards — Use the pre-selected standards from the Activity Plan exactly as provided. Do NOT select new ones or add extras.
@@ -131,6 +134,7 @@ Generate a complete handwriting and spelling lesson following the structure in t
    🗣️ **Teacher:** Does /b/-et start with the /b/ or /p/ sound?
    💬 **Child Response:** Children should say /b/.
    🗣️ **Teacher:** Yes. I am pushing out air and using my vocal box /b/, so I am going to hold up my ball sound card for the /b/ sound.
+   - **Elicit BEFORE Tell (pre-response)**: When the teacher asks children to identify a sound or sound-letter match, the teacher MUST ask the question and a 💬 **Child Response:** line MUST appear BEFORE the teacher confirms or reveals the answer. Do NOT script the teacher revealing the answer in the same 🗣️ **Teacher:** turn as the question. We want kids to match the sound to the letter themselves — not to hear the teacher give it away first. (This is the pre-response constraint; the post-response explanation above is what comes AFTER 💬 **Child Response:**.)
 
 10. **Sound/Letter Comparison with Confusable Partner**: Skip this rule if `include_articulation` is false in the Lesson Directives. Otherwise, in Section 2 (Model, Explain & Engage), include a compare/contrast between the target sound/letter and its most commonly confused partner. You MUST: state what is similar, state what is different, include articulatory detail (mouth, lips, tongue, voicing), and have students produce both sounds. Example pattern:
    🗣️ **Teacher:** Remember that we said that the /{letter}/ sound is a lot like the [confusable] sound.
@@ -142,6 +146,7 @@ Generate a complete handwriting and spelling lesson following the structure in t
    🗣️ **Teacher:** Right. For the /{letter}/ sound, [articulatory description]. For the [confusable] sound, [articulatory description].
    🗣️ **Teacher:** Everyone put your hand on your vocal box and make the /{letter}/ sound. Everyone.
    🗣️ **Teacher:** Now let's make the [confusable] sound. Everyone.
+   - **Confusable partner must be a taught sound**: The `[confusable]` partner MUST be a sound listed in `previously_learned`. Never introduce a new, untaught sound here just to contrast against the target — doing so teaches an unlearned sound implicitly. If no sound in `previously_learned` pairs well with /{letter}/, SKIP this comparison entirely for this lesson.
 
 11. **Verbatim Teacher Script — Not Stage Directions**: Write the EXACT words the teacher will say. Do NOT write stage directions that require teacher improvisation. Every section must have verbatim read-aloud teacher dialogue.
    - BAD: "👉 **Teacher Does:** Teacher demonstrates writing and uses sequence verbal cues"
@@ -151,8 +156,11 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - Include pacing cues in EVERY section: "Ready... Go", "My turn... Your turn", "Say it with me", "Get Ready Go."
    - Include specific example words (at least 2-3) in Sound Hunt and Application activities — do not leave word lists to the teacher.
    - Script specific child responses with 💬 **Child Response:**, not generic "💬 **Child Response:** Children respond".
+   - **Say the sound, not the letter name, while writing**: When children are writing the target letter, they say the sound `/{letter}/` — NOT the letter name. The teacher also says the sound (not the name) while modeling strokes. We do not want kids switching between saying the letter name and the sound while their hand is forming the letter; pick the sound and stay with it.
 
 12. **Prior Practice Awareness**: The student has learned these sounds: {previously_learned}. Use ONLY these sounds plus the target sound when selecting example words. Do not use words that contain sounds not in this list. If the list is empty, this is the student's first lesson — use only the target sound.
+   - **Section 1 (Review & Connect) must REVIEW, not introduce**: In Section 1, example words and sounds MUST come from `previously_learned` only. The target letter `{letter}` and its sound /{letter}/ MUST NOT appear as the subject of practice in Section 1 — they are introduced in Section 2 (Model, Explain & Engage). Section 1 is for warming up previously-taught sounds so children connect prior learning before meeting the new sound.
+   - **Exclude high-frequency irregular words**: Beyond the phoneme-inventory constraint above, AVOID high-frequency irregular words that early readers learn as sight words rather than by decoding: `on`, `the`, `was`, `said`, `of`, `is`, `has`, `his`, `to`, `you`, `I`, `a`, `my`, `be`, `are`. If a candidate word doesn't decode cleanly from (`previously_learned` ∪ `{{/{letter}/}}`), don't use it — pick a decodable alternative.
 
 ## LESSON DIRECTIVES FROM ACTIVITY PLAN
 
