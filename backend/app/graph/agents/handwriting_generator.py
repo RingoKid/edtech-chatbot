@@ -123,18 +123,42 @@ Generate a complete handwriting and spelling lesson following the structure in t
      - 1st (CVCe, blends): "You know how to write /{letter}/. Now we're going to spell words with a tricky rule — the silent e / the blend /tr/ — and you'll hear the difference the rule makes."
    - This priming line is non-optional. Do not jump from Section 3 directly into the think-aloud — the child must hear "you are ready to apply this" first.
 
-8. **Corrective Feedback**: Include at least 2 corrective feedback blocks in the lesson that anticipate specific, plausible student errors. Each block MUST: (a) name a specific likely error for the target letter/sound (e.g., confusing letter direction, confusing voiced/unvoiced pair, incorrect stroke sequence), (b) provide exact scripted teacher dialogue that explains the difference, and (c) engage students in noticing and fixing it. Example pattern:
-   Corrective Feedback: Some children may confuse the direction of d, writing instead b or p.
-   🗣️ **Teacher:** You are close. My sound is /d/. Everyone look up here. Some of you wrote this.
-   👉 **Teacher Does:** Teacher writes b.
-   🗣️ **Teacher:** This was our new sound we learned yesterday. This sound is /b/. We are writing /d/. This is /d/.
-   👉 **Teacher Does:** Teacher writes d on the board.
-   🗣️ **Teacher:** What is different about these two letters? Everyone think. Partner 1 tell Partner 2. Stop. Partner 2 tell Partner 1. Stop. Jesslyn, what is different about the /b/ and /d/?
-   💬 **Child Response:** Child should respond that bottom bubble is different.
-   🗣️ **Teacher:** Exactly, both the /d/ and /b/ have a straight line down, but one has a bubble on the back, the left, and one has a bubble in the front, on the right. Everyone say /d/. Where's the bubble, on the front or back? Everyone.
-   💬 **Child Response:** On the back.
-   🗣️ **Teacher:** Everyone say /b/. Where's the bubble? Everyone.
-   💬 **Child Response:** On the front.
+8. **Corrective Feedback**: Include at least 2 corrective feedback blocks in the lesson that anticipate specific, plausible student errors. Each block MUST: (a) name a specific likely error for the target letter/sound (e.g., confusing letter direction, confusing voiced/unvoiced pair, incorrect stroke sequence), (b) provide exact scripted teacher dialogue that explains the difference, and (c) engage students in noticing and fixing it.
+   - **Wrap the entire block in a markdown blockquote** (every line prefixed with `> `). Teachers read the boxed callout as an aside — a correction teachers can use if needed, not part of the main lesson flow. This is a render convention: blockquotes render as a bordered box in the teacher view.
+   - **Separate each dialogue turn with a blank `>` line** so each marker (🗣️/👉/💬) renders as its own paragraph. Without blank `>` separators, consecutive lines collapse into one run-on paragraph.
+   - **Lead with `> **Corrective Feedback:**`** on the first line of the block so teachers can locate it at a glance. Do NOT emit the plain-text `Corrective Feedback:` label outside the blockquote.
+   - **Scope discipline — stay on the error, then stop.** Every turn inside the block MUST directly address the specific error named in the opening line. End the block the moment the child demonstrates they can distinguish correct from incorrect. Dr. Farrow's expert example is 3 paragraphs. Target 3-6 turns; do not exceed 7.
+     - **FORBIDDEN inside the box:**
+       - Generic pacing cues like `"Ready... Go"` that signal a new practice round — this is main-lesson pacing, not correction
+       - Celebratory wrap-ups like `"You got it. You listened..."`, `"Nice job!"`, `"Kiss your brains!"` — route these to Section 5 or to post-response explanations in the main flow, NOT inside the corrective feedback box
+       - Re-teaching the main skill from scratch (full letter formation steps, full sound production instruction)
+       - Partner talk routines (`"Turn and tell your neighbor"`, `"Partner 1 tell Partner 2"`) unless the talk is specifically about distinguishing the error (not general practice)
+       - Generic practice drills (`"Now write 3 more"`, `"Let's do 5 more words"`)
+       - Any line that would fit equally well in the main lesson as inside the box
+     - **Close the block with the child's successful correction**, not with teacher affirmation. The last line should be the 💬 **Child Response:** that demonstrates the fix — not a 🗣️ **Teacher:** celebration afterward.
+
+   Example pattern:
+   > **Corrective Feedback:** Some children may confuse the direction of d, writing instead b or p.
+   >
+   > 🗣️ **Teacher:** You are close. My sound is /d/. Everyone look up here. Some of you wrote this.
+   >
+   > 👉 **Teacher Does:** Teacher writes b.
+   >
+   > 🗣️ **Teacher:** This was our new sound we learned yesterday. This sound is /b/. We are writing /d/. This is /d/.
+   >
+   > 👉 **Teacher Does:** Teacher writes d on the board.
+   >
+   > 🗣️ **Teacher:** What is different about these two letters? Everyone think. Partner 1 tell Partner 2. Stop. Partner 2 tell Partner 1. Stop. Jesslyn, what is different about the /b/ and /d/?
+   >
+   > 💬 **Child Response:** Child should respond that bottom bubble is different.
+   >
+   > 🗣️ **Teacher:** Exactly, both the /d/ and /b/ have a straight line down, but one has a bubble on the back, the left, and one has a bubble in the front, on the right. Everyone say /d/. Where's the bubble, on the front or back? Everyone.
+   >
+   > 💬 **Child Response:** On the back.
+   >
+   > 🗣️ **Teacher:** Everyone say /b/. Where's the bubble? Everyone.
+   >
+   > 💬 **Child Response:** On the front.
 
 9. **Post-Response Explanations**: After the first and/or second elicited student response during an activity, the teacher MUST explain WHY the answer is correct — not just confirm it with "Yes!" or "Perfect!" or move on. The explanation should connect the student's answer to the underlying concept. Example pattern:
    🗣️ **Teacher:** Does /b/-et start with the /b/ or /p/ sound?
@@ -174,13 +198,28 @@ Generate a complete handwriting and spelling lesson following the structure in t
    - **Exclude high-frequency irregular words**: Beyond the phoneme-inventory constraint above, AVOID high-frequency irregular words that early readers learn as sight words rather than by decoding: `on`, `the`, `was`, `said`, `of`, `is`, `has`, `his`, `to`, `you`, `I`, `a`, `my`, `be`, `are`. These exclusions refer to the standalone sight-word forms — they do NOT forbid the letter or sound when it IS the target of the lesson. If a candidate word doesn't decode cleanly from (`previously_learned` ∪ `{{/{letter}/}}`), don't use it — pick a decodable alternative.
    - **Word count minimums**: Expert lessons use 11-14 unique decodable words; earlier generator output averaged 3-7. Produce AT LEAST 8 unique decodable practice words in Guided Practice (Section 3) and AT LEAST 6 more unique decodable words in Application (Section 4). Do not repeat the Guided Practice word list in Application — extend it. All words still constrained by `previously_learned + target`. If you cannot find enough decodable words in the allowed phoneme set, you MAY include minimal-pair contrasts (e.g., `bat/bit/bet`, `cab/cob/cub`) to reach the minimum — but every word must still be fully decodable.
 
+13. **Possible Words/Sounds Reference Box**: After each activity that uses example words or sounds, include a teacher-reference blockquote listing the full pool of decodable options drawn from `previously_learned + target`. Teachers like to see every word/sound they could pull from so they can differentiate or extend the activity on the fly without re-deriving the phoneme set.
+   - **Format — every line prefixed with `> `** (markdown blockquote, renders as a bordered box):
+     > **Possible words:** cab, cat, can, bat, bag, mat, mag, sat, sap, tab, tan
+   - **For sound-focused activities** (e.g., Section 1 Review, Section 2 Sound Hunt), list sounds instead of words:
+     > **Possible sounds:** /c/, /a/, /t/, /m/, /s/, /b/
+   - **Where to place the box**:
+     - Section 1 (Review) — `> **Possible sounds:**` with the full `previously_learned` set.
+     - Section 3 (Guided Practice) — `> **Possible words:**` with 12+ decodable words covering the allowed phoneme set (a superset of the 8+ scripted in the activity).
+     - Section 4 (Application) — `> **Possible words:**` with 10+ decodable words the teacher could substitute for or add to the scripted 6+.
+     - Section 2 optional; Section 5 skip.
+   - **Placement**: AFTER the scripted activity dialogue (including any Corrective Feedback block), BEFORE the next section header.
+   - **Constraints**: Words/sounds obey the same decoding constraints as Rule 12 — only `previously_learned + target`, no high-frequency irregular words.
+   - **Real English words only, no duplicates**: Every entry in a `**Possible words:**` box MUST be a real English word (common nouns, verbs, or adjectives children might recognize). Do NOT pad the list with nonsense pseudo-words like `mab`, `nad`, `gib`, `vac` just to reach decodable-phoneme combinations. Deduplicate — no word appears twice in the same box.
+   - **No emoji markers inside** — this block is a teacher-facing reference, not classroom script.
+
 ## LESSON DIRECTIVES FROM ACTIVITY PLAN
 
 The Activity Planner has pre-determined these pedagogical decisions. Follow them exactly — do NOT override or re-derive.
 
 {directives_section}
 
-13. **Image Placeholders**: Place EXACTLY 3 image placeholders in your lesson using this syntax:
+14. **Image Placeholders**: Place EXACTLY 3 image placeholders in your lesson using this syntax:
    `![2-3 sentence description of the image focused on pedagogical content](IMAGE_N)`
    where N is 1, 2, or 3. Placement guidance:
    - `IMAGE_1` → in Section 2 (Model, Explain & Engage)

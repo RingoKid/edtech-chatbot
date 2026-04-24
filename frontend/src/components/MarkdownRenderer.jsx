@@ -132,10 +132,10 @@ const MarkdownRenderer = ({ content, className = '' }) => {
           />
         ),
 
-        // Blockquotes
+        // Blockquotes — rendered as boxed callouts (Corrective Feedback, Possible words/sounds)
         blockquote: ({ node, ...props }) => (
           <blockquote
-            className="border-l-4 border-gray-300 pl-4 italic my-2"
+            className="border border-gray-300 rounded-md bg-gray-50 px-4 py-3 my-3"
             {...props}
           />
         ),
