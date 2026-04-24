@@ -2,16 +2,17 @@
 Phase 1 prototype: Language Construction (Vocabulary & Sentence Structure) lesson generator.
 
 Standalone script. No graph, no agent, no tools. Loads the full LC prompt-ready form set
-plus the K-level standards, composes one system prompt, calls gpt-5.4 once, writes the
-markdown output to a timestamped file under scripts/prototype-lc-outputs/.
+(including both example lessons) plus the K-level standards, composes one system prompt,
+and generates a lesson for each entry in INPUT_RUNS — one API call and one output file per
+entry. Outputs go to scripts/prototype-lc-outputs/ with per-run tags in the filename.
 
-Iteration loop: edit SYSTEM_PROMPT_TEMPLATE or INPUTS below, re-run, diff against
-`prompt-ready/lesson-plan-k-example.md` for structural fidelity.
+Iteration loop: edit SYSTEM_PROMPT_TEMPLATE or INPUT_RUNS below, re-run, read the outputs.
 
 Usage:
     docker compose exec backend python scripts/prototype_lc_generator.py
 
-Cost: ~$0.20/run on gpt-5.4 (OpenAI auto-caches repeated system prompts).
+Cost: ~$0.20 per run on gpt-5.4 (OpenAI auto-caches the fixed reference-material prefix,
+so runs 2+ pay only a fraction of run 1's input cost).
 """
 
 import sys
@@ -43,32 +44,60 @@ GENERATOR_MODEL = "gpt-5.4"
 
 # Reference files loaded in this order. Form L (modifications) excluded — only needed
 # for modification flow, would confuse the generator.
-# Cycle 2: form-j-example-lesson.md held out as the diff target — only lesson-plan-k-example in context.
 REFERENCE_FILES = [
     "form-i-lesson-structure.md",
     "form-m-genre-elements.md",
     "form-r-sentence-structure-guide.md",
     "form-k-scaffolded-activities.md",
     "form-e-best-practices.md",
+    "form-j-example-lesson.md",
     "lesson-plan-k-example.md",
 ]
 
 # -----------------------------------------------------------------------------
-# Cycle 3 inputs — exact match for lesson-plan-k-example.md. Goal: check whether
-# the prompt reproduces the reference lesson when given identical inputs (the
-# reference is in context via REFERENCE_FILES).
+# Cycle 4 inputs — three K lessons, each varying one axis off the reference
+# baseline (Informational + Be-verbs + on-target):
+#   A. narrative_prep       — new genre + new syntax
+#   B. opinion_adj          — new genre + new syntax
+#   C. info_adverb_support  — ability-level switch (tests Rule 3 Form K matching)
+# `tag` is embedded in each output filename.
 # -----------------------------------------------------------------------------
-INPUTS = {
-    "grade": "K",
-    "genre": "Informational",
-    "unit_focus": "Weather and temperature",
-    "vocabulary": ["weather", "temperature", "thermometer", "chilly", "freezing"],
-    "sentence_structure_focus": "Be-verbs",
-    "previously_learned_structure": (
-        "Action verbs; putting a 'y' at the end of a noun to turn it into an adjective (describing word)"
-    ),
-    "ability_level": "on target",
-}
+INPUT_RUNS = [
+    {
+        "tag": "narrative_prep",
+        "grade": "K",
+        "genre": "Personal Narrative",
+        "unit_focus": "A trip to the fire station (community helpers)",
+        "vocabulary": ["firefighter", "hose", "siren", "brave", "rescue"],
+        "sentence_structure_focus": "Prepositional phrases (where)",
+        "previously_learned_structure": (
+            "Be-verbs (is, are); simple subject + action verb sentences"
+        ),
+        "ability_level": "on target",
+    },
+    {
+        "tag": "opinion_adj",
+        "grade": "K",
+        "genre": "Personal Opinion Writing",
+        "unit_focus": "My favorite season",
+        "vocabulary": ["cozy", "crisp", "sunny", "snowy", "favorite"],
+        "sentence_structure_focus": "Adjectives describing nouns (what kind? how many?)",
+        "previously_learned_structure": (
+            "Be-verbs (is, are); subject + action verb sentences"
+        ),
+        "ability_level": "on target",
+    },
+    {
+        "tag": "info_adverb_support",
+        "grade": "K",
+        "genre": "Informational",
+        "unit_focus": "Plants and how they grow",
+        "vocabulary": ["seed", "soil", "sprout", "roots", "bloom"],
+        "sentence_structure_focus": "One-word adverbs (how, when, where)",
+        "previously_learned_structure": "Action verbs; be-verbs",
+        "ability_level": "more support",
+    },
+]
 
 # -----------------------------------------------------------------------------
 # System prompt
@@ -196,16 +225,16 @@ def load_reference_materials() -> str:
     return "\n\n---\n\n".join(sections)
 
 
-def build_system_prompt() -> str:
+def build_system_prompt(run: dict, reference_materials: str) -> str:
     return SYSTEM_PROMPT_TEMPLATE.format(
-        grade=INPUTS["grade"],
-        genre=INPUTS["genre"],
-        unit_focus=INPUTS["unit_focus"],
-        vocabulary=", ".join(INPUTS["vocabulary"]),
-        sentence_structure_focus=INPUTS["sentence_structure_focus"],
-        previously_learned_structure=INPUTS["previously_learned_structure"],
-        ability_level=INPUTS["ability_level"],
-        reference_materials=load_reference_materials(),
+        grade=run["grade"],
+        genre=run["genre"],
+        unit_focus=run["unit_focus"],
+        vocabulary=", ".join(run["vocabulary"]),
+        sentence_structure_focus=run["sentence_structure_focus"],
+        previously_learned_structure=run["previously_learned_structure"],
+        ability_level=run["ability_level"],
+        reference_materials=reference_materials,
     )
 
 
@@ -231,38 +260,42 @@ def compute_cost(usage_by_model: dict) -> float:
 def main() -> int:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    system_prompt = build_system_prompt()
-    print(f"System prompt: {len(system_prompt):,} chars")
-    print(f"Inputs: {INPUTS}")
-    print(f"Calling {GENERATOR_MODEL} …", flush=True)
-
+    reference_materials = load_reference_materials()
     model = get_chat_model(GENERATOR_MODEL, streaming=True)
     callback = UsageMetadataCallbackHandler()
-    response = model.invoke(
-        [SystemMessage(content=system_prompt), HumanMessage(content=USER_PROMPT)],
-        config={"callbacks": [callback]},
-    )
 
-    output_text = (
-        response.content if isinstance(response.content, str) else str(response.content)
-    )
+    for idx, run in enumerate(INPUT_RUNS, start=1):
+        tag = run["tag"]
+        print()
+        print(f"=== Run {idx}/{len(INPUT_RUNS)}: {tag} ===")
+        system_prompt = build_system_prompt(run, reference_materials)
+        print(f"System prompt: {len(system_prompt):,} chars")
+        print(f"Inputs: {run}")
+        print(f"Calling {GENERATOR_MODEL} …", flush=True)
 
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    output_path = OUTPUT_DIR / f"lc_lesson_{INPUTS['grade']}_{timestamp}.md"
-    output_path.write_text(output_text)
+        response = model.invoke(
+            [SystemMessage(content=system_prompt), HumanMessage(content=USER_PROMPT)],
+            config={"callbacks": [callback]},
+        )
+        output_text = (
+            response.content if isinstance(response.content, str) else str(response.content)
+        )
+
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        output_path = OUTPUT_DIR / f"lc_lesson_{run['grade']}_{tag}_{timestamp}.md"
+        output_path.write_text(output_text)
+        print(f"Output: {output_path.relative_to(BACKEND_DIR)}")
+        print(f"Chars: {len(output_text):,}")
 
     print()
-    print(f"Output: {output_path.relative_to(BACKEND_DIR)}")
-    print(f"Chars: {len(output_text):,}")
-    print()
-    print("Usage:")
+    print("Total usage across all runs:")
     for model_name, usage in callback.usage_metadata.items():
         inp = usage.get("input_tokens", 0)
         out = usage.get("output_tokens", 0)
         cached = usage.get("input_token_details", {}).get("cache_read", 0)
         print(f"  {model_name}: {inp:,} in ({cached:,} cached) / {out:,} out")
     cost = compute_cost(callback.usage_metadata)
-    print(f"Estimated cost: ${cost:.4f}")
+    print(f"Total estimated cost: ${cost:.4f}")
 
     return 0
 
