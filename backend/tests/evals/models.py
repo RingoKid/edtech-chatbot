@@ -302,6 +302,54 @@ class CorrectiveFeedbackOutput(BaseModel):
     explanation: str = Field(description="Overall summary")
 
 
+# --- Corrective Feedback Scope Eval Models ---
+# Narrow per-block scope judge. Blocks are extracted deterministically by
+# `extract_corrective_feedback_blocks()`; the judge receives ONE block's text
+# and rules only on whether its content stays scoped to the error.
+
+
+class CorrectiveFeedbackScopeJudgment(BaseModel):
+    """Judge's direct output schema — one block in, one judgment out."""
+
+    stays_on_error: bool = Field(
+        description=(
+            "True if every turn in the block directly addresses or remediates "
+            "the specific anticipated error named in the opening line. False if "
+            "any turn drifts into re-teaching the main skill, generic practice, "
+            "wrap-up celebration, or unrelated instruction."
+        )
+    )
+    drift_evidence: str = Field(
+        description=(
+            "If stays_on_error is false, quote the specific line(s) that drifted "
+            "out of scope. Empty string if stays_on_error is true."
+        )
+    )
+    explanation: str = Field(
+        description="One-sentence justification of the ruling."
+    )
+
+
+class CorrectiveFeedbackScopeBlock(BaseModel):
+    """Aggregated per-block result: extractor metadata + judge verdict."""
+
+    block_index: int = Field(description="0-indexed position within the lesson")
+    turn_count: int = Field(
+        description="Number of speaker-marker turns (🗣️/👉/💬) in the block"
+    )
+    stays_on_error: bool
+    drift_evidence: str
+    explanation: str
+
+
+class CorrectiveFeedbackScopeOutput(BaseModel):
+    """Complete output: one entry per extracted block, plus a summary."""
+
+    blocks: list[CorrectiveFeedbackScopeBlock] = Field(
+        description="One judgment per extracted Corrective Feedback block"
+    )
+
+
 # --- Post-Response Explanation Eval Models ---
 
 
