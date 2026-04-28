@@ -106,6 +106,18 @@ Look up the EXACT value from this table:
 
 Valid values: `single_sound`, `VC`, `CVC`, `CVCe`, `CCVC`, `CVCC`
 
+**Two worked examples — read BOTH before picking a pattern:**
+
+1. **Vowel target letter (CVCe path):** 1st grade + letter `i` + on-level → `CVCe` (e.g., `bit/bite`, `pip/pipe`, `kit/kite`). The letter `i` IS a vowel, AND the student is on-level (not struggling), so the silent-e pattern applies. The CVCe pattern makes the target vowel long — that's exactly what this lesson is teaching. Picking `CVC` here would miss the whole point of the lesson.
+
+2. **Consonant target letter (consonant-blend path):** 1st grade + letter `r` + advanced → `CVC`, `CCVC`, or `CVCC` (e.g., `trip`, `frog`, `runs`). The letter `r` is a CONSONANT, so CVCe does NOT apply — regardless of student level. The student's "advanced" level moves them toward blends (CCVC/CVCC), NOT toward CVCe. CVCe is a silent-e pattern that only makes sense when the target letter is a vowel that NEEDS the silent e to become long.
+
+**The decision is a 2-step question, in this order:**
+- Step 1: Is `{letter}` a vowel (a, e, i, o, u)? If YES → go to the vowel rows (CVCe or CVC by level). If NO → go to the consonant row (never CVCe).
+- Step 2: Use `{student_level}` to pick within that branch.
+
+**Pattern-matching shortcut to AVOID:** "1st grade + advanced → CVCe". That heuristic is WRONG because it ignores Step 1 (the letter's vowel-vs-consonant status).
+
 ### include_directionality
 
 | Condition | Value |

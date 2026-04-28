@@ -63,3 +63,36 @@ def extract_standard(standards_text: str, code: str) -> str:
     pattern = rf"^\|\s*{escaped}\s*\|([^|]+)\|"
     match = re.search(pattern, standards_text, re.MULTILINE)
     return f"{code} — {match.group(1).strip()}" if match else ""
+
+
+_CF_OPENER = re.compile(r"^>\s*\*\*Corrective Feedback:\*\*")
+_CF_TURN_MARKERS = ("🗣️", "👉", "💬")
+
+
+def extract_corrective_feedback_blocks(lesson_markdown: str) -> list[dict]:
+    """Extract every Corrective Feedback blockquote block from a lesson.
+
+    A block is a contiguous run of lines starting with `>` whose first line
+    begins `> **Corrective Feedback:**`. The block ends at the first line
+    that does not start with `>`.
+
+    Returns a list of dicts: {"raw_text": str, "turn_count": int}, where
+    turn_count is the number of speaker-marker lines (🗣️/👉/💬) in the block.
+    Used by the corrective_feedback_scope eval to bound the LLM judge's input.
+    """
+    blocks: list[dict] = []
+    lines = lesson_markdown.split("\n")
+    i = 0
+    while i < len(lines):
+        if _CF_OPENER.match(lines[i]):
+            start = i
+            while i < len(lines) and lines[i].startswith(">"):
+                i += 1
+            block_lines = lines[start:i]
+            turn_count = sum(
+                1 for l in block_lines if any(m in l for m in _CF_TURN_MARKERS)
+            )
+            blocks.append({"raw_text": "\n".join(block_lines), "turn_count": turn_count})
+        else:
+            i += 1
+    return blocks

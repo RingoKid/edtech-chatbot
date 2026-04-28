@@ -53,17 +53,29 @@ C. Materials
 🗣️ **Teacher:** "My sound is /d/. Write the sound. Show me."
 💬 **Child Response:** Children hold up their whiteboards together.
 
-Corrective Feedback: Some children may confuse the direction of d, writing instead b or p.
-🗣️ **Teacher:** "You are close. My sound is /d/. Everyone look up here. Some of you wrote this."
-👉 **Teacher Does:** Teacher writes b.
-🗣️ **Teacher:** "This was our new sound we learned yesterday. This sound is /b/. We are writing /d/. This is /d/."
-👉 **Teacher Does:** Teacher writes d on the board.
-🗣️ **Teacher:** "What is different about these two letters? Everyone think. Partner 1 tell Partner 2. Stop. Partner 2 tell Partner 1. Stop. Jesslyn, what is different about the /b/ and /d/?"
-💬 **Child Response:** Child should respond that bottom bubble is different.
-🗣️ **Teacher:** "Exactly, both the /d/ and /b/ have a straight line down, but one has a bubble on the back, the left, and one has a bubble in the front, on the right. Everyone say /d/. Where's the bubble, on the front or back? Everyone."
-💬 **Child Response:** On the back.
-🗣️ **Teacher:** "Everyone say /b/. Where's the bubble? Everyone."
-💬 **Child Response:** On the front.
+> **Corrective Feedback:** Some children may confuse the direction of d, writing instead b or p.
+>
+> 🗣️ **Teacher:** "You are close. My sound is /d/. Everyone look up here. Some of you wrote this."
+>
+> 👉 **Teacher Does:** Teacher writes b.
+>
+> 🗣️ **Teacher:** "This was our new sound we learned yesterday. This sound is /b/. We are writing /d/. This is /d/."
+>
+> 👉 **Teacher Does:** Teacher writes d on the board.
+>
+> 🗣️ **Teacher:** "What is different about these two letters? Everyone think. Partner 1 tell Partner 2. Stop. Partner 2 tell Partner 1. Stop. Jesslyn, what is different about the /b/ and /d/?"
+>
+> 💬 **Child Response:** Child should respond that bottom bubble is different.
+>
+> 🗣️ **Teacher:** "Exactly, both the /d/ and /b/ have a straight line down, but one has a bubble on the back, the left, and one has a bubble in the front, on the right. Everyone say /d/. Where's the bubble, on the front or back? Everyone."
+>
+> 💬 **Child Response:** On the back.
+>
+> 🗣️ **Teacher:** "Everyone say /b/. Where's the bubble? Everyone."
+>
+> 💬 **Child Response:** On the front.
+
+> **Possible sounds:** /m/, /a/, /p/, /d/, /t/, /c/, /l/, /g/, /n/, /j/
 
 **2. Model, Explain, Engage**
 
@@ -141,6 +153,8 @@ Corrective Feedback: Some children may confuse the direction of d, writing inste
 🗣️ **Teacher:** "How many sounds will we hear if these are CVC words. Everyone. Yes. Three sounds. That's why we see three boxes for each sound. You first stretch the sounds, then write the letter for each sound. Let me show you. My turn. The word is cab. So, I first stretch the sounds, c-a-b, the beginning sound is /c/. I know that the /c/ sound is written with the letter c. I am going to write c in the first block. So, we have /c/-/a/. The /a/ sound is written with the letter a, so I write the letter a, remember that's our vowel, in the middle box. So, we have /c/-/a/-/b/. That's our new sound at the end. I am going to write the letter b for the /b/ sound in the last box. Okay. Let's try."
 🗣️ **Teacher:** "My turn. My first word is bin. Stretch the sound everyone. First sound. Write the letter. Second sound. Write the letter. Third sound. Write the letter."
 👉 **Teacher Does:** Teacher uses the same list of words that were used in the Sound Hunt activity above. Teacher monitors students' answers providing corrective feedback.
+
+> **Possible words:** big, bin, bob, bog, bat, bed, bib, cab, job, lab, nab, gab, dab, tab, mob, cob
 
 **5. Wrap-Up**
 

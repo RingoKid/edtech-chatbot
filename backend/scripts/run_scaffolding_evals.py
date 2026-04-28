@@ -30,6 +30,7 @@ import time
 from datetime import datetime
 
 from app.llm.client import get_chat_model
+from app.graph.utils.extractors import extract_corrective_feedback_blocks
 from tests.evals.models import (
     WithinSectionOutput,
     AcrossSectionOutput,
@@ -39,6 +40,9 @@ from tests.evals.models import (
     StructureOutput,
     ThinkAloudOutput,
     CorrectiveFeedbackOutput,
+    CorrectiveFeedbackScopeJudgment,
+    CorrectiveFeedbackScopeBlock,
+    CorrectiveFeedbackScopeOutput,
     PostResponseOutput,
     SoundLetterComparisonOutput,
     ScriptSpecificityOutput,
@@ -95,7 +99,8 @@ def compute_cost(usage: dict, model_key: str) -> float:
 
 ALL_EVAL_NAMES = [
     "within", "across", "release", "decomposition", "verbatim", "structure",
-    "think_aloud", "corrective_feedback", "post_response", "sound_comparison", "script_specificity",
+    "think_aloud", "corrective_feedback", "corrective_feedback_scope",
+    "post_response", "sound_comparison", "script_specificity",
     "grade_standards", "activity_naming", "child_response_coverage",
 ]
 
@@ -240,6 +245,55 @@ def run_corrective_feedback_judge(lesson_output: str, model_key: str, form_conte
     judge = model.with_structured_output(CorrectiveFeedbackOutput, include_raw=True)
     result = judge.invoke(prompt)
     return result["parsed"], extract_usage(result["raw"])
+
+
+# Scope judge uses a cheap model regardless of the pipeline's --model flag.
+# Task is narrow (does this extracted block stay on error?) — nano is sufficient.
+CF_SCOPE_JUDGE_MODEL = "gpt-5.4-nano"
+
+
+def run_corrective_feedback_scope_judge(
+    lesson_output: str, model_key: str, form_content: None = None,
+) -> tuple[CorrectiveFeedbackScopeOutput, dict]:
+    """Score whether each Corrective Feedback block stays scoped to its error.
+
+    Extracts blocks deterministically via `extract_corrective_feedback_blocks`
+    (so block boundaries don't cost LLM tokens), then invokes a cheap per-block
+    judge. The `model_key` argument from the pipeline is ignored — this judge
+    is hardcoded to `CF_SCOPE_JUDGE_MODEL` because the task is intentionally
+    narrow.
+    """
+    extracted = extract_corrective_feedback_blocks(lesson_output)
+    if not extracted:
+        return CorrectiveFeedbackScopeOutput(blocks=[]), {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
+
+    rubric_template = load_rubric("corrective_feedback_scope")
+    model = get_chat_model(
+        CF_SCOPE_JUDGE_MODEL, temperature=0,
+        timeout=JUDGE_TIMEOUT, max_retries=JUDGE_MAX_RETRIES,
+    )
+    judge = model.with_structured_output(CorrectiveFeedbackScopeJudgment, include_raw=True)
+
+    results: list[CorrectiveFeedbackScopeBlock] = []
+    total_usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
+
+    for idx, block in enumerate(extracted):
+        prompt = rubric_template.replace("{block_text}", block["raw_text"])
+        result = judge.invoke(prompt)
+        verdict: CorrectiveFeedbackScopeJudgment = result["parsed"]
+        usage = extract_usage(result["raw"])
+        for k in total_usage:
+            total_usage[k] += usage.get(k, 0)
+
+        results.append(CorrectiveFeedbackScopeBlock(
+            block_index=idx,
+            turn_count=block["turn_count"],
+            stays_on_error=verdict.stays_on_error,
+            drift_evidence=verdict.drift_evidence,
+            explanation=verdict.explanation,
+        ))
+
+    return CorrectiveFeedbackScopeOutput(blocks=results), total_usage
 
 
 def run_post_response_judge(lesson_output: str, model_key: str, form_content: None = None) -> tuple[PostResponseOutput, dict]:
@@ -418,6 +472,19 @@ def compute_corrective_feedback_score(output: CorrectiveFeedbackOutput) -> tuple
 
     score = (best_count / 4 * 100)
     return best_count, 4, score
+
+
+def compute_corrective_feedback_scope_score(output: CorrectiveFeedbackScopeOutput) -> tuple[int, int, float]:
+    """Fraction of Corrective Feedback blocks that stay scoped to their error.
+
+    Returns (scoped_count, total_blocks, percentage). If no blocks were
+    extracted, returns (0, 0, 0.0) — distinguishable from "0 of N scoped".
+    """
+    if not output.blocks:
+        return 0, 0, 0.0
+    scoped = sum(1 for b in output.blocks if b.stays_on_error)
+    total = len(output.blocks)
+    return scoped, total, (scoped / total * 100)
 
 
 def compute_post_response_score(output: PostResponseOutput) -> tuple[int, int, float]:
@@ -915,6 +982,28 @@ def format_corrective_feedback_detail(output: CorrectiveFeedbackOutput) -> str:
     return "\n".join(lines)
 
 
+def format_corrective_feedback_scope_detail(output: CorrectiveFeedbackScopeOutput) -> str:
+    """Per-block scope verdict with turn counts and any drift evidence."""
+    lines = []
+
+    if not output.blocks:
+        lines.append("_No corrective feedback blocks extracted (no `> **Corrective Feedback:**` markers found)_\n")
+        return "\n".join(lines)
+
+    lines.append("| # | Turns | Scoped? | Drift Evidence | Explanation |")
+    lines.append("|---|-------|---------|----------------|-------------|")
+    for block in output.blocks:
+        drift = block.drift_evidence.replace("|", "\\|").replace("\n", " ")[:120]
+        explanation = block.explanation.replace("|", "\\|").replace("\n", " ")[:150]
+        scoped_marker = "+" if block.stays_on_error else "-"
+        lines.append(
+            f"| {block.block_index} | {block.turn_count} | {scoped_marker} "
+            f'| "{drift}" | {explanation} |'
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
 def format_post_response_detail(output: PostResponseOutput) -> str:
     """Format post-response explanation output as a markdown table."""
     lines = []
@@ -1305,6 +1394,15 @@ EVAL_REGISTRY = {
         "judge_fn": run_corrective_feedback_judge,
         "compute_fn": compute_corrective_feedback_score,
         "format_fn": format_corrective_feedback_detail,
+    },
+    "corrective_feedback_scope": {
+        "label": "CFScope",
+        "unit": "blocks",
+        "form": "none",
+        "description": "Each `> **Corrective Feedback:**` block stays scoped to its anticipated error (no drift into main-lesson instruction). Uses a cheap nano judge on regex-extracted blocks.",
+        "judge_fn": run_corrective_feedback_scope_judge,
+        "compute_fn": compute_corrective_feedback_scope_score,
+        "format_fn": format_corrective_feedback_scope_detail,
     },
     "post_response": {
         "label": "PostResp",
