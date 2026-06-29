@@ -11,22 +11,22 @@ Tests the param agent against multi-turn conversation scenarios:
 - Invalid input (should reject)
 """
 
-import pytest
 import uuid
 from dataclasses import dataclass
 from unittest.mock import patch
-from langchain_core.messages import HumanMessage, AIMessage
-from langgraph.checkpoint.memory import MemorySaver
 
+import pytest
 from app.graph.graph import create_graph
 from app.graph.state import HandwritingParams
+from langchain_core.messages import AIMessage, HumanMessage
+from langgraph.checkpoint.memory import MemorySaver
 from tests.datasets.param_agent import (
     ParamTestCase,
     get_complete_cases,
+    get_extraction_cases,
+    get_invalid_cases,
     get_multi_turn_cases,
     get_partial_cases,
-    get_invalid_cases,
-    get_extraction_cases,
 )
 
 

@@ -5,22 +5,22 @@ Uses create_agent from langchain.agents for natural conversation flow.
 The agent uses task-specific tools to submit collected parameters.
 """
 
+from email.policy import default
 from typing import Literal
-from pydantic import BaseModel, Field
-from langchain_core.tools import tool
-from langchain.agents import create_agent
 
-from app.llm.client import get_chat_model
 from app.graph.state import (
-    GraphState,
-    GradeLevel,
-    StudentLevel,
-    SkillFocus,
-    WritingType,
     Genre,
+    GradeLevel,
+    GraphState,
+    SkillFocus,
+    StudentLevel,
     WritingStage,
+    WritingType,
 )
-
+from app.llm.client import get_chat_model
+from langchain.agents import create_agent
+from langchain_core.tools import tool
+from pydantic import BaseModel, Field
 
 # Default prompt used when Langfuse is unavailable or prompt doesn't exist
 # NOTE: This prompt is generic - it tells the agent to look at conversation context
@@ -95,9 +95,11 @@ class SubmitHandwritingParams(BaseModel):
         description="Student ability level for differentiation"
     )
     previously_learned: list[str] = Field(
+        ..., # it IS required by Pydantic
         description="Sounds/letters the students have already learned. Ask the teacher — do not assume or leave empty."
     )
     skill_focus: Literal["isolating_sounds", "blending", "letter_formation", "spelling"] = Field(
+        ..., # it IS required by Pydantic
         description="Primary skill to target. Ask the teacher which skill to focus on — do not pick a default."
     )
 
