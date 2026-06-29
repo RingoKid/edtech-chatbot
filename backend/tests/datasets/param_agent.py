@@ -73,6 +73,19 @@ PARAM_TEST_CASES: list[ParamTestCase] = [
         description="Complete: natural phrasing",
         category="complete",
     ),
+    ParamTestCase(
+        messages=["K letter b advanced, they know m a s t p, focus on letter formation"],
+        expected_params={
+            "grade": "K",
+            "letter": "b",
+            "student_level": "advanced",
+            "previously_learned": ["m", "a", "s", "t", "p"],
+            "skill_focus": "letter_formation",
+        },
+        expect_submit_after=0,
+        description="Complete: letter_formation skill_focus",
+        category="complete",
+    ),
 
     # ==========================================
     # Category: multi_turn — info spread across turns
@@ -159,6 +172,20 @@ PARAM_TEST_CASES: list[ParamTestCase] = [
         expected_params=None,
         expect_submit_after=None,
         description="Partial: letter only",
+        category="partial_no_submit",
+    ),
+    ParamTestCase(
+        messages=["K letter b on-level, they've learned m a s t"],
+        expected_params=None,
+        expect_submit_after=None,
+        description="Partial: missing skill_focus",
+        category="partial_no_submit",
+    ),
+    ParamTestCase(
+        messages=["K letter b on-level, focus on letter formation"],
+        expected_params=None,
+        expect_submit_after=None,
+        description="Partial: missing previously_learned",
         category="partial_no_submit",
     ),
 

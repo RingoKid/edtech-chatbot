@@ -336,3 +336,4 @@ backend/tests/fixtures/handwriting_generator/*.json
 
 # Obsidian
 .obsidian/
+.tmp/
